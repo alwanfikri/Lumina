@@ -1,30 +1,34 @@
-import {openDB} from "./db.js"
-import {initSync,scheduleSync} from "./sync.js"
-import {initDiary} from "./diary.js"
-import {initCalendar} from "./calendar.js"
-import {initPhotoGallery} from "./drive.js"
+import { openDB } from "./db.js";
+import { initSync, scheduleSync } from "./sync.js";
+import { initDiary } from "./diary.js";
+import { initCalendar } from "./calendar.js";
+import { initPhotoGallery } from "./drive.js";
 
 async function boot(){
 
-await openDB()
+try{
 
-await initSync()
+await openDB();
 
-await initDiary()
+await initSync();
 
-await initCalendar()
+await initDiary();
 
-initPhotoGallery()
+await initCalendar();
+
+initPhotoGallery();
 
 document.getElementById("sync-btn")
-.addEventListener("click",()=>{
+?.addEventListener("click",()=>scheduleSync());
 
-scheduleSync()
+}catch(err){
 
-})
-
-document.getElementById("splash").style.display="none"
+console.error("BOOT ERROR:",err);
 
 }
 
-boot()
+document.getElementById("splash").style.display="none";
+
+}
+
+boot();
