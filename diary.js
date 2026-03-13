@@ -48,7 +48,7 @@ function renderDiaryCard(entry) {
   const dateStr = formatDate(entry.date);
   const preview = stripHtml(entry.content_html).slice(0, 120) || '(No content)';
   const hasPhotos = entry.photo_urls && entry.photo_urls.length > 0;
-  const syncIcon = entry.syncStatus === "synced" ? '' : '<span class="unsynced-dot" title="Not synced"></span>';
+  const syncIcon = entry.synced ? '' : '<span class="unsynced-dot" title="Not synced"></span>';
 
   return `
     <article class="diary-card" data-id="${entry.id}">
