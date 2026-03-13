@@ -190,3 +190,45 @@ function blobToBase64(blob) {
     r.readAsDataURL(blob);
   });
 }
+export async function checkReminders() {
+  try {
+
+    const events = await dbGetAll("agenda");
+
+    const now = new Date();
+
+    for (const event of events) {
+
+      if (event.deleted) continue;
+
+      if (event.reminderFired) continue;
+
+      const start = new Date(event.startTime);
+
+      const reminderTime = new Date(start.getTime() - (event.reminderMinutes || 30) * 60000);
+
+      if (now >= reminderTime && now < start) {
+
+        if (Notification.permission === "granted") {
+
+          new Notification("Upcoming event", {
+            body: event.title || "Agenda reminder",
+            tag: event.id
+          });
+
+        }
+
+        event.reminderFired = true;
+
+        await dbPut("agenda", event);
+
+      }
+
+    }
+
+  } catch (err) {
+
+    console.warn("[Sync] reminder check error", err);
+
+  }
+}
