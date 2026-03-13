@@ -159,20 +159,25 @@ export async function pullFromServer() {
 }
 
 // Generic API call to Apps Script (POST JSON)
-async function apiCall(action, params = {}) {
-  const body = JSON.stringify({ action, ...params });
-  const resp = await fetch(_apiUrl, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body
-  });
-  const text = await resp.text();
-  try {
-    return JSON.parse(text);
-  } catch (e) {
-    console.warn('[Sync] apiCall parse error', e, text);
-    return {};
-  }
+async function apiCall(action,data={}){
+
+const res = await fetch(API_URL,{
+
+method:"POST",
+
+headers:{
+"Content-Type":"text/plain"
+},
+
+body:JSON.stringify({
+action,
+...data
+})
+
+})
+
+return res.json()
+
 }
 
 /* ============================================================
