@@ -1,164 +1,141 @@
-/* =========================================
-   Lumina Sync Engine
-   ========================================= */
+/* ============================================================
+   Lumina Sync Engine (stable)
+   ============================================================ */
 
-const API_URL =
-"https://script.google.com/macros/s/AKfycbzbYdcPjuZkMm6XwARZ-OCxCim-KyUNgVrjKIVWBfri2pIYEML7T6sOb2I0eYAia4HX/exec"
+let API_URL = "";
 
-console.log("[Sync] initialized with API:", API_URL)
+export function setApiUrl(url){
+ API_URL = url;
+}
 
+/* ================================
+   API CALL (NO CORS PREFLIGHT)
+   ================================ */
 
-/* =========================================
-   API CALL
-   ========================================= */
+async function apiCall(payload){
 
-async function apiCall(action,data={}){
+ const res = await fetch(API_URL,{
+  method:"POST",
+  headers:{
+   "Content-Type":"text/plain;charset=utf-8"
+  },
+  body:JSON.stringify(payload)
+ });
 
-const res = await fetch(API_URL,{
+ const text = await res.text();
 
-method:"POST",
-
-headers:{
-"Content-Type":"text/plain;charset=utf-8"
-},
-
-body:JSON.stringify({
-action,
-...data
-})
-
-})
-
-const text = await res.text()
-
-return JSON.parse(text)
+ try{
+  return JSON.parse(text);
+ }catch(e){
+  console.error("[Sync] invalid JSON",text);
+  return {};
+ }
 
 }
 
-
-/* =========================================
+/* ================================
    SYNC QUEUE
-   ========================================= */
+   ================================ */
 
-const syncQueue = []
+const queue = [];
+let processing = false;
 
-function enqueueSync(action,data){
+export async function enqueueSync(job){
 
-syncQueue.push({
-action,
-data,
-time:Date.now()
-})
+ queue.push(job);
 
-processQueue()
+ scheduleSync();
 
 }
 
+/* ================================
+   SCHEDULE
+   ================================ */
 
-/* =========================================
-   SCHEDULE SYNC
-   ========================================= */
+export function scheduleSync(delay=500){
 
-function scheduleSync(action,data){
-
-setTimeout(()=>{
-
-enqueueSync(action,data)
-
-},500)
+ setTimeout(processQueue,delay);
 
 }
 
-
-/* =========================================
+/* ================================
    PROCESS QUEUE
-   ========================================= */
+   ================================ */
 
 async function processQueue(){
 
-if(syncQueue.length===0) return
+ if(processing) return;
+ if(queue.length===0) return;
 
-const job = syncQueue.shift()
+ processing=true;
 
-try{
+ const job = queue.shift();
 
-await apiCall(job.action,job.data)
+ try{
 
-}catch(err){
+  await apiCall({
+   action:"sync",
+   job
+  });
 
-console.warn("[Sync] retry later",err)
+ }catch(err){
 
-syncQueue.push(job)
+  console.warn("[Sync] retry",err);
+  queue.push(job);
 
-}
+ }
 
-}
+ processing=false;
 
-
-/* =========================================
-   PULL FROM SERVER
-   ========================================= */
-
-async function pullFromServer(){
-
-try{
-
-const photos = await apiCall("listPhotoMeta")
-
-const diary = await apiCall("listDiary")
-
-const agenda = await apiCall("listAgenda")
-
-return{
-photos,
-diary,
-agenda
-}
-
-}catch(err){
-
-console.error("[Sync] pullFromServer error",err)
-
-throw err
+ if(queue.length>0){
+  scheduleSync(1000);
+ }
 
 }
 
-}
+/* ================================
+   PULL SERVER DATA
+   ================================ */
 
+export async function pullFromServer(){
 
-/* =========================================
-   AUTO SYNC
-   ========================================= */
+ try{
 
-function startAutoPull(){
+  const res = await apiCall({
+   action:"pull"
+  });
 
-setInterval(async()=>{
+  return res;
 
-try{
+ }catch(err){
 
-await pullFromServer()
+  console.error("[Sync] pull error",err);
 
-}catch(e){
-
-console.warn("[Sync] autoPull error",e)
-
-}
-
-},3000)
+ }
 
 }
 
+/* ================================
+   AUTO PULL
+   ================================ */
 
-/* =========================================
-   EXPORT
-   ========================================= */
+export async function initSync(){
 
-export{
+ setInterval(()=>{
+  pullFromServer();
+ },5000);
 
-apiCall,
-enqueueSync,
-scheduleSync,
-pullFromServer,
-startAutoPull
+ console.log("[Sync] initialized");
+
+}
+
+/* ================================
+   REMINDERS
+   ================================ */
+
+export function checkReminders(){
+
+ // simple placeholder
+ console.log("[Sync] reminder check");
 
 }
