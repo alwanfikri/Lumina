@@ -1,97 +1,101 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <meta name="theme-color" content="#0d0f14" />
+  <title>Lumina — Productivity</title>
 
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <!-- NOTE: Manifest omitted on purpose for online-only mode.
+       If you want PWA later, re-add manifest with correct paths. -->
+  <link rel="icon" type="image/png" href="./icon-192.png" />
 
-<title>Lumina</title>
+  <link rel="stylesheet" href="./style.css" />
 
-<link rel="icon" href="./icon-192.png">
-
-<link rel="stylesheet" href="./style.css">
-
-<link href="https://cdn.quilljs.com/1.3.7/quill.snow.css" rel="stylesheet">
-
+  <!-- Third-party libs -->
+  <link href="https://cdn.quilljs.com/1.3.7/quill.snow.css" rel="stylesheet" />
 </head>
 
 <body>
+  <!-- SPLASH + LOADER -->
+  <div id="splash" class="splash" style="display:flex;align-items:center;justify-content:center;flex-direction:column;">
+    <div class="splash-logo">
+      <div class="splash-mark">✦</div>
+      <h1 class="splash-title">Lumina</h1>
+      <p class="splash-sub">Your productivity hub</p>
+    </div>
+    <div class="splash-loader" style="margin-top:28px;">
+      <div class="splash-bar"></div>
+    </div>
+  </div>
 
-<div id="splash" class="splash">
+  <!-- Top bar -->
+  <header class="topbar">
+    <div class="topbar-brand">
+      <span class="topbar-mark">✦</span>
+      <span class="topbar-name">Lumina</span>
+    </div>
+    <div class="topbar-right">
+      <div id="sync-status" class="sync-status online"><span class="sync-icon">●</span><span id="sync-label" class="sync-label">Online</span></div>
+      <button id="sync-btn" class="btn-icon">↻</button>
+      <button id="settings-btn" class="btn-icon">⚙</button>
+    </div>
+  </header>
 
-<div class="splash-logo">
+  <main class="main-content">
+    <!-- Agenda -->
+    <section id="agenda-tab" class="tab-content">
+      <h2 class="tab-title">Agenda</h2>
+      <div id="agenda-list" class="agenda-list"><div class="loading-spinner"></div></div>
+      <div id="calendar-container" class="calendar-container" style="display:none"></div>
+      <button id="fab-agenda" class="fab">+</button>
+    </section>
 
-<div class="splash-mark">✦</div>
+    <!-- Diary -->
+    <section id="diary-tab" class="tab-content">
+      <h2 class="tab-title">Diary</h2>
+      <div id="diary-list"></div>
+      <button id="fab-diary" class="fab">+</button>
+    </section>
 
-<h1 class="splash-title">Lumina</h1>
+    <!-- Photos -->
+    <section id="photos-tab" class="tab-content">
+      <h2 class="tab-title">Photos</h2>
+      <button id="gallery-upload-btn">Upload</button>
+      <input type="file" id="gallery-upload-input" accept="image/*" multiple style="display:none" />
+      <div id="gallery-grid"></div>
+    </section>
+  </main>
 
-<p class="splash-sub">Your productivity hub</p>
+  <!-- Libraries (order matters) -->
+  <script src="https://cdn.quilljs.com/1.3.7/quill.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.js"></script>
 
-</div>
+  <!-- idb MUST be loaded BEFORE db.js uses idb.openDB -->
+  <script src="https://cdn.jsdelivr.net/npm/idb@7/build/umd.js"></script>
 
-</div>
+  <!-- App scripts -->
+  <!-- Note: app.js is a module -->
+  <script type="module" src="./app.js"></script>
 
-<header class="topbar">
-
-<div class="topbar-brand">
-
-<span class="topbar-mark">✦</span>
-<span class="topbar-name">Lumina</span>
-
-</div>
-
-<div class="topbar-right">
-
-<button id="sync-btn">Sync</button>
-
-</div>
-
-</header>
-
-<main class="main-content">
-
-<section id="agenda-tab">
-
-<h2>Agenda</h2>
-
-<div id="agenda-list"></div>
-
-</section>
-
-<section id="diary-tab">
-
-<h2>Diary</h2>
-
-<div id="diary-list"></div>
-
-</section>
-
-<section id="photos-tab">
-
-<h2>Photos</h2>
-
-<input type="file" id="gallery-upload-input" accept="image/*">
-
-<div id="gallery-grid"></div>
-
-</section>
-
-</main>
-<script>
-window.addEventListener("error",e=>{
-console.log("GLOBAL ERROR",e.error)
-})
-</script>
-
-<script src="https://cdn.quilljs.com/1.3.7/quill.min.js"></script>
-
-<script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.js"></script>
-
-<script src="https://cdn.jsdelivr.net/npm/idb@7/build/umd.js"></script>
-
-<script type="module" src="./app.js"></script>
-
+  <!-- Global error hook so splash never silently hangs -->
+  <script>
+    window.addEventListener('error', (e) => {
+      console.error('GLOBAL ERROR:', e.error || e.message || e);
+      // hide splash after brief timeout if any uncaught error happens
+      setTimeout(() => {
+        const s = document.getElementById('splash');
+        if (s) s.style.display = 'none';
+      }, 1200);
+    });
+    // Also catch unhandled promise rejections
+    window.addEventListener('unhandledrejection', (e) => {
+      console.error('UNHANDLED REJECTION', e.reason);
+      setTimeout(() => {
+        const s = document.getElementById('splash');
+        if (s) s.style.display = 'none';
+      }, 1200);
+    });
+  </script>
 </body>
-
 </html>

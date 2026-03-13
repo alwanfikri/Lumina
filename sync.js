@@ -1,157 +1,192 @@
+/* ============================================================
+   Lumina — sync.js (stability patched)
+   - default API URL fallback
+   - JSON headers
+   - tolerant field parsing (camelCase / snake_case)
+   - emits lumina:pulled events
+   ============================================================ */
+
 import {
-dbGetAll,
-dbPut,
-getSyncQueue,
-removeSyncItem,
-markPhotoSynced,
-getPhotoBlob,
-generateId
-} from "./db.js"
+  dbGetAll,
+  dbPut,
+  getSetting,
+  setSetting,
+  getSyncQueue,
+  removeSyncItem,
+  markPhotoSynced,
+  getPhotoBlob,
+  generateId
+} from './db.js';
 
-const API_URL="https://script.google.com/macros/s/AKfycbzbYdcPjuZkMm6XwARZ-OCxCim-KyUNgVrjKIVWBfri2pIYEML7T6sOb2I0eYAia4HX/exec"
+export { enqueueSync } from './db.js'; // leave enqueueSync exported by db layer
 
-let AUTO_PULL=null
+// Default API URL (your Apps Script endpoint)
+const DEFAULT_API = 'https://script.google.com/macros/s/AKfycbzbYdcPjuZkMm6XwARZ-OCxCim-KyUNgVrjKIVWBfri2pIYEML7T6sOb2I0eYAia4HX/exec';
 
+let _apiUrl = '';
+let _syncInProgress = false;
+let _autoPullTimer = null;
 
-export async function initSync(){
+// Initialize sync
+export async function initSync() {
+  _apiUrl = await getSetting('apiUrl', '') || DEFAULT_API;
+  // save back default so UI shows it if needed
+  await setSetting('apiUrl', _apiUrl);
 
-startAutoPull()
-
+  startAutoPull();
+  console.log('[Sync] initialized with API:', _apiUrl);
 }
 
-
-function startAutoPull(){
-
-if(AUTO_PULL) clearInterval(AUTO_PULL)
-
-AUTO_PULL=setInterval(async()=>{
-
-await pullPhotos()
-
-},4000)
-
+// Allow app to override if needed
+export function setApiUrl(url) {
+  _apiUrl = url || _apiUrl;
+  setSetting('apiUrl', _apiUrl).catch(() => {});
 }
 
-
-export function scheduleSync(){
-
-processQueue()
-
+// Auto pull loop (short interval for near-realtime; adjust if throttling)
+function startAutoPull() {
+  if (_autoPullTimer) clearInterval(_autoPullTimer);
+  _autoPullTimer = setInterval(async () => {
+    if (!navigator.onLine) return;
+    try {
+      await pullFromServer();
+    } catch (err) {
+      console.warn('[Sync] autoPull error', err);
+    }
+  }, 3000); // every 3 seconds (adjust as needed)
 }
 
-
-async function processQueue(){
-
-const queue=await getSyncQueue()
-
-for(const item of queue){
-
-if(item.entityType==="photo"){
-
-await uploadPhoto(item)
-
+// Public scheduleSync trigger
+export function scheduleSync(delay = 1000) {
+  setTimeout(() => processQueue().catch(e => console.warn('[Sync] processQueue', e)), delay);
 }
 
+// Process local queue (uploads)
+export async function processQueue() {
+  if (_syncInProgress) return;
+  _syncInProgress = true;
+  try {
+    const queue = await getSyncQueue();
+    for (const item of queue) {
+      if (item.entityType === 'photo') {
+        await uploadPhoto(item);
+      }
+      // extend for diary/agenda if queue contains them
+    }
+  } finally {
+    _syncInProgress = false;
+  }
 }
 
+// uploadPhoto sends base64 to Apps Script and marks local record with driveId
+async function uploadPhoto(item) {
+  const photo = await getPhotoBlob(item.localId);
+  if (!photo) return;
+
+  const base64 = await blobToBase64(photo.blob);
+
+  const res = await apiCall('uploadPhoto', { base64, name: photo.name });
+
+  if (res && res.driveId) {
+    await markPhotoSynced(photo.id, {
+      driveId: res.driveId,
+      driveUrl: res.driveUrl,
+      thumbUrl: res.thumbUrl
+    });
+    await removeSyncItem(item.id);
+  } else {
+    console.warn('[Sync] uploadPhoto no driveId in response', res);
+  }
 }
 
+// Pull metadata (photos, diary, agenda) from server
+export async function pullFromServer() {
+  if (!_apiUrl) {
+    console.warn('[Sync] No API URL configured');
+    return { photos: 0, diary: 0, agenda: 0 };
+  }
 
-async function uploadPhoto(item){
+  try {
+    const res = await apiCall('listPhotoMeta');
+    const remotePhotos = (res && res.photos) || [];
 
-const photo=await getPhotoBlob(item.localId)
+    const localPhotos = await dbGetAll('photoBlobs');
+    const known = new Set(localPhotos.map(p => p.driveId).filter(Boolean));
 
-if(!photo) return
+    let added = 0;
+    for (const remote of remotePhotos) {
+      // tolerate both snake_case and camelCase from server
+      const driveId = remote.driveId || remote.drive_id;
+      if (!driveId) continue;
+      if (known.has(driveId)) continue;
 
-const base64=await blobToBase64(photo.blob)
+      const thumbUrl = remote.thumbUrl || remote.thumb_url || `https://drive.google.com/thumbnail?id=${driveId}&sz=w400`;
+      const driveUrl = remote.driveUrl || remote.drive_url || `https://drive.google.com/uc?export=view&id=${driveId}`;
 
-const res=await apiCall("uploadPhoto",{
+      await dbPut('photoBlobs', {
+        id: generateId('P'),
+        entryId: remote.entryId || remote.entry_id || null,
+        blob: null,
+        thumbnail: null,
+        name: remote.name || 'photo.jpg',
+        mimeType: remote.mimeType || 'image/jpeg',
+        width: remote.width || 0,
+        height: remote.height || 0,
+        sizeBytes: remote.sizeBytes || 0,
+        driveId,
+        driveUrl,
+        thumbUrl,
+        syncStatus: 'synced',
+        errorMsg: null,
+        createdAt: remote.createdAt || remote.created_at || new Date().toISOString()
+      });
 
-base64,
-name:photo.name
+      known.add(driveId);
+      added++;
+    }
 
-})
+    if (added > 0) {
+      console.log('[Sync] photos pulled:', added);
+      window.dispatchEvent(new CustomEvent('lumina:pulled', { detail: { photos: added } }));
+    }
 
-await markPhotoSynced(photo.id,res)
-
-await removeSyncItem(item.id)
-
+    // TODO: pull diary/agenda similarly by calling listDiary/listAgenda endpoints (if implemented)
+    return { photos: added, diary: 0, agenda: 0 };
+  } catch (err) {
+    console.error('[Sync] pullFromServer error', err);
+    throw err;
+  }
 }
 
-
-async function pullPhotos(){
-
-const res=await apiCall("listPhotoMeta")
-
-const remote=res.photos||[]
-
-const local=await dbGetAll("photoBlobs")
-
-const known=new Set(local.map(p=>p.driveId).filter(Boolean))
-
-for(const r of remote){
-
-if(known.has(r.driveId)) continue
-
-await dbPut("photoBlobs",{
-
-id:generateId("P"),
-
-blob:null,
-
-driveId:r.driveId,
-driveUrl:r.driveUrl,
-thumbUrl:r.thumbUrl,
-
-name:r.name,
-
-createdAt:r.createdAt,
-
-syncStatus:"synced"
-
-})
-
+// Generic API call to Apps Script (POST JSON)
+async function apiCall(action, params = {}) {
+  const body = JSON.stringify({ action, ...params });
+  const resp = await fetch(_apiUrl, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body
+  });
+  const text = await resp.text();
+  try {
+    return JSON.parse(text);
+  } catch (e) {
+    console.warn('[Sync] apiCall parse error', e, text);
+    return {};
+  }
 }
 
-}
+/* ============================================================
+   Utilities
+   ============================================================ */
 
-
-async function apiCall(action,data={}){
-
-const res=await fetch(API_URL,{
-
-method:"POST",
-
-headers:{"Content-Type":"application/json"},
-
-body:JSON.stringify({action,...data})
-
-})
-
-return res.json()
-
-}
-
-
-function blobToBase64(blob){
-
-return new Promise((resolve,reject)=>{
-
-const r=new FileReader()
-
-r.onload=e=>resolve(e.target.result.split(",")[1])
-
-r.onerror=reject
-
-r.readAsDataURL(blob)
-
-})
-
-}
-
-
-function generateId(prefix=""){
-
-return prefix+Date.now().toString(36)+Math.random().toString(36).slice(2)
-
+function blobToBase64(blob) {
+  return new Promise((resolve, reject) => {
+    const r = new FileReader();
+    r.onload = () => {
+      const base64 = r.result.split(',')[1];
+      resolve(base64);
+    };
+    r.onerror = reject;
+    r.readAsDataURL(blob);
+  });
 }
