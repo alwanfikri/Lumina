@@ -37,7 +37,7 @@ return JSON.parse(text)
 
 
 /* =========================================
-   QUEUE
+   SYNC QUEUE
    ========================================= */
 
 const syncQueue = []
@@ -54,6 +54,25 @@ processQueue()
 
 }
 
+
+/* =========================================
+   SCHEDULE SYNC
+   ========================================= */
+
+function scheduleSync(action,data){
+
+setTimeout(()=>{
+
+enqueueSync(action,data)
+
+},500)
+
+}
+
+
+/* =========================================
+   PROCESS QUEUE
+   ========================================= */
 
 async function processQueue(){
 
@@ -77,7 +96,7 @@ syncQueue.push(job)
 
 
 /* =========================================
-   PULL
+   PULL FROM SERVER
    ========================================= */
 
 async function pullFromServer(){
@@ -138,6 +157,7 @@ export{
 
 apiCall,
 enqueueSync,
+scheduleSync,
 pullFromServer,
 startAutoPull
 
