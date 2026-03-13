@@ -2,31 +2,77 @@
    Lumina Sync Engine
    ========================================= */
 
-// sync.js — bagian atas
-const API_URL = "https://script.google.com/macros/s/AKfycbzbYdcPjuZkMm6XwARZ-OCxCim-KyUNgVrjKIVWBfri2pIYEML7T6sOb2I0eYAia4HX/exec";
-console.log("[Sync] API ->", API_URL);
+const API_URL =
+"https://script.google.com/macros/s/AKfycbzbYdcPjuZkMm6XwARZ-OCxCim-KyUNgVrjKIVWBfri2pIYEML7T6sOb2I0eYAia4HX/exec"
+
+console.log("[Sync] initialized with API:", API_URL)
 
 
 /* =========================================
    API CALL
    ========================================= */
 
-// sync.js — gantikan fungsi apiCall dengan ini
-async function apiCall(action, data = {}) {
-  const bodyStr = JSON.stringify({ action, ...data });
+async function apiCall(action,data={}){
 
-  const res = await fetch(API_URL, {
-    method: "POST",
-    headers: {
-      "Content-Type": "text/plain;charset=utf-8"   // penting: text/plain agar tidak preflight
-    },
-    body: bodyStr,
-    cache: "no-store"
-  });
+const res = await fetch(API_URL,{
 
-  const text = await res.text();
-  try { return JSON.parse(text); }
-  catch (e) { console.warn("[Sync] apiCall parse error", e, text); return {}; }
+method:"POST",
+
+headers:{
+"Content-Type":"text/plain;charset=utf-8"
+},
+
+body:JSON.stringify({
+action,
+...data
+})
+
+})
+
+const text = await res.text()
+
+return JSON.parse(text)
+
+}
+
+
+/* =========================================
+   QUEUE
+   ========================================= */
+
+const syncQueue = []
+
+function enqueueSync(action,data){
+
+syncQueue.push({
+action,
+data,
+time:Date.now()
+})
+
+processQueue()
+
+}
+
+
+async function processQueue(){
+
+if(syncQueue.length===0) return
+
+const job = syncQueue.shift()
+
+try{
+
+await apiCall(job.action,job.data)
+
+}catch(err){
+
+console.warn("[Sync] retry later",err)
+
+syncQueue.push(job)
+
+}
+
 }
 
 
@@ -84,9 +130,14 @@ console.warn("[Sync] autoPull error",e)
 }
 
 
+/* =========================================
+   EXPORT
+   ========================================= */
+
 export{
 
 apiCall,
+enqueueSync,
 pullFromServer,
 startAutoPull
 
