@@ -1,4 +1,12 @@
-import {dbGetAll,dbPut,getSyncQueue,removeSyncItem,markPhotoSynced,getPhotoBlob} from "./db.js"
+import {
+dbGetAll,
+dbPut,
+getSyncQueue,
+removeSyncItem,
+markPhotoSynced,
+getPhotoBlob,
+generateId
+} from "./db.js"
 
 const API_URL="https://script.google.com/macros/s/AKfycbzbYdcPjuZkMm6XwARZ-OCxCim-KyUNgVrjKIVWBfri2pIYEML7T6sOb2I0eYAia4HX/exec"
 
@@ -114,7 +122,7 @@ const res=await fetch(API_URL,{
 
 method:"POST",
 
-headers:{"Content-Type":"text/plain"},
+headers:{"Content-Type":"application/json"},
 
 body:JSON.stringify({action,...data})
 
