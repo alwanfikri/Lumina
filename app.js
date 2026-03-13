@@ -1,80 +1,81 @@
-/* ============================================================
-   Lumina — app.js (stability patched)
-   - Removes Service Worker registration (online-only)
-   - Sets default API URL so no manual settings required
-   - Adds boot timeout fallback so splash never permanently stuck
-   ============================================================ */
-
-import { openDB, getSetting } from './db.js';
-import { initSync, setApiUrl, scheduleSync, pullFromServer } from './sync.js';
-import { initDiary, openDiaryEditor } from './diary.js';
-import { initCalendar, openEventEditor } from './calendar.js';
+// app.js — main boot controller (online-only variant)
+import { setApiUrl, initSync, pullFromServer, enqueueSync } from './sync.js';
+import { openDB, dbGetAll, dbPut } from './db.js'; // still use db.js for caching if needed
+import { initDiary } from './diary.js';
+import { initCalendar } from './calendar.js';
 import { initPhotoGallery } from './drive.js';
 
-const DEFAULT_API_URL = 'https://script.google.com/macros/s/AKfycbzbYdcPjuZkMm6XwARZ-OCxCim-KyUNgVrjKIVWBfri2pIYEML7T6sOb2I0eYAia4HX/exec';
+const DEFAULT_API_URL = "https://script.google.com/macros/s/AKfycbzbYdcPjuZkMm6XwARZ-OCxCim-KyUNgVrjKIVWBfri2pIYEML7T6sOb2I0eYAia4HX/exec";
 
-// Boot sequence
-async function boot() {
-  console.log('[App] Boot start');
-
-  // Ensure we hide splash after N seconds even if something goes wrong
-  const splashTimeout = setTimeout(() => {
-    const s = document.getElementById('splash');
-    if (s) s.style.display = 'none';
-    console.warn('[App] Splash fallback triggered (timeout)');
-  }, 8000);
-
-  try {
-    // open DB (idb must be loaded in index.html)
+async function boot(){
+  console.log("[App] Boot start");
+  // open IDB (kept for caching, optional)
+  try{
     await openDB();
-    console.log('[App] DB opened');
-
-    // Set API URL default (dedicated app — no user input required)
-    const configured = await getSetting('apiUrl', '');
-    if (!configured) {
-      setApiUrl(DEFAULT_API_URL);
-      console.log('[App] set default API URL');
-    } else {
-      setApiUrl(configured);
-      console.log('[App] using configured API URL');
-    }
-
-    // Init sync (this will schedule auto pulls)
-    await initSync();
-
-    // Initialize features (these modules use db.js & sync.js)
-    await initDiary();
-    await initCalendar();
-    initPhotoGallery();
-
-    // Bind global UI events
-    document.getElementById('fab-diary')?.addEventListener('click', () => openDiaryEditor());
-    document.getElementById('fab-agenda')?.addEventListener('click', () => openEventEditor());
-    document.getElementById('gallery-upload-btn')?.addEventListener('click', () => {
-      document.getElementById('gallery-upload-input')?.click();
-    });
-    document.getElementById('sync-btn')?.addEventListener('click', () => scheduleSync(0));
-
-    // Optional: do an initial pull (safe — uses server list endpoint)
-    setTimeout(() => {
-      pullFromServer().catch(err => console.warn('[App] initial pull failed', err));
-    }, 600);
-
-    console.log('[App] Boot complete');
-  } catch (err) {
-    console.error('[App] Boot error:', err);
-  } finally {
-    // hide splash (either normal or after error)
-    const s = document.getElementById('splash');
-    if (s) {
-      s.style.opacity = '0';
-      setTimeout(() => { s.style.display = 'none'; s.style.opacity = '1'; }, 400);
-    }
-    clearTimeout(splashTimeout);
+    console.log("[App] DB opened");
+  }catch(e){
+    console.warn("[App] openDB failed, continuing online-only", e);
   }
+
+  // set API (dedicated)
+  setApiUrl(DEFAULT_API_URL);
+
+  // Init modules
+  initDiary();        // Quill editor etc.
+  initCalendar();
+  initPhotoGallery();
+
+  // init sync loop (pull)
+  initSync(5000);
+
+  // initial pull and render
+  try{
+    const payload = await pullFromServer();
+    // dispatch event or call renderers - each module should listen or accept a function
+    window.dispatchEvent(new CustomEvent('lumina:pull', { detail: payload }));
+    console.log("[App] initial pull finished");
+  }catch(e){
+    console.warn("[App] initial pull failed", e);
+  }
+
+  // UI: show default tab (agenda) if not visible
+  const agenda = document.getElementById('agenda-tab');
+  if(agenda && !agenda.classList.contains('active')) agenda.classList.add('active');
+
+  // attach nav
+  document.querySelectorAll('.bottom-nav button').forEach(b=>{
+    b.addEventListener('click', ()=> {
+      const t = b.dataset.target;
+      document.querySelectorAll('.tab-content').forEach(el=>el.classList.remove('active'));
+      const sel = document.getElementById(t + '-tab') || document.getElementById(t);
+      if(sel) sel.classList.add('active');
+    });
+  });
+
+  // wire upload button if present
+  const uploadBtn = document.getElementById('btnUploadPhoto');
+  if(uploadBtn){
+    uploadBtn.addEventListener('click', async ()=>{
+      const input = document.getElementById('photoInput');
+      if(!input || !input.files || input.files.length===0) return alert("Choose file");
+      const file = input.files[0];
+      const reader = new FileReader();
+      reader.onload = async (ev) => {
+        const b64 = ev.target.result.split(',')[1];
+        // enqueue upload job so UI can stay responsive
+        enqueueSync({ entityType:'photo', operation:'upload', name: file.name, base64: b64 });
+        // fire processQueue quickly
+        // processQueue is internal to sync.js (scheduled). We optimistically refresh UI:
+        setTimeout(()=> pullFromServer().then(p=>window.dispatchEvent(new CustomEvent('lumina:pull',{detail:p}))).catch(()=>{}), 1200);
+      };
+      reader.readAsDataURL(file);
+    });
+  }
+
+  console.log("[App] Boot complete");
 }
 
-// IMPORTANT: we are not registering a Service Worker here in online-only mode.
-// If you later want PWA, re-enable SW registration carefully and bump cache version.
-
+// Don't register service worker (online-only). If your repo previously registered it, remove that registration code.
 boot();
+
+// Let modules listen to lumina:pull to render
