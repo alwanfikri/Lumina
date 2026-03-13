@@ -1,141 +1,154 @@
 /* ============================================================
-   Lumina Sync Engine (stable)
+   Lumina Sync Engine — fixed
+   Compatible with drive.js, diary.js, calendar.js
+   No CORS preflight
    ============================================================ */
 
 let API_URL = "";
 
+/* =========================================
+   API URL
+   ========================================= */
+
 export function setApiUrl(url){
- API_URL = url;
+  API_URL = url;
+  console.log("[Sync] initialized with API:", API_URL);
 }
 
-/* ================================
-   API CALL (NO CORS PREFLIGHT)
-   ================================ */
+/* =========================================
+   API CALL
+   ========================================= */
 
 async function apiCall(payload){
 
- const res = await fetch(API_URL,{
-  method:"POST",
-  headers:{
-   "Content-Type":"text/plain;charset=utf-8"
-  },
-  body:JSON.stringify(payload)
- });
+  const res = await fetch(API_URL,{
+    method:"POST",
+    headers:{
+      "Content-Type":"text/plain;charset=utf-8"
+    },
+    body:JSON.stringify(payload)
+  });
 
- const text = await res.text();
+  const text = await res.text();
 
- try{
-  return JSON.parse(text);
- }catch(e){
-  console.error("[Sync] invalid JSON",text);
-  return {};
- }
+  try{
+    return JSON.parse(text);
+  }catch(e){
+    console.warn("[Sync] JSON parse failed",text);
+    return {};
+  }
 
 }
 
-/* ================================
+/* =========================================
    SYNC QUEUE
-   ================================ */
+   ========================================= */
 
 const queue = [];
 let processing = false;
 
 export async function enqueueSync(job){
 
- queue.push(job);
+  queue.push(job);
 
- scheduleSync();
-
-}
-
-/* ================================
-   SCHEDULE
-   ================================ */
-
-export function scheduleSync(delay=500){
-
- setTimeout(processQueue,delay);
+  scheduleSync();
 
 }
 
-/* ================================
+/* =========================================
+   SCHEDULE SYNC
+   ========================================= */
+
+export function scheduleSync(delay=800){
+
+  setTimeout(processQueue,delay);
+
+}
+
+/* =========================================
    PROCESS QUEUE
-   ================================ */
+   ========================================= */
 
 async function processQueue(){
 
- if(processing) return;
- if(queue.length===0) return;
+  if(processing) return;
+  if(queue.length===0) return;
 
- processing=true;
+  processing = true;
 
- const job = queue.shift();
+  const job = queue.shift();
 
- try{
+  try{
 
-  await apiCall({
-   action:"sync",
-   job
-  });
+    await apiCall({
+      action:"sync",
+      job
+    });
 
- }catch(err){
+  }catch(err){
 
-  console.warn("[Sync] retry",err);
-  queue.push(job);
+    console.warn("[Sync] retry later",err);
 
- }
+    queue.push(job);
 
- processing=false;
+  }
 
- if(queue.length>0){
-  scheduleSync(1000);
- }
+  processing = false;
+
+  if(queue.length>0){
+    scheduleSync(1000);
+  }
 
 }
 
-/* ================================
+/* =========================================
    PULL SERVER DATA
-   ================================ */
+   ========================================= */
 
 export async function pullFromServer(){
 
- try{
+  try{
 
-  const res = await apiCall({
-   action:"pull"
-  });
+    const photos = await apiCall({action:"listPhotoMeta"});
+    const diary  = await apiCall({action:"listDiary"});
+    const agenda = await apiCall({action:"listAgenda"});
 
-  return res;
+    return {
+      photos,
+      diary,
+      agenda
+    };
 
- }catch(err){
+  }catch(err){
 
-  console.error("[Sync] pull error",err);
+    console.warn("[Sync] pullFromServer error",err);
 
- }
+  }
 
 }
 
-/* ================================
-   AUTO PULL
-   ================================ */
+/* =========================================
+   AUTO SYNC
+   ========================================= */
 
 export async function initSync(){
 
- setInterval(()=>{
-  pullFromServer();
- },5000);
+  console.log("[Sync] init");
 
- console.log("[Sync] initialized");
+  setInterval(()=>{
+
+    pullFromServer();
+
+  },5000);
 
 }
 
-/* ================================
+/* =========================================
    REMINDERS
-   ================================ */
+   ========================================= */
 
 export function checkReminders(){
 
- // simple placeholder
- console.log("[Sync] reminder check");
+  console.log("[Sync] reminder check");
 
 }
