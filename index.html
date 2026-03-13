@@ -1,209 +1,207 @@
-<!DOCTYPE html>
-
-<html lang="en">
+<!doctype html>
+<html lang="id">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Lumina — Online</title>
 
-<title>Lumina</title>
+  <!-- Gaya utama -->
+  <link rel="stylesheet" href="./style.css?v=20260314">
 
-<link rel="stylesheet" href="style.css">
+  <!-- FullCalendar (global build) -->
+  <link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/index.global.min.css" rel="stylesheet">
 
-<!-- FullCalendar -->
+  <!-- Quill editor -->
+  <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
 
-<link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/index.global.min.css" rel="stylesheet">
-
-<!-- Quill Editor -->
-
-<link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
-
-<!-- Icons -->
-
-<link rel="icon" type="image/png" href="icon-192.png">
-
+  <link rel="icon" href="icon-192.png" type="image/png">
 </head>
-
 <body>
 
-<!-- ===============================
-HEADER
-================================ -->
-
-<header class="topbar">
-
-<div class="brand">
-Lumina
-</div>
-
-<div class="status" id="statusIndicator">
-● Online
-</div>
-
-<div class="actions">
-
-<button id="btnRefresh">
-⟳
-</button>
-
-<button id="btnSettings">
-⚙
-</button>
-
-</div>
-
-</header>
-
-<!-- ===============================
-MAIN CONTENT
-================================ -->
-
-<main id="app">
-
-<!-- ===============================
-AGENDA TAB
-================================ -->
-
-<section id="agenda-tab" class="tab-content active">
-
-<div class="page-header">
-<h1>Agenda</h1>
-</div>
-
-<div id="calendar"></div>
-
-<button class="fab" id="btnAddAgenda">
-+
-</button>
-
-</section>
-
-<!-- ===============================
-DIARY TAB
-================================ -->
-
-<section id="diary-tab" class="tab-content">
-
-<div class="page-header">
-<h1>Diary</h1>
-</div>
-
-<div id="diaryList"></div>
-
-<button class="fab" id="btnAddDiary">
-+
-</button>
-
-</section>
-
-<!-- ===============================
-PHOTOS TAB
-================================ -->
-
-<section id="photos-tab" class="tab-content">
-
-<div class="page-header">
-<h1>Photos</h1>
-</div>
-
-<div id="photoGrid" class="photo-grid"></div>
-
-<div class="upload-area">
-
-<input type="file" id="photoInput" accept="image/*">
-
-<button id="btnUploadPhoto">
-Upload Photo
-</button>
-
-</div>
-
-</section>
-
-</main>
-
-<!-- ===============================
-BOTTOM NAVIGATION
-================================ -->
-
-<nav class="bottom-nav">
-
-<button data-target="agenda">
-Agenda
-</button>
-
-<button data-target="diary">
-Diary
-</button>
-
-<button data-target="photos">
-Photos
-</button>
-
-</nav>
-
-<!-- ===============================
-MODALS
-================================ -->
-
-<!-- Diary Editor -->
-
-<div id="diaryModal" class="modal">
-
-<div class="modal-content">
-
-<input id="diaryTitle" placeholder="Title">
-
-<div id="editor"></div>
-
-<button id="btnSaveDiary">
-Save
-</button>
-
-</div>
-
-</div>
-
-<!-- Agenda Editor -->
-
-<div id="agendaModal" class="modal">
-
-<div class="modal-content">
-
-<input id="agendaTitle" placeholder="Event Title">
-
-<input type="datetime-local" id="agendaStart">
-
-<input type="datetime-local" id="agendaEnd">
-
-<textarea id="agendaDescription" placeholder="Description"></textarea>
-
-<button id="btnSaveAgenda">
-Save
-</button>
-
-</div>
-
-</div>
-
-<!-- ===============================
-SCRIPTS
-================================ -->
-
-<!-- FullCalendar -->
-
-<script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/index.global.min.js"></script>
-
-<!-- Quill -->
-
-<script src="https://cdn.quilljs.com/1.3.6/quill.js"></script>
-
-<!-- IDB -->
-
-<script src="https://cdn.jsdelivr.net/npm/idb@7/build/umd.js"></script>
-
-<!-- Modules -->
-
-<script type="module" src="app.js"></script>
+  <!-- TOPBAR -->
+  <header class="topbar">
+    <div class="brand">Lumina</div>
+    <div id="statusDot" class="status">● Online</div>
+    <div class="top-actions">
+      <button id="btnRefresh" class="icon">⟳</button>
+      <button id="btnSettings" class="icon">⚙</button>
+    </div>
+  </header>
+
+  <!-- MAIN CONTENT -->
+  <main id="app" role="main">
+
+    <!-- AGENDA TAB -->
+    <section id="agenda-tab" class="tab-content active" aria-hidden="false">
+      <div class="page-header">
+        <h1>Agenda</h1>
+      </div>
+
+      <!-- Calendar container expected by calendar.js -->
+      <div id="calendar" style="min-height:320px;"></div>
+
+      <div id="agenda-list" class="list"></div>
+
+      <button id="btnNewAgenda" class="primary fab">+ New Event</button>
+    </section>
+
+    <!-- DIARY TAB -->
+    <section id="diary-tab" class="tab-content" aria-hidden="true">
+      <div class="page-header"><h1>Diary</h1></div>
+
+      <div id="diary-list" class="list"></div>
+
+      <button id="btnNewDiary" class="primary fab">+ New Entry</button>
+    </section>
+
+    <!-- PHOTOS TAB -->
+    <section id="photos-tab" class="tab-content" aria-hidden="true">
+      <div class="page-header"><h1>Photos</h1></div>
+
+      <div id="photos-grid" class="photo-grid"></div>
+
+      <div class="upload-row">
+        <input id="photoInput" type="file" accept="image/*" />
+        <button id="btnUploadPhoto" class="primary">Upload</button>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- BOTTOM NAV -->
+  <nav class="bottom-nav" role="navigation" aria-label="Main">
+    <button data-target="agenda" class="nav-btn">Agenda</button>
+    <button data-target="diary" class="nav-btn">Diary</button>
+    <button data-target="photos" class="nav-btn">Photos</button>
+  </nav>
+
+  <!-- TEMPLATES -->
+  <template id="photo-item-tpl">
+    <div class="photo-card">
+      <img class="photo-img" src="" alt="photo" />
+      <div class="photo-name"></div>
+    </div>
+  </template>
+
+  <template id="diary-item-tpl">
+    <div class="diary-card">
+      <div class="diary-date"></div>
+      <div class="diary-title"></div>
+      <div class="diary-body"></div>
+    </div>
+  </template>
+
+  <template id="agenda-item-tpl">
+    <div class="agenda-card">
+      <div class="agenda-title"></div>
+      <div class="agenda-time"></div>
+    </div>
+  </template>
+
+  <!-- MODALS (basic placeholders; existing JS may open its own modals) -->
+  <div id="diaryModal" class="modal" aria-hidden="true" style="display:none;">
+    <div class="modal-content">
+      <input id="diaryTitle" placeholder="Title" />
+      <div id="editor" style="height:220px"></div>
+      <button id="btnSaveDiary" class="primary">Save</button>
+      <button id="btnCloseDiary">Close</button>
+    </div>
+  </div>
+
+  <div id="agendaModal" class="modal" aria-hidden="true" style="display:none;">
+    <div class="modal-content">
+      <input id="agendaTitle" placeholder="Title" />
+      <input id="agendaStart" type="datetime-local" />
+      <input id="agendaEnd" type="datetime-local" />
+      <textarea id="agendaDescription" placeholder="Description"></textarea>
+      <button id="btnSaveAgenda" class="primary">Save</button>
+      <button id="btnCloseAgenda">Close</button>
+    </div>
+  </div>
+
+  <!-- libraries (global) -->
+  <script src="https://cdn.jsdelivr.net/npm/idb@7/build/umd.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/index.global.min.js"></script>
+  <script src="https://cdn.quilljs.com/1.3.6/quill.js"></script>
+
+  <!-- Your app (module) -->
+  <script type="module" src="./app.js?v=20260314"></script>
+
+  <!-- DEBUG / HEALTHCHECK helper (non-intrusive) -->
+  <script>
+    (function(){
+      // Elements we expect to exist (common selectors used in your JS)
+      const checks = [
+        'agenda-tab','diary-tab','photos-tab',
+        'calendar','agenda-list','diary-list','photos-grid',
+        'btnNewAgenda','btnNewDiary','btnUploadPhoto','photoInput',
+        'btnSaveDiary','editor','diaryModal','agendaModal'
+      ];
+
+      const missing = [];
+      checks.forEach(id=>{
+        if(!document.getElementById(id)){
+          missing.push(id);
+        }
+      });
+
+      if(missing.length>0){
+        console.warn("[LUMINA-DEBUG] Missing expected elements:", missing);
+      } else {
+        console.log("[LUMINA-DEBUG] All expected elements present.");
+      }
+
+      // Auto-hook bottom nav if app.js hasn't already
+      const navBtns = document.querySelectorAll('.bottom-nav button[data-target]');
+      navBtns.forEach(b=>{
+        b.addEventListener('click', ()=>{
+          const target = b.getAttribute('data-target');
+          document.querySelectorAll('.tab-content').forEach(t=> {
+            t.classList.remove('active');
+            t.setAttribute('aria-hidden','true');
+          });
+          const sel = document.getElementById(target + '-tab') || document.getElementById(target);
+          if(sel){
+            sel.classList.add('active');
+            sel.setAttribute('aria-hidden','false');
+          }
+        });
+      });
+
+      // Quick console helpers
+      window.__lumina_health = {
+        missing: missing,
+        showTab: (name) => {
+          document.querySelectorAll('.tab-content').forEach(t=>t.classList.remove('active'));
+          const sel = document.getElementById(name+'-tab') || document.getElementById(name);
+          if(sel) sel.classList.add('active');
+        },
+        listHandlers: () => {
+          return {
+            uploadButton: !!document.getElementById('btnUploadPhoto') && !!document.getElementById('btnUploadPhoto').onclick,
+            navCount: document.querySelectorAll('.bottom-nav button').length
+          };
+        }
+      };
+
+      // Minimal visual indicator if everything missing (helps debugging on phone)
+      if(missing.length > 0){
+        const dbg = document.createElement('div');
+        dbg.style.position='fixed';
+        dbg.style.right='8px';
+        dbg.style.bottom='72px';
+        dbg.style.padding='8px 12px';
+        dbg.style.background='rgba(0,0,0,0.6)';
+        dbg.style.color='#fff';
+        dbg.style.fontSize='12px';
+        dbg.style.borderRadius='8px';
+        dbg.style.zIndex=99999;
+        dbg.textContent = 'Lumina: DEBUG missing elements: ' + missing.length;
+        dbg.title = 'Open console to see full report';
+        document.body.appendChild(dbg);
+      }
+    })();
+  </script>
 
 </body>
 </html>
