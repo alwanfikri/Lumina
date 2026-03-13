@@ -2,37 +2,31 @@
    Lumina Sync Engine
    ========================================= */
 
-const API_URL =
-"https://script.google.com/macros/s/AKfycbzbYdcPjuZkMm6XwARZ-OCxCim-KyUNgVrjKIVWBfri2pIYEML7T6sOb2I0eYAia4HX/exec"
-
-console.log("[Sync] initialized with API:",API_URL)
+// sync.js — bagian atas
+const API_URL = "https://script.google.com/macros/s/AKfycbzbYdcPjuZkMm6XwARZ-OCxCim-KyUNgVrjKIVWBfri2pIYEML7T6sOb2I0eYAia4HX/exec";
+console.log("[Sync] API ->", API_URL);
 
 
 /* =========================================
    API CALL
    ========================================= */
 
-async function apiCall(action,data={}){
+// sync.js — gantikan fungsi apiCall dengan ini
+async function apiCall(action, data = {}) {
+  const bodyStr = JSON.stringify({ action, ...data });
 
-const res = await fetch(API_URL,{
+  const res = await fetch(API_URL, {
+    method: "POST",
+    headers: {
+      "Content-Type": "text/plain;charset=utf-8"   // penting: text/plain agar tidak preflight
+    },
+    body: bodyStr,
+    cache: "no-store"
+  });
 
-method:"POST",
-
-headers:{
-"Content-Type":"text/plain;charset=utf-8"
-},
-
-body:JSON.stringify({
-action,
-...data
-})
-
-})
-
-const text = await res.text()
-
-return JSON.parse(text)
-
+  const text = await res.text();
+  try { return JSON.parse(text); }
+  catch (e) { console.warn("[Sync] apiCall parse error", e, text); return {}; }
 }
 
 
