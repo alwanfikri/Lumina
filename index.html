@@ -170,6 +170,9 @@ img{max-width:100%;display:block}
 .mc{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:.8rem .7rem;box-shadow:var(--shadow);text-align:center}
 .mc-lbl{font-size:.67rem;text-transform:uppercase;letter-spacing:.07em;color:var(--text3);font-weight:500;margin-bottom:.25rem}
 .mc-val{font-family:var(--font-s);font-size:.96rem;font-weight:600}
+.total-bal-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:.75rem 1rem;box-shadow:var(--shadow);margin-bottom:1rem;display:flex;align-items:center;justify-content:space-between}
+.total-bal-lbl{font-size:.72rem;text-transform:uppercase;letter-spacing:.07em;color:var(--text3);font-weight:500}
+.total-bal-val{font-family:var(--font-s);font-size:1.1rem;font-weight:700}
 .mc-val.inc{color:var(--green)}.mc-val.exp{color:var(--red)}
 .mc-val.pos{color:var(--green)}.mc-val.neg{color:var(--red)}
 .month-nav{display:flex;align-items:center;gap:.4rem;margin-bottom:1rem}
@@ -439,11 +442,16 @@ img{max-width:100%;display:block}
       </div>
     </div>
 
-    <!-- Summary cards -->
+    <!-- Summary cards: monthly -->
     <div class="money-summary">
-      <div class="mc"><div class="mc-lbl">Income</div><div class="mc-val inc" id="sum-inc">—</div></div>
-      <div class="mc"><div class="mc-lbl">Expense</div><div class="mc-val exp" id="sum-exp">—</div></div>
-      <div class="mc"><div class="mc-lbl">Balance</div><div class="mc-val" id="sum-bal">—</div></div>
+      <div class="mc"><div class="mc-lbl" id="mc-lbl-inc">Income</div><div class="mc-val inc" id="sum-inc">—</div></div>
+      <div class="mc"><div class="mc-lbl" id="mc-lbl-exp">Expense</div><div class="mc-val exp" id="sum-exp">—</div></div>
+      <div class="mc"><div class="mc-lbl" id="mc-lbl-bal">Balance</div><div class="mc-val" id="sum-bal">—</div></div>
+    </div>
+    <!-- Total all-time balance -->
+    <div class="total-bal-card">
+      <div class="total-bal-lbl" id="mc-lbl-total">Total Balance (All Time)</div>
+      <div class="total-bal-val" id="sum-total-bal">—</div>
     </div>
 
     <!-- Month nav -->
@@ -781,7 +789,7 @@ const TRANSLATIONS = {
     expenseBtn:'− Expense', incomeBtn:'+ Income',
     amountLabel:'Amount', categoryLabel:'Category', notesLabel:'Notes',
     // Summary
-    income:'Income', expense:'Expense', balance:'Balance',
+    income:'Income', expense:'Expense', balance:'Balance', totalBalance:'Total Balance (All Time)',
     // Charts
     spendingByCategory:'Spending by Category', monthlyTrend:'6-Month Trend',
     totalSpent:'t().totalSpent', noExpenses:'t().noExpenses',
@@ -849,7 +857,7 @@ const TRANSLATIONS = {
     newTx:'Transaksi Baru', editTx:'Edit Transaksi',
     expenseBtn:'− Pengeluaran', incomeBtn:'+ Pemasukan',
     amountLabel:'Jumlah', categoryLabel:'Kategori', notesLabel:'Catatan',
-    income:'Pemasukan', expense:'Pengeluaran', balance:'Saldo',
+    income:'Pemasukan', expense:'Pengeluaran', balance:'Saldo', totalBalance:'Total Saldo (Semua Waktu)',
     spendingByCategory:'Pengeluaran per Kategori', monthlyTrend:'Tren 6 Bulan',
     totalSpent:'total dikeluarkan', noExpenses:'Belum ada pengeluaran',
     budgetProgress:'Progress Anggaran',
@@ -975,6 +983,7 @@ function applyTranslations(){
   if(mcLabels[0])mcLabels[0].textContent=tr.income;
   if(mcLabels[1])mcLabels[1].textContent=tr.expense;
   if(mcLabels[2])mcLabels[2].textContent=tr.balance;
+  safeText('mc-lbl-total', tr.totalBalance||'Total Balance (All Time)');
 
   // Top buttons (safe - these have no child spans with listeners)
   const safeText=(id,txt)=>{const el=document.getElementById(id);if(el&&txt)el.textContent=txt;};
@@ -1932,6 +1941,17 @@ function renderMoney(){
   document.getElementById('sum-exp').textContent=idr(exp);
   const be=document.getElementById('sum-bal');be.textContent=(bal<0?'−':'')+idr(bal);be.className=`mc-val ${bal>=0?'pos':'neg'}`;
 
+  // Total all-time balance (all months)
+  let totalInc=0,totalExp=0;
+  _money.forEach(t=>{if(t.type==='income')totalInc+=t.amount;else totalExp+=t.amount;});
+  const totalBal=totalInc-totalExp;
+  const tb=document.getElementById('sum-total-bal');
+  if(tb){
+    tb.textContent=(totalBal<0?'−':'')+idr(totalBal);
+    tb.className=`total-bal-val ${totalBal>=0?'pos':'neg'}`;
+    tb.style.color=totalBal>=0?'var(--green)':'var(--red)';
+  }
+
   renderDonutChart(fil);
   renderBarChart();
   renderBudgetBars(fil);
@@ -2106,6 +2126,7 @@ function getGreeting(){
 function renderHome(){
   const el=document.getElementById('home-content');
   if(!el)return;
+  try{
   const tr=t();
   const now=new Date();
   const todayS=now.toISOString().slice(0,10);
@@ -2253,6 +2274,10 @@ function renderHome(){
       setTimeout(()=>{_photoOverride=null;openCarousel(idx);},100);
     });
   });
+  }catch(err){
+    console.error('[renderHome] Error:', err);
+    el.innerHTML=`<div style="padding:1rem;color:var(--red);font-size:.85rem">⚠ Dashboard error: ${esc(err.message)}</div>`;
+  }
 }
 
 // ═══════════════════════════════════════════════════════
@@ -2414,16 +2439,43 @@ function renderUpcoming(){
 //  INIT
 // ═══════════════════════════════════════════════════════
 async function loadAll(){
-  loadEnabledCals(); // restore saved calendar filter from localStorage
+  loadEnabledCals();
   setTxType('expense');
-  await Promise.all([loadAgenda(),loadDiary(),loadPhotos(),loadMoney()]);
+  // Use allSettled so one failing load doesn't block others
+  await Promise.allSettled([loadAgenda(),loadDiary(),loadPhotos(),loadMoney()]);
+  loadCalendars();
+}
+
+// Warn if opened as file:// (fetch won't work)
+if(location.protocol==='file:'){
+  document.body.insertAdjacentHTML('afterbegin',
+    '<div style="position:fixed;top:0;left:0;right:0;z-index:9999;background:#dc2626;color:#fff;padding:.6rem 1rem;font-size:.82rem;text-align:center">' +
+    '⚠ Lumina must be opened from a web server, not a local file. ' +
+    'Push to GitHub Pages or use a local server. ' +
+    '<a href="https://alwanfikri.github.io/Lumina/" style="color:#fde68a;text-decoration:underline">Open from GitHub Pages →</a>' +
+    '</div>'
+  );
+  // Shift content down
+  document.querySelector('.header').style.marginTop='40px';
 }
 
 // Init calendar first then load data
 initCalendar();
 applyTranslations();
 renderHome();
-loadAll();
+
+// Ping API first — show clear error if unreachable
+(async ()=>{
+  try{
+    await api('ping');
+    loadAll();
+  }catch(e){
+    const msg = e.message.includes('abort') ? 'API timeout — check your URL in Settings' : `API error: ${e.message}`;
+    toast(msg, 'error', 8000);
+    // Still try loading — might partially work
+    loadAll();
+  }
+})();
 </script>
 </body>
 </html>
