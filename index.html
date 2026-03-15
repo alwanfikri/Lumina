@@ -119,6 +119,13 @@ img{max-width:100%;display:block}
 .badge-holiday{background:#dcfce7;color:#166534}
 .badge-gcal{background:#dbeafe;color:#1e40af}
 
+/* Dark mode chart text */
+[data-theme="dark"] .fc-toolbar-title{color:var(--text)!important}
+[data-theme="dark"] .fc-button{background:var(--amber)!important;border-color:var(--amber)!important}
+[data-theme="dark"] .fc-button-active{background:var(--amber-d)!important}
+[data-theme="dark"] .fc-daygrid-day-number,[data-theme="dark"] .fc-col-header-cell-cushion{color:var(--text2)!important}
+[data-theme="dark"] .fc-list-event-title a{color:var(--text)!important}
+
 /* GCal event source badge in FC */
 .fc-event-lumina{border-left:3px solid transparent!important}
 .fc-event-gcal{border-left:3px solid #4285f4!important;opacity:.85}
@@ -445,7 +452,7 @@ img{max-width:100%;display:block}
       <h1 class="sec-title">Diary</h1>
       <button class="btn btn-primary btn-sm" id="new-diary-btn">+ Entry</button>
     </div>
-    <div id="diary-list"><div class="loading"><div class="spinner"></div>Loading…</div></div>
+    <div id="diary-list"><div class="loading"><div class="spinner"></div><span class="loading-txt">Loading…</span></div></div>
   </div>
 
   <!-- PHOTOS -->
@@ -510,7 +517,7 @@ img{max-width:100%;display:block}
     <div id="budget-bars"></div>
 
     <!-- Transactions -->
-    <div id="tx-list"><div class="loading"><div class="spinner"></div>Loading…</div></div>
+    <div id="tx-list"><div class="loading"><div class="spinner"></div><span class="loading-txt">Loading…</span></div></div>
   </div>
 
 </main>
@@ -808,7 +815,7 @@ const TRANSLATIONS = {
     recentPhotos:'Recent Photos', thisMonth:'This month',
     noUpcoming:'No upcoming events', noRecentDiary:'No diary entries yet',
     noRecentPhotos:'No photos yet', applySettings:'Apply Settings',
-    saveReload:'Save & Reload', enterUrl:'Enter a URL', theme:'Theme', themeLight:'☀️ Light', themeDark:'🌙 Dark', themeAuto:'⚙ Auto', refreshData:'↺ Refresh all data',
+    saveReload:'Save & Reload', enterUrl:'Enter a URL', loading:'Loading…', theme:'Theme', themeLight:'☀️ Light', themeDark:'🌙 Dark', themeAuto:'⚙ Auto', refreshData:'↺ Refresh all data',
     // Tabs
     agenda:'Agenda', diary:'Diary', photos:'Photos', money:'Money',
     // Section titles
@@ -882,7 +889,7 @@ const TRANSLATIONS = {
     recentPhotos:'Foto Terbaru', thisMonth:'Bulan ini',
     noUpcoming:'Tidak ada acara mendatang', noRecentDiary:'Belum ada catatan',
     noRecentPhotos:'Belum ada foto', applySettings:'Terapkan Pengaturan',
-    saveReload:'Simpan & Muat Ulang', enterUrl:'Masukkan URL', theme:'Tema', themeLight:'☀️ Terang', themeDark:'🌙 Gelap', themeAuto:'⚙ Otomatis', refreshData:'↺ Perbarui semua data',
+    saveReload:'Simpan & Muat Ulang', enterUrl:'Masukkan URL', loading:'Memuat…', theme:'Tema', themeLight:'☀️ Terang', themeDark:'🌙 Gelap', themeAuto:'⚙ Otomatis', refreshData:'↺ Perbarui semua data',
     agenda:'Agenda', diary:'Diari', photos:'Foto', money:'Keuangan',
     newEvent:'+ Acara', newEntry:'+ Catatan', upload:'+ Unggah', addTx:'+ Tambah',
     budgets:'🎯 Anggaran',
@@ -958,7 +965,7 @@ function applyTheme(theme){
     if(btn)btn.classList.toggle('active',t===_locale.theme);
   });
   // Rebuild charts with new colors if data loaded
-  if(_money.length) renderMoney();
+  if(typeof _barChart !== 'undefined' && _money.length) renderMoney();
 }
 
 // Listen for system theme changes when in auto mode
@@ -1306,6 +1313,7 @@ document.getElementById('setting-apply').addEventListener('click',()=>{
 
   // Re-render all tabs with new locale
   applyTranslations();
+  applyTheme(_locale.theme||'auto');
   if(_diary.length)  renderDiary();
   if(_money.length)  renderMoney();
   renderHome();
@@ -1399,7 +1407,7 @@ function renderCalPickerList(){
   if(!el)return;
 
   if(!_calendars.length){
-    el.innerHTML='<div class="loading"><div class="spinner"></div>Loading…</div>';
+    el.innerHTML=`<div class="loading"><div class="spinner"></div>${t().loading||'Loading…'}</div>`;
     api('getCalendars').then(d=>{_calendars=d.calendars||[];renderCalPickerList();}).catch(e=>{
       el.innerHTML=`<div style="color:var(--red);font-size:.84rem;padding:.5rem">${esc(e.message)}</div>`;
     });
@@ -1746,7 +1754,7 @@ document.getElementById('ev-del').addEventListener('click',async()=>{
 //  DIARY
 // ═══════════════════════════════════════════════════════
 async function loadDiary(){
-  document.getElementById('diary-list').innerHTML='<div class="loading"><div class="spinner"></div>Loading…</div>';
+  document.getElementById('diary-list').innerHTML=`<div class="loading"><div class="spinner"></div>${t().loading||'Loading…'}</div>`;
   try{
     const d=await api('getDiaries');_diary=d.entries||[];renderDiary();renderHome();
   }catch(e){
@@ -1900,7 +1908,7 @@ document.getElementById('diary-save').addEventListener('click',async()=>{
     }
     const photoUrls=await uploadAttachedPhotos(id||'');
     await api('saveDiary',{id,date:document.getElementById('diary-date').value,title,content_html:content,photo_urls:photoUrls.join(',')});
-    closeModal('diary-modal');toast('Entry saved','success');loadDiary();loadPhotos();
+    closeModal('diary-modal');toast(t().saved,'success');loadDiary();loadPhotos();
   }catch(e){toast(e.message,'error');}
   finally{btn.disabled=false;btn.textContent=t().save;}
 });
@@ -1915,7 +1923,7 @@ document.getElementById('diary-del').addEventListener('click',async()=>{
 //  PHOTOS
 // ═══════════════════════════════════════════════════════
 async function loadPhotos(){
-  try{const d=await api('getPhotos',{});_photos=d.photos||[];renderGallery();renderHome();renderHome();}
+  try{const d=await api('getPhotos',{});_photos=d.photos||[];renderGallery();renderHome();}
   catch(e){
     const msg=e.message.includes('abort')?'Request timed out':e.message;
     toast('Photos: '+msg,'error',6000);
@@ -2032,7 +2040,7 @@ document.getElementById('month-prev').addEventListener('click',()=>{_month=addMo
 document.getElementById('month-next').addEventListener('click',()=>{_month=addMonth(_month,1);updateMonthLbl();renderMoney();});
 
 async function loadMoney(){
-  document.getElementById('tx-list').innerHTML='<div class="loading"><div class="spinner"></div>Loading…</div>';
+  document.getElementById('tx-list').innerHTML=`<div class="loading"><div class="spinner"></div>${t().loading||'Loading…'}</div>`;
   try{const d=await api('getMoneys',{});_money=d.transactions||[];updateMonthLbl();renderMoney();renderHome();}
   catch(e){
     const msg=e.message.includes('abort')?'Request timed out — check API URL in Settings':e.message;
@@ -2112,7 +2120,12 @@ function renderBarChart(){
 
   if(_barChart){_barChart.destroy();}
   const ctx=document.getElementById('chart-bar').getContext('2d');
-  _barChart=new Chart(ctx,{type:'bar',data:{labels,datasets:[{label:'Income',data:incomes,backgroundColor:'rgba(22,163,74,.7)',borderRadius:4},{label:'Expense',data:expenses,backgroundColor:'rgba(220,38,38,.7)',borderRadius:4}]},options:{plugins:{legend:{labels:{font:{size:11},boxWidth:12}}},scales:{x:{grid:{display:false},ticks:{font:{size:10}}},y:{ticks:{callback:v=>v>=1e6?'Rp'+(v/1e6).toFixed(1)+'jt':v>=1e3?'Rp'+(v/1e3).toFixed(0)+'k':'Rp'+v,font:{size:10}},grid:{color:'rgba(0,0,0,.05)'}}}},animation:{duration:400}});
+  _barChart=new Chart(ctx,{type:'bar',data:{labels,datasets:[{label:t().income||'Income',data:incomes,
+    backgroundColor:getComputedStyle(document.documentElement).getPropertyValue('--green').trim()||'#16a34a',
+    borderRadius:4},
+    {label:t().expense||'Expense',data:expenses,
+    backgroundColor:getComputedStyle(document.documentElement).getPropertyValue('--red').trim()||'#dc2626',
+    borderRadius:4}]},options:{plugins:{legend:{labels:{font:{size:11},boxWidth:12}}},scales:{x:{grid:{display:false},ticks:{font:{size:10}}},y:{ticks:{callback:v=>v>=1e6?'Rp'+(v/1e6).toFixed(1)+'jt':v>=1e3?'Rp'+(v/1e3).toFixed(0)+'k':'Rp'+v,font:{size:10}},grid:{color:'rgba(0,0,0,.05)'}}}},animation:{duration:400}});
 }
 
 // ── Budget progress bars ──────────────────────────────────
