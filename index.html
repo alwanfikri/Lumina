@@ -14,6 +14,7 @@
 <!-- Quill -->
 <link href="https://cdn.quilljs.com/1.3.7/quill.snow.css" rel="stylesheet">
 <script src="https://cdn.quilljs.com/1.3.7/quill.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
 <style>
 /* ═══════════════════════════════════
    TOKENS
@@ -157,6 +158,27 @@ img{max-width:100%;display:block}
 .ch{background:#ef4444}.ce{background:#ec4899}.cb{background:#6b7280}
 .csl{background:#16a34a}.cfl{background:#10b981}.co{background:#d97706}
 .type-toggle{display:flex;border:1px solid var(--border);border-radius:var(--r-sm);overflow:hidden}
+/* Charts */
+.charts-row{display:grid;grid-template-columns:1fr 1fr;gap:.75rem;margin-bottom:1.1rem}
+@media(max-width:480px){.charts-row{grid-template-columns:1fr}}
+.chart-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:.85rem;box-shadow:var(--shadow)}
+.chart-card-title{font-size:.72rem;text-transform:uppercase;letter-spacing:.07em;color:var(--text3);font-weight:500;margin-bottom:.6rem}
+.donut-wrap{position:relative;width:140px;height:140px;margin:0 auto}
+.donut-center{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center;pointer-events:none}
+.donut-center-val{font-family:var(--font-s);font-size:1rem;font-weight:600;color:var(--text)}
+.donut-center-lbl{font-size:.65rem;color:var(--text3)}
+/* Budget bars */
+.budget-section{margin-bottom:1.1rem}
+.budget-section-title{font-size:.72rem;text-transform:uppercase;letter-spacing:.07em;color:var(--text3);font-weight:500;margin-bottom:.5rem}
+.budget-item{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:.75rem 1rem;margin-bottom:.45rem;box-shadow:var(--shadow)}
+.budget-item-hdr{display:flex;justify-content:space-between;align-items:center;margin-bottom:.45rem}
+.budget-item-cat{font-size:.86rem;font-weight:500}
+.budget-item-vals{font-size:.75rem;color:var(--text2)}
+.budget-bar-track{height:6px;background:var(--surface2);border-radius:3px;overflow:hidden}
+.budget-bar-fill{height:100%;border-radius:3px;transition:width .4s ease}
+.budget-bar-fill.ok{background:var(--green)}
+.budget-bar-fill.warn{background:var(--amber)}
+.budget-bar-fill.over{background:var(--red)}
 .type-toggle button{flex:1;padding:.52rem;font-size:.84rem;font-weight:500;transition:all var(--ease);color:var(--text2);cursor:pointer;border:none;background:none}
 .tt-exp{background:var(--red-l)!important;color:var(--red)!important}
 .tt-inc{background:var(--green-l)!important;color:var(--green)!important}
@@ -282,18 +304,42 @@ img{max-width:100%;display:block}
   <div class="panel" id="panel-money">
     <div class="sec-hdr">
       <h1 class="sec-title">Money</h1>
-      <button class="btn btn-primary btn-sm" id="new-tx-btn">+ Add</button>
+      <div style="display:flex;gap:.4rem">
+        <button class="btn btn-ghost btn-sm" id="budget-btn">🎯 Budgets</button>
+        <button class="btn btn-primary btn-sm" id="new-tx-btn">+ Add</button>
+      </div>
     </div>
+
+    <!-- Summary cards -->
     <div class="money-summary">
       <div class="mc"><div class="mc-lbl">Income</div><div class="mc-val inc" id="sum-inc">—</div></div>
       <div class="mc"><div class="mc-lbl">Expense</div><div class="mc-val exp" id="sum-exp">—</div></div>
       <div class="mc"><div class="mc-lbl">Balance</div><div class="mc-val" id="sum-bal">—</div></div>
     </div>
+
+    <!-- Month nav -->
     <div class="month-nav">
       <button id="month-prev">‹</button>
       <span class="month-lbl" id="month-lbl"></span>
       <button id="month-next">›</button>
     </div>
+
+    <!-- Charts row -->
+    <div class="charts-row">
+      <div class="chart-card">
+        <div class="chart-card-title">Spending by Category</div>
+        <div class="donut-wrap"><canvas id="chart-donut"></canvas><div class="donut-center" id="donut-center"></div></div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-card-title">6-Month Trend</div>
+        <canvas id="chart-bar" style="max-height:160px"></canvas>
+      </div>
+    </div>
+
+    <!-- Budget progress bars -->
+    <div id="budget-bars"></div>
+
+    <!-- Transactions -->
     <div id="tx-list"><div class="loading"><div class="spinner"></div>Loading…</div></div>
   </div>
 
@@ -418,6 +464,19 @@ img{max-width:100%;display:block}
       <button class="btn btn-danger btn-sm" id="tx-del" style="display:none;margin-right:auto">🗑 Delete</button>
       <button class="btn btn-ghost" data-close="tx-modal">Cancel</button>
       <button class="btn btn-primary" id="tx-save">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- Budget modal -->
+<div class="overlay" id="budget-modal">
+  <div class="modal">
+    <div class="modal-hdr"><h2 class="modal-ttl">Monthly Budgets</h2><button class="modal-x" data-close="budget-modal">✕</button></div>
+    <p style="font-size:.82rem;color:var(--text2);margin-bottom:1rem">Set spending limits per category. Leave blank for no limit.</p>
+    <div id="budget-inputs"></div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" data-close="budget-modal">Cancel</button>
+      <button class="btn btn-primary" id="budget-save-btn">Save Budgets</button>
     </div>
   </div>
 </div>
@@ -975,9 +1034,16 @@ document.getElementById('c-del').addEventListener('click',async()=>{
 // ═══════════════════════════════════════════════════════
 //  MONEY
 // ═══════════════════════════════════════════════════════
-const EXPENSE_CATS=[{id:'food',label:'🍜 Food & Drink',cls:'cf'},{id:'transport',label:'🚗 Transport',cls:'ct'},{id:'shopping',label:'🛍 Shopping',cls:'cs'},{id:'health',label:'💊 Health',cls:'ch'},{id:'entertain',label:'🎬 Entertainment',cls:'ce'},{id:'bills',label:'📋 Bills & Utilities',cls:'cb'},{id:'other',label:'📦 Other',cls:'co'}];
-const INCOME_CATS=[{id:'salary',label:'💼 Salary',cls:'csl'},{id:'freelance',label:'💻 Freelance',cls:'cfl'},{id:'other',label:'📦 Other Income',cls:'co'}];
-const catInfo=id=>[...EXPENSE_CATS,...INCOME_CATS].find(c=>c.id===id)||{label:id,cls:'co'};
+const EXPENSE_CATS=[{id:'food',label:'🍜 Food & Drink',cls:'cf',color:'#f97316'},{id:'transport',label:'🚗 Transport',cls:'ct',color:'#3b82f6'},{id:'shopping',label:'🛍 Shopping',cls:'cs',color:'#a855f7'},{id:'health',label:'💊 Health',cls:'ch',color:'#ef4444'},{id:'entertain',label:'🎬 Entertainment',cls:'ce',color:'#ec4899'},{id:'bills',label:'📋 Bills & Utilities',cls:'cb',color:'#6b7280'},{id:'other',label:'📦 Other',cls:'co',color:'#d97706'}];
+const INCOME_CATS=[{id:'salary',label:'💼 Salary',cls:'csl',color:'#16a34a'},{id:'freelance',label:'💻 Freelance',cls:'cfl',color:'#10b981'},{id:'other',label:'📦 Other Income',cls:'co',color:'#d97706'}];
+const catInfo=id=>[...EXPENSE_CATS,...INCOME_CATS].find(c=>c.id===id)||{label:id,cls:'co',color:'#d97706'};
+
+// Budget storage (localStorage)
+const LS_BUDGETS = 'lumina_budgets';
+let _budgets = JSON.parse(localStorage.getItem(LS_BUDGETS)||'{}'); // {catId: amount}
+
+// Chart instances
+let _donutChart = null, _barChart = null;
 
 function fmtMonth(m){const[y,mo]=m.split('-');return new Date(+y,+mo-1,1).toLocaleDateString('en-US',{month:'long',year:'numeric'});}
 function updateMonthLbl(){document.getElementById('month-lbl').textContent=fmtMonth(_month);}
@@ -996,6 +1062,11 @@ function renderMoney(){
   document.getElementById('sum-inc').textContent=idr(inc);
   document.getElementById('sum-exp').textContent=idr(exp);
   const be=document.getElementById('sum-bal');be.textContent=(bal<0?'−':'')+idr(bal);be.className=`mc-val ${bal>=0?'pos':'neg'}`;
+
+  renderDonutChart(fil);
+  renderBarChart();
+  renderBudgetBars(fil);
+
   const el=document.getElementById('tx-list');
   if(!fil.length){el.innerHTML='<div class="empty"><div class="empty-ico">💰</div><p class="empty-ttl">No transactions</p><p class="empty-sub">Tap + Add to record one</p></div>';return;}
   const g={};fil.forEach(t=>{(g[t.date]=g[t.date]||[]).push(t);});
@@ -1007,6 +1078,95 @@ function renderMoney(){
   }).join('');
   el.querySelectorAll('.tx-item').forEach(c=>c.addEventListener('click',()=>openTxModal(_money.find(t=>t.id===c.dataset.id))));
 }
+
+// ── Donut chart: spending by category ────────────────────
+function renderDonutChart(fil){
+  const expenses=fil.filter(t=>t.type==='expense');
+  const totals={};
+  expenses.forEach(t=>{ totals[t.category]=(totals[t.category]||0)+t.amount; });
+  const cats=Object.keys(totals).sort((a,b)=>totals[b]-totals[a]);
+  const total=Object.values(totals).reduce((s,v)=>s+v,0);
+
+  const centerEl=document.getElementById('donut-center');
+  if(!cats.length){
+    centerEl.innerHTML='<div class="donut-center-lbl">No expenses</div>';
+    if(_donutChart){_donutChart.destroy();_donutChart=null;}
+    return;
+  }
+
+  centerEl.innerHTML=`<div class="donut-center-val">${idr(total)}</div><div class="donut-center-lbl">total spent</div>`;
+
+  const data={labels:cats.map(id=>catInfo(id).label),datasets:[{data:cats.map(id=>totals[id]),backgroundColor:cats.map(id=>catInfo(id).color||'#d97706'),borderWidth:0,hoverOffset:4}]};
+
+  if(_donutChart){_donutChart.destroy();}
+  const ctx=document.getElementById('chart-donut').getContext('2d');
+  _donutChart=new Chart(ctx,{type:'doughnut',data,options:{cutout:'65%',plugins:{legend:{display:false},tooltip:{callbacks:{label:i=>`${i.label}: ${idr(i.raw)}`}}},animation:{duration:400}}});
+}
+
+// ── Bar chart: 6-month income vs expense trend ────────────
+function renderBarChart(){
+  const months=[];
+  for(let i=5;i>=0;i--){months.push(addMonth(_month,-i));}
+  const incomes=months.map(m=>_money.filter(t=>t.date.slice(0,7)===m&&t.type==='income').reduce((s,t)=>s+t.amount,0));
+  const expenses=months.map(m=>_money.filter(t=>t.date.slice(0,7)===m&&t.type==='expense').reduce((s,t)=>s+t.amount,0));
+  const labels=months.map(m=>{const[y,mo]=m.split('-');return new Date(+y,+mo-1,1).toLocaleDateString('en-US',{month:'short'});});
+
+  if(_barChart){_barChart.destroy();}
+  const ctx=document.getElementById('chart-bar').getContext('2d');
+  _barChart=new Chart(ctx,{type:'bar',data:{labels,datasets:[{label:'Income',data:incomes,backgroundColor:'rgba(22,163,74,.7)',borderRadius:4},{label:'Expense',data:expenses,backgroundColor:'rgba(220,38,38,.7)',borderRadius:4}]},options:{plugins:{legend:{labels:{font:{size:11},boxWidth:12}}},scales:{x:{grid:{display:false},ticks:{font:{size:10}}},y:{ticks:{callback:v=>v>=1e6?'Rp'+(v/1e6).toFixed(1)+'jt':v>=1e3?'Rp'+(v/1e3).toFixed(0)+'k':'Rp'+v,font:{size:10}},grid:{color:'rgba(0,0,0,.05)'}}}},animation:{duration:400}});
+}
+
+// ── Budget progress bars ──────────────────────────────────
+function renderBudgetBars(fil){
+  const el=document.getElementById('budget-bars');
+  const budgetCats=EXPENSE_CATS.filter(cat=>_budgets[cat.id]);
+  if(!budgetCats.length){el.innerHTML='';return;}
+
+  const spent={};
+  fil.filter(t=>t.type==='expense').forEach(t=>{ spent[t.category]=(spent[t.category]||0)+t.amount; });
+
+  el.innerHTML=`<div class="budget-section">
+    <div class="budget-section-title">Budget Progress</div>
+    ${budgetCats.map(cat=>{
+      const limit=_budgets[cat.id];
+      const used=spent[cat.id]||0;
+      const pct=Math.min(100,Math.round(used/limit*100));
+      const cls=pct>=100?'over':pct>=80?'warn':'ok';
+      const remaining=limit-used;
+      return`<div class="budget-item">
+        <div class="budget-item-hdr">
+          <span class="budget-item-cat">${cat.label}</span>
+          <span class="budget-item-vals">${idr(used)} / ${idr(limit)} <span style="color:${remaining>=0?'var(--green)':'var(--red)'}">(${remaining>=0?'left: '+idr(remaining):'over: '+idr(-remaining)})</span></span>
+        </div>
+        <div class="budget-bar-track"><div class="budget-bar-fill ${cls}" style="width:${pct}%"></div></div>
+      </div>`;
+    }).join('')}
+  </div>`;
+}
+
+// ── Budget modal ──────────────────────────────────────────
+document.getElementById('budget-btn').addEventListener('click',()=>{
+  const el=document.getElementById('budget-inputs');
+  el.innerHTML=EXPENSE_CATS.map(cat=>`
+    <div class="fg">
+      <label class="flabel">${cat.label}</label>
+      <input class="fi" type="number" min="0" step="10000" placeholder="No limit"
+             id="budget-${cat.id}" value="${_budgets[cat.id]||''}">
+    </div>`).join('');
+  openModal('budget-modal');
+});
+
+document.getElementById('budget-save-btn').addEventListener('click',()=>{
+  EXPENSE_CATS.forEach(cat=>{
+    const val=parseFloat(document.getElementById(`budget-${cat.id}`).value);
+    if(val>0) _budgets[cat.id]=val;
+    else delete _budgets[cat.id];
+  });
+  localStorage.setItem(LS_BUDGETS,JSON.stringify(_budgets));
+  closeModal('budget-modal');
+  toast('Budgets saved','success');
+  renderMoney();
+});
 function setTxType(type){
   _txType=type;
   document.getElementById('tt-exp').className=type==='expense'?'tt-exp':'';
