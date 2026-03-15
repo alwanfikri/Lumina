@@ -1186,8 +1186,10 @@ const fmtDate = s => formatDate(s);
 const fmtDateLbl = s => formatDateLabel(s);
 
 // ── Apply translations to DOM ──────────────────────────
+// Safe text helper — updates element text without touching innerHTML or event listeners
+function safeText(id,txt){const el=document.getElementById(id);if(el&&txt)el.textContent=txt;}
+
 function applyTranslations(){
-  const safeText=(id,txt)=>{const el=document.getElementById(id);if(el&&txt)el.textContent=txt;};
   const tr = t();
 
   // ── Safe text-only updates (no innerHTML, no event listener destruction) ──
