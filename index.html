@@ -235,6 +235,9 @@ img{max-width:100%;display:block}
 .s-ttl{font-family:var(--font-s);font-size:1.15rem;font-weight:600;margin-bottom:1.3rem}
 .s-lbl{font-size:.72rem;text-transform:uppercase;letter-spacing:.07em;color:var(--text3);margin-bottom:.35rem;font-weight:500}
 .s-val{font-size:.84rem;color:var(--text2);word-break:break-all;margin-top:.2rem}
+.lang-toggle{display:flex;gap:.5rem;margin-top:6px}
+.lang-btn{flex:1;padding:.5rem;border-radius:var(--r-sm);font-size:.84rem;font-weight:500;border:1px solid var(--border);background:var(--surface);color:var(--text2);cursor:pointer;transition:all var(--ease)}
+.lang-btn.active{background:var(--amber);color:#fff;border-color:var(--amber)}
 
 /* TOAST */
 #toasts{position:fixed;bottom:calc(68px + env(safe-area-inset-bottom) + 10px);left:50%;transform:translateX(-50%);z-index:300;display:flex;flex-direction:column;gap:7px;align-items:center;pointer-events:none;width:min(340px,90vw)}
@@ -327,11 +330,11 @@ img{max-width:100%;display:block}
     <!-- Charts row -->
     <div class="charts-row">
       <div class="chart-card">
-        <div class="chart-card-title">Spending by Category</div>
+        <div class="chart-card-title">${t().spendingByCategory}</div>
         <div class="donut-wrap"><canvas id="chart-donut"></canvas><div class="donut-center" id="donut-center"></div></div>
       </div>
       <div class="chart-card">
-        <div class="chart-card-title">6-Month Trend</div>
+        <div class="chart-card-title">${t().monthlyTrend}</div>
         <canvas id="chart-bar" style="max-height:160px"></canvas>
       </div>
     </div>
@@ -471,12 +474,12 @@ img{max-width:100%;display:block}
 <!-- Budget modal -->
 <div class="overlay" id="budget-modal">
   <div class="modal">
-    <div class="modal-hdr"><h2 class="modal-ttl">Monthly Budgets</h2><button class="modal-x" data-close="budget-modal">✕</button></div>
-    <p style="font-size:.82rem;color:var(--text2);margin-bottom:1rem">Set spending limits per category. Leave blank for no limit.</p>
+    <div class="modal-hdr"><h2 class="modal-ttl">`${t().monthlyBudgets}`</h2><button class="modal-x" data-close="budget-modal">✕</button></div>
+    <p style="font-size:.82rem;color:var(--text2);margin-bottom:1rem">`${t().budgetHint}`</p>
     <div id="budget-inputs"></div>
     <div class="modal-actions">
       <button class="btn btn-ghost" data-close="budget-modal">Cancel</button>
-      <button class="btn btn-primary" id="budget-save-btn">Save Budgets</button>
+      <button class="btn btn-primary" id="budget-save-btn">t().saveBudgets</button>
     </div>
   </div>
 </div>
@@ -501,18 +504,72 @@ img{max-width:100%;display:block}
 <!-- Settings -->
 <div class="settings-ol" id="settings-ol">
   <div class="settings-panel">
-    <h2 class="s-ttl">Settings</h2>
+    <h2 class="s-ttl" data-i18n="settings">Settings</h2>
+
+    <!-- Language -->
+    <div style="margin-bottom:1.1rem">
+      <div class="s-lbl" data-i18n="language">Language</div>
+      <div class="lang-toggle">
+        <button id="lang-en" class="lang-btn active">🇺🇸 English</button>
+        <button id="lang-id" class="lang-btn">🇮🇩 Indonesia</button>
+      </div>
+    </div>
+
+    <hr style="border:none;border-top:1px solid var(--border);margin:1rem 0">
+
+    <!-- Currency -->
+    <div style="margin-bottom:1rem">
+      <div class="s-lbl" data-i18n="currency">Currency</div>
+      <select class="fi" id="setting-currency" style="margin-top:4px">
+        <option value="IDR">IDR — Indonesian Rupiah (Rp)</option>
+        <option value="USD">USD — US Dollar ($)</option>
+        <option value="EUR">EUR — Euro (€)</option>
+        <option value="SGD">SGD — Singapore Dollar (S$)</option>
+        <option value="MYR">MYR — Malaysian Ringgit (RM)</option>
+      </select>
+    </div>
+
+    <!-- Date format -->
+    <div style="margin-bottom:1rem">
+      <div class="s-lbl" data-i18n="dateFormat">Date Format</div>
+      <select class="fi" id="setting-dateformat" style="margin-top:4px">
+        <option value="DD/MM/YYYY">DD/MM/YYYY</option>
+        <option value="MM/DD/YYYY">MM/DD/YYYY</option>
+        <option value="YYYY-MM-DD">YYYY-MM-DD</option>
+        <option value="D MMM YYYY">D MMM YYYY (15 Mar 2026)</option>
+      </select>
+    </div>
+
+    <!-- Number format -->
+    <div style="margin-bottom:1rem">
+      <div class="s-lbl" data-i18n="numberFormat">Number Format</div>
+      <select class="fi" id="setting-numformat" style="margin-top:4px">
+        <option value="id-ID">1.000.000,00 (Indonesian)</option>
+        <option value="en-US">1,000,000.00 (English)</option>
+      </select>
+    </div>
+
+    <div style="margin-bottom:1rem">
+      <div class="s-lbl" data-i18n="preview">Preview</div>
+      <div class="s-val" id="format-preview" style="font-size:.88rem;line-height:1.8"></div>
+    </div>
+
+    <button class="btn btn-primary" style="width:100%;margin-bottom:.75rem" id="setting-apply" data-i18n="applySettings">Apply Settings</button>
+
+    <hr style="border:none;border-top:1px solid var(--border);margin:1rem 0">
+
+    <!-- API -->
     <div class="fg">
-      <div class="s-lbl">Override API URL</div>
+      <div class="s-lbl">API URL</div>
       <input class="fi" id="api-input" placeholder="Paste Apps Script URL…" style="margin-top:4px">
-      <button class="btn btn-primary btn-sm" id="api-save" style="margin-top:8px;width:100%">Save & Reload</button>
+      <button class="btn btn-primary btn-sm" id="api-save" style="margin-top:8px;width:100%" data-i18n="saveReload">Save & Reload</button>
     </div>
     <div style="margin-bottom:.9rem">
       <div class="s-lbl">Active Endpoint</div>
       <div class="s-val" id="api-display">—</div>
     </div>
     <hr style="border:none;border-top:1px solid var(--border);margin:1rem 0">
-    <button class="btn btn-ghost" style="width:100%;margin-bottom:.5rem" id="refresh-btn">↺ Refresh all data</button>
+    <button class="btn btn-ghost" style="width:100%;margin-bottom:.5rem" id="refresh-btn" data-i18n="refreshData">↺ Refresh all data</button>
   </div>
 </div>
 
@@ -520,6 +577,300 @@ img{max-width:100%;display:block}
 
 <script>
 'use strict';
+// ═══════════════════════════════════════════════════════
+//  LOCALE / i18n
+// ═══════════════════════════════════════════════════════
+const LS_LOCALE = 'lumina_locale';
+const _LOCALE_DEFAULTS = { lang:'en', currency:'IDR', dateFormat:'D MMM YYYY', numFormat:'id-ID' };
+let _locale = { ..._LOCALE_DEFAULTS, ...JSON.parse(localStorage.getItem(LS_LOCALE)||'{}') };
+
+const TRANSLATIONS = {
+  en: {
+    settings:'Settings', language:'Language', currency:'Currency',
+    dateFormat:'Date Format', numberFormat:'Number Format',
+    preview:'Preview', applySettings:'Apply Settings',
+    saveReload:'Save & Reload', refreshData:'↺ Refresh all data',
+    // Tabs
+    agenda:'Agenda', diary:'Diary', photos:'Photos', money:'Money',
+    // Section titles
+    newEvent:'+ Event', newEntry:'+ Entry', upload:'+ Upload', addTx:'+ Add',
+    budgets:'🎯 Budgets',
+    // Agenda modal
+    newEventTitle:'New Event', editEventTitle:'Edit Event',
+    titleLabel:'Title', startDate:'Start Date', endDate:'End Date',
+    startTime:'Start Time', endTime:'End Time', allDayEvent:'All day event',
+    repeat:'Repeat', repeatUntil:'Repeat Until', description:'Description',
+    color:'Color', deleteBtn:'🗑 Delete', cancel:'Cancel', save:'Save',
+    saving:'Saving…',
+    doesNotRepeat:'Does not repeat', everyDay:'Every day',
+    everyWeek:'Every week', everyMonth:'Every month',
+    everyWeekday:'Every weekday (Mon–Fri)',
+    // Diary modal
+    newEntry2:'New Entry', editEntry:'Edit Entry',
+    date:'Date', title:'Title', content:'Content',
+    attachPhotos:'Attach Photos', addPhoto:'📎 Add Photo',
+    photosUploadNote:'Photos upload to Drive',
+    // Money modal
+    newTx:'New Transaction', editTx:'Edit Transaction',
+    expenseBtn:'− Expense', incomeBtn:'+ Income',
+    amountLabel:'Amount', categoryLabel:'Category', notesLabel:'Notes',
+    // Summary
+    income:'Income', expense:'Expense', balance:'Balance',
+    // Charts
+    spendingByCategory:'Spending by Category', monthlyTrend:'6-Month Trend',
+    totalSpent:'t().totalSpent', noExpenses:'t().noExpenses',
+    budgetProgress:'t().budgetProgress',
+    noLimit:'No limit',
+    // Empty states
+    noPhotos:'No photos yet', tapUpload:'Tap + Upload to add images',
+    noEvents:'No events yet', tapEvent:'Tap + Event to add one',
+    noDiaries:'No entries yet', tapEntry:'Tap + Entry to start writing',
+    noTx:'No transactions', tapAdd:'Tap + Add to record one',
+    couldNotLoad:'Could not load',
+    // Toast
+    savedGcal:'Saved to Lumina & Google Calendar ✓',
+    deleted:'Deleted', saved:'Saved', refreshing:'Refreshing…',
+    enterTitle:'Enter a title', enterAmount:'Enter a valid amount',
+    addTitleOrContent:'Add a title or content',
+    budgetsSaved:'Budgets saved',
+    settingsApplied:'Settings applied',
+    uploading:'Uploading…', uploadedPhotos:(n)=>`${n} photo${n>1?'s':''} uploaded`,
+    // Budget modal
+    monthlyBudgets:'Monthly Budgets',
+    budgetHint:'Set spending limits per category. Leave blank for no limit.',
+    saveBudgets:'Save Budgets',
+    left:'left', over:'over',
+    // Active endpoint
+    activeEndpoint:'Active Endpoint',
+    overrideApi:'API URL',
+    // Repeat Until placeholder
+    noEndDate:'No end date',
+    detailsPlaceholder:'Details…',
+    optionalPlaceholder:'Optional…',
+  },
+  id: {
+    settings:'Pengaturan', language:'Bahasa', currency:'Mata Uang',
+    dateFormat:'Format Tanggal', numberFormat:'Format Angka',
+    preview:'Pratinjau', applySettings:'Terapkan Pengaturan',
+    saveReload:'Simpan & Muat Ulang', refreshData:'↺ Perbarui semua data',
+    agenda:'Agenda', diary:'Diari', photos:'Foto', money:'Keuangan',
+    newEvent:'+ Acara', newEntry:'+ Catatan', upload:'+ Unggah', addTx:'+ Tambah',
+    budgets:'🎯 Anggaran',
+    newEventTitle:'Acara Baru', editEventTitle:'Edit Acara',
+    titleLabel:'Judul', startDate:'Tanggal Mulai', endDate:'Tanggal Selesai',
+    startTime:'Waktu Mulai', endTime:'Waktu Selesai', allDayEvent:'Sepanjang hari',
+    repeat:'Ulangi', repeatUntil:'Ulangi Sampai', description:'Keterangan',
+    color:'Warna', deleteBtn:'🗑 Hapus', cancel:'Batal', save:'Simpan',
+    saving:'Menyimpan…',
+    doesNotRepeat:'Tidak berulang', everyDay:'Setiap hari',
+    everyWeek:'Setiap minggu', everyMonth:'Setiap bulan',
+    everyWeekday:'Setiap hari kerja (Sen–Jum)',
+    newEntry2:'Catatan Baru', editEntry:'Edit Catatan',
+    date:'Tanggal', title:'Judul', content:'Isi',
+    attachPhotos:'Lampirkan Foto', addPhoto:'📎 Tambah Foto',
+    photosUploadNote:'Foto diunggah ke Drive',
+    newTx:'Transaksi Baru', editTx:'Edit Transaksi',
+    expenseBtn:'− Pengeluaran', incomeBtn:'+ Pemasukan',
+    amountLabel:'Jumlah', categoryLabel:'Kategori', notesLabel:'Catatan',
+    income:'Pemasukan', expense:'Pengeluaran', balance:'Saldo',
+    spendingByCategory:'Pengeluaran per Kategori', monthlyTrend:'Tren 6 Bulan',
+    totalSpent:'total dikeluarkan', noExpenses:'Belum ada pengeluaran',
+    budgetProgress:'Progress Anggaran',
+    noLimit:'Tanpa batas',
+    noPhotos:'Belum ada foto', tapUpload:'Ketuk + Unggah untuk menambah gambar',
+    noEvents:'Belum ada acara', tapEvent:'Ketuk + Acara untuk menambahkan',
+    noDiaries:'Belum ada catatan', tapEntry:'Ketuk + Catatan untuk mulai menulis',
+    noTx:'Belum ada transaksi', tapAdd:'Ketuk + Tambah untuk mencatat',
+    couldNotLoad:'Gagal memuat',
+    savedGcal:'Tersimpan ke Lumina & Google Calendar ✓',
+    deleted:'Dihapus', saved:'Tersimpan', refreshing:'Memperbarui…',
+    enterTitle:'Masukkan judul', enterAmount:'Masukkan jumlah yang valid',
+    addTitleOrContent:'Tambahkan judul atau isi',
+    budgetsSaved:'Anggaran tersimpan',
+    settingsApplied:'Pengaturan diterapkan',
+    uploading:'Mengunggah…', uploadedPhotos:(n)=>`${n} foto berhasil diunggah`,
+    monthlyBudgets:'Anggaran Bulanan',
+    budgetHint:'Atur batas pengeluaran per kategori. Kosongkan jika tidak ada batas.',
+    saveBudgets:'Simpan Anggaran',
+    left:'sisa', over:'melebihi',
+    activeEndpoint:'Endpoint Aktif',
+    overrideApi:'URL API',
+    noEndDate:'Tanpa tanggal akhir',
+    detailsPlaceholder:'Detail…',
+    optionalPlaceholder:'Opsional…',
+  }
+};
+
+// Active translations shortcut
+const t = ()=>TRANSLATIONS[_locale.lang]||TRANSLATIONS.en;
+
+// ── Currency formatter ─────────────────────────────────
+const CURRENCY_SYMBOLS = { IDR:'Rp', USD:'$', EUR:'€', SGD:'S$', MYR:'RM' };
+function formatCurrency(amount){
+  const sym = CURRENCY_SYMBOLS[_locale.currency]||_locale.currency;
+  const abs = Math.abs(amount);
+  if(_locale.numFormat === 'id-ID'){
+    // Indonesian: dots as thousands, comma as decimal
+    const parts = abs.toFixed(0).split('');
+    const rev = parts.reverse();
+    const grouped = [];
+    for(let i=0;i<rev.length;i++){ if(i>0&&i%3===0)grouped.push('.'); grouped.push(rev[i]); }
+    return sym+' '+grouped.reverse().join('');
+  } else {
+    // English: commas as thousands
+    return sym+' '+abs.toLocaleString('en-US',{maximumFractionDigits:0});
+  }
+}
+
+// ── Date formatter ─────────────────────────────────────
+function formatDate(dateStr){
+  if(!dateStr)return'';
+  let d;
+  try{ d=new Date(dateStr+'T12:00:00'); if(isNaN(d))return dateStr; }catch{return dateStr;}
+  const day=d.getDate(), month=d.getMonth(), year=d.getFullYear();
+  const months_en=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  const months_id=['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'];
+  const months = _locale.lang==='id' ? months_id : months_en;
+  const fmt = _locale.dateFormat;
+  if(fmt==='DD/MM/YYYY') return String(day).padStart(2,'0')+'/'+String(month+1).padStart(2,'0')+'/'+year;
+  if(fmt==='MM/DD/YYYY') return String(month+1).padStart(2,'0')+'/'+String(day).padStart(2,'0')+'/'+year;
+  if(fmt==='YYYY-MM-DD') return year+'-'+String(month+1).padStart(2,'0')+'-'+String(day).padStart(2,'0');
+  // D MMM YYYY (default)
+  return day+' '+months[month]+' '+year;
+}
+
+function formatDateLabel(dateStr){
+  if(!dateStr)return'';
+  let d;
+  try{ d=new Date(dateStr+'T12:00:00'); if(isNaN(d))return dateStr; }catch{return dateStr;}
+  const weekdays_en=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+  const weekdays_id=['Min','Sen','Sel','Rab','Kam','Jum','Sab'];
+  const weekdays = _locale.lang==='id' ? weekdays_id : weekdays_en;
+  return weekdays[d.getDay()]+', '+formatDate(dateStr);
+}
+
+// ── Number formatter ───────────────────────────────────
+function formatNumber(n, decimals=0){
+  if(_locale.numFormat==='id-ID'){
+    const parts=Math.abs(n).toFixed(decimals).replace('.',',').split(',');
+    const rev=parts[0].split('').reverse();
+    const grouped=[];
+    for(let i=0;i<rev.length;i++){if(i>0&&i%3===0)grouped.push('.');grouped.push(rev[i]);}
+    return grouped.reverse().join('')+(decimals>0?','+parts[1]:'');
+  }
+  return Math.abs(n).toLocaleString('en-US',{minimumFractionDigits:decimals,maximumFractionDigits:decimals});
+}
+
+// Override the old helpers with locale-aware versions
+const idr = n => formatCurrency(n);
+const fmtDate = s => formatDate(s);
+const fmtDateLbl = s => formatDateLabel(s);
+
+// ── Apply translations to DOM ──────────────────────────
+function applyTranslations(){
+  const tr = t();
+  // Tab labels
+  const tabs = document.querySelectorAll('.tab-btn');
+  const tabKeys = ['agenda','diary','photos','money'];
+  tabs.forEach((btn,i)=>{ const ti=btn.querySelector('.ti'); if(ti&&tabKeys[i])btn.innerHTML=ti.outerHTML+(tr[tabKeys[i]]||''); });
+
+  // Section titles
+  document.querySelectorAll('.sec-title').forEach(el=>{
+    const tab=el.closest('.panel')?.id?.replace('panel-','');
+    if(tab&&tr[tab])el.textContent=tr[tab];
+  });
+
+  // Summary cards
+  const sumLabels=['income','expense','balance'];
+  document.querySelectorAll('.mc-lbl').forEach((el,i)=>{ if(tr[sumLabels[i]])el.textContent=tr[sumLabels[i]]; });
+
+  // Buttons with data-i18n
+  document.querySelectorAll('[data-i18n]').forEach(el=>{
+    const key=el.dataset.i18n;
+    if(tr[key])el.textContent=tr[key];
+  });
+
+  // Form labels inside modals
+  const labelMap = {
+    'ev-ttl':null, // set dynamically
+    'flabel': null,
+  };
+
+  // Photos empty state
+  document.querySelector('#gallery-empty .empty-ttl')&&(document.querySelector('#gallery-empty .empty-ttl').textContent=tr.noPhotos);
+  document.querySelector('#gallery-empty .empty-sub')&&(document.querySelector('#gallery-empty .empty-sub').textContent=tr.tapUpload);
+
+  // Button labels that aren't data-i18n
+  document.getElementById('new-ev-btn').textContent=tr.newEvent;
+  document.getElementById('new-diary-btn').textContent=tr.newEntry;
+  document.getElementById('new-tx-btn').textContent=tr.addTx;
+  document.getElementById('budget-btn').textContent=tr.budgets;
+
+  // Settings panel labels
+  document.querySelector('.s-ttl').textContent=tr.settings;
+
+  // Money amount label
+  const amtLabel = document.querySelector('label[for] + #tx-amount')?.previousElementSibling;
+  // Update all flabels by matching parent fg content
+  updateModalLabels();
+
+  // Update format preview
+  updateFormatPreview();
+
+  // Re-render money if loaded
+  if(_money.length) renderMoney();
+  if(_diary.length) renderDiary();
+}
+
+function updateModalLabels(){
+  const tr = t();
+  // Map label text to translation key
+  const labelMap = {
+    'Title':tr.titleLabel,'Start Date':tr.startDate,'End Date':tr.endDate,
+    'Start Time':tr.startTime,'End Time':tr.endTime,'All day event':tr.allDayEvent,
+    'Repeat':tr.repeat,'Repeat Until':tr.repeatUntil,'Description':tr.description,
+    'Color':tr.color,'Date':tr.date,'Content':tr.content,
+    'Attach Photos':tr.attachPhotos,'Type':tr.titleLabel,
+    'Category':tr.categoryLabel,'Notes':tr.notesLabel,
+    'Override API URL':tr.overrideApi,'Active Endpoint':tr.activeEndpoint,
+    'Language':tr.language,'Currency':tr.currency,
+    'Date Format':tr.dateFormat,'Number Format':tr.numberFormat,
+    'Preview':tr.preview,
+  };
+  // Amount label special case
+  const amtFg = document.getElementById('tx-amount')?.closest('.fg');
+  if(amtFg){ const lbl=amtFg.querySelector('.flabel'); if(lbl) lbl.textContent=tr.amountLabel+' ('+(_locale.currency||'IDR')+')'; }
+  
+  // Repeat options
+  const recurSel = document.getElementById('ev-recur');
+  if(recurSel){
+    const opts = [tr.doesNotRepeat,tr.everyDay,tr.everyWeek,tr.everyMonth,tr.everyWeekday];
+    recurSel.options[0].text=opts[0]; recurSel.options[1].text=opts[1];
+    recurSel.options[2].text=opts[2]; recurSel.options[3].text=opts[3];
+    recurSel.options[4].text=opts[4];
+  }
+
+  // Expense/Income toggle buttons
+  document.getElementById('tt-exp').textContent=tr.expenseBtn;
+  document.getElementById('tt-inc').textContent=tr.incomeBtn;
+
+  // Add Photo button
+  const addPhotoLabel = document.querySelector('label[for="diary-photo-input"]');
+  if(addPhotoLabel){ const inp=addPhotoLabel.querySelector('input'); addPhotoLabel.textContent=tr.addPhoto; if(inp)addPhotoLabel.appendChild(inp); }
+}
+
+function updateFormatPreview(){
+  const tr=t();
+  const previewEl=document.getElementById('format-preview');
+  if(!previewEl)return;
+  const sampleDate='2026-03-15';
+  const sampleAmt=1500000;
+  previewEl.innerHTML=
+    `<b>${tr.dateFormat||'Date'}:</b> ${formatDate(sampleDate)}<br>`+
+    `<b>${tr.numberFormat||'Number'}:</b> ${formatNumber(sampleAmt)}<br>`+
+    `<b>${tr.currency||'Currency'}:</b> ${formatCurrency(sampleAmt)}`;
+}
+
 // ═══════════════════════════════════════════════════════
 //  CONFIG
 // ═══════════════════════════════════════════════════════
@@ -598,7 +949,49 @@ window.addEventListener('online',updateStatus);window.addEventListener('offline'
 document.getElementById('settings-btn').addEventListener('click',()=>{
   document.getElementById('api-input').value=API_URL;
   document.getElementById('api-display').textContent=API_URL||'Not set';
+  // Populate locale settings
+  document.getElementById('lang-en').classList.toggle('active',_locale.lang==='en');
+  document.getElementById('lang-id').classList.toggle('active',_locale.lang==='id');
+  document.getElementById('setting-currency').value=_locale.currency||'IDR';
+  document.getElementById('setting-dateformat').value=_locale.dateFormat||'D MMM YYYY';
+  document.getElementById('setting-numformat').value=_locale.numFormat||'id-ID';
+  updateFormatPreview();
   document.getElementById('settings-ol').classList.add('open');
+});
+
+// Language toggle
+document.getElementById('lang-en').addEventListener('click',()=>{
+  _locale.lang='en';
+  document.getElementById('lang-en').classList.add('active');
+  document.getElementById('lang-id').classList.remove('active');
+  updateFormatPreview();
+});
+document.getElementById('lang-id').addEventListener('click',()=>{
+  _locale.lang='id';
+  document.getElementById('lang-id').classList.add('active');
+  document.getElementById('lang-en').classList.remove('active');
+  updateFormatPreview();
+});
+
+// Live preview on change
+['setting-currency','setting-dateformat','setting-numformat'].forEach(id=>{
+  document.getElementById(id).addEventListener('change',()=>{
+    _locale.currency   = document.getElementById('setting-currency').value;
+    _locale.dateFormat = document.getElementById('setting-dateformat').value;
+    _locale.numFormat  = document.getElementById('setting-numformat').value;
+    updateFormatPreview();
+  });
+});
+
+// Apply settings
+document.getElementById('setting-apply').addEventListener('click',()=>{
+  _locale.currency   = document.getElementById('setting-currency').value;
+  _locale.dateFormat = document.getElementById('setting-dateformat').value;
+  _locale.numFormat  = document.getElementById('setting-numformat').value;
+  localStorage.setItem(LS_LOCALE, JSON.stringify(_locale));
+  document.getElementById('settings-ol').classList.remove('open');
+  applyTranslations();
+  toast(t().settingsApplied, 'success');
 });
 document.getElementById('settings-ol').addEventListener('click',e=>{if(e.target===document.getElementById('settings-ol'))document.getElementById('settings-ol').classList.remove('open')});
 document.getElementById('api-save').addEventListener('click',()=>{
@@ -606,9 +999,9 @@ document.getElementById('api-save').addEventListener('click',()=>{
   if(!url){toast('Enter a URL','error');return;}
   API_URL=url;localStorage.setItem(LS_KEY,url);
   document.getElementById('settings-ol').classList.remove('open');
-  toast('Saved','success');loadAll();
+  toast(t().saved,'success');loadAll();
 });
-document.getElementById('refresh-btn').addEventListener('click',()=>{document.getElementById('settings-ol').classList.remove('open');loadAll();toast('Refreshing…')});
+document.getElementById('refresh-btn').addEventListener('click',()=>{document.getElementById('settings-ol').classList.remove('open');loadAll();toast(t().refreshing)});
 
 // ═══════════════════════════════════════════════════════
 //  AGENDA — FullCalendar
@@ -740,8 +1133,8 @@ document.getElementById('ev-date').addEventListener('change',e=>{
 
 document.getElementById('ev-save').addEventListener('click',async()=>{
   const title=document.getElementById('ev-title').value.trim();
-  if(!title){toast('Enter a title','error');return;}
-  const btn=document.getElementById('ev-save');btn.disabled=true;btn.textContent='Saving…';
+  if(!title){toast(t().enterTitle,'error');return;}
+  const btn=document.getElementById('ev-save');btn.disabled=true;btn.textContent=t().saving;
   const date=document.getElementById('ev-date').value;
   const endDate=document.getElementById('ev-end-date').value||date;
   const time=document.getElementById('ev-time').value;
@@ -762,16 +1155,16 @@ document.getElementById('ev-save').addEventListener('click',async()=>{
       description:document.getElementById('ev-desc').value.trim(),
       color:document.querySelector('#ev-colors .swatch.sel')?.dataset.c||'#f59e0b'
     });
-    closeModal('ev-modal');toast('Saved to Lumina & Google Calendar ✓','success');loadAgenda();
+    closeModal('ev-modal');toast(t().savedGcal,'success');loadAgenda();
   }catch(e){toast(e.message,'error');}
-  finally{btn.disabled=false;btn.textContent='Save';}
+  finally{btn.disabled=false;btn.textContent=t().save;}
 });
 
 document.getElementById('ev-del').addEventListener('click',async()=>{
   const id=document.getElementById('ev-id').value;
   const gcal_id=document.getElementById('ev-gcal-id').value;
   if(!id||!confirm('Delete this event?'))return;
-  try{await api('deleteAgenda',{id,gcal_id});closeModal('ev-modal');toast('Deleted','info');loadAgenda();}
+  try{await api('deleteAgenda',{id,gcal_id});closeModal('ev-modal');toast(t().deleted,'info');loadAgenda();}
   catch(e){toast(e.message,'error');}
 });
 
@@ -782,12 +1175,12 @@ async function loadDiary(){
   document.getElementById('diary-list').innerHTML='<div class="loading"><div class="spinner"></div>Loading…</div>';
   try{
     const d=await api('getDiaries');_diary=d.entries||[];renderDiary();
-  }catch(e){document.getElementById('diary-list').innerHTML=`<div class="empty"><div class="empty-ico">⚠️</div><p class="empty-ttl">Could not load</p><p class="empty-sub">${esc(e.message)}</p></div>`;}
+  }catch(e){document.getElementById('diary-list').innerHTML=`<div class="empty"><div class="empty-ico">⚠️</div><p class="empty-ttl">${t().couldNotLoad}</p><p class="empty-sub">${esc(e.message)}</p></div>`;}
 }
 
 function renderDiary(){
   const el=document.getElementById('diary-list');
-  if(!_diary.length){el.innerHTML='<div class="empty"><div class="empty-ico">📓</div><p class="empty-ttl">No entries yet</p><p class="empty-sub">Tap + Entry to start writing</p></div>';return;}
+  if(!_diary.length){el.innerHTML=`<div class="empty"><div class="empty-ico">📓</div><p class="empty-ttl">${t().noDiaries}</p><p class="empty-sub">${t().tapEntry}</p></div>`;return;}
   el.innerHTML=_diary.map(e=>{
     const photoUrls=e.photo_urls?(e.photo_urls.split(',').filter(Boolean)):[]; 
     const thumbHtml=photoUrls.slice(0,4).map(u=>`<img src="${esc(driveThumb(u,'w80'))}" class="dc-photo-thumb" onerror="this.style.display='none'">`).join('');
@@ -919,13 +1312,13 @@ async function uploadAttachedPhotos(entryId){
 document.getElementById('diary-save').addEventListener('click',async()=>{
   const title=document.getElementById('diary-title').value.trim();
   const content=_quill?_quill.root.innerHTML.trim():'';
-  if(!title&&!content){toast('Add a title or content','error');return;}
+  if(!title&&!content){toast(t().addTitleOrContent,'error');return;}
   const btn=document.getElementById('diary-save');btn.disabled=true;btn.textContent='Saving…';
   try{
     const id=document.getElementById('diary-id').value||undefined;
     // Upload any new photos first
     if(_attachedPhotos.some(p=>p.file)){
-      btn.textContent='Uploading photos…';
+      btn.textContent=t().uploading;
     }
     const photoUrls=await uploadAttachedPhotos(id||'');
     await api('saveDiary',{id,date:document.getElementById('diary-date').value,title,content_html:content,photo_urls:photoUrls.join(',')});
@@ -963,7 +1356,7 @@ function renderGallery(){
 document.getElementById('photo-input').addEventListener('change',async e=>{
   const files=Array.from(e.target.files||[]);e.target.value='';if(!files.length)return;
   const wrap=document.getElementById('upload-bar-wrap');
-  wrap.innerHTML='<div class="upload-bar"><div class="spinner"></div><span>Uploading…</span></div>';
+  wrap.innerHTML=`<div class="upload-bar"><div class="spinner"></div><span>${t().uploading}</span></div>`;
   let ok=0;
   for(const file of files){
     if(!file.type.startsWith('image/'))continue;
@@ -1053,7 +1446,7 @@ document.getElementById('month-next').addEventListener('click',()=>{_month=addMo
 async function loadMoney(){
   document.getElementById('tx-list').innerHTML='<div class="loading"><div class="spinner"></div>Loading…</div>';
   try{const d=await api('getMoneys',{});_money=d.transactions||[];updateMonthLbl();renderMoney();}
-  catch(e){document.getElementById('tx-list').innerHTML=`<div class="empty"><div class="empty-ico">⚠️</div><p class="empty-ttl">Could not load</p><p class="empty-sub">${esc(e.message)}</p></div>`;}
+  catch(e){document.getElementById('tx-list').innerHTML=`<div class="empty"><div class="empty-ico">⚠️</div><p class="empty-ttl">${t().couldNotLoad}</p><p class="empty-sub">${esc(e.message)}</p></div>`;}
 }
 function renderMoney(){
   const fil=_money.filter(t=>t.date.slice(0,7)===_month);
@@ -1068,7 +1461,7 @@ function renderMoney(){
   renderBudgetBars(fil);
 
   const el=document.getElementById('tx-list');
-  if(!fil.length){el.innerHTML='<div class="empty"><div class="empty-ico">💰</div><p class="empty-ttl">No transactions</p><p class="empty-sub">Tap + Add to record one</p></div>';return;}
+  if(!fil.length){el.innerHTML=`<div class="empty"><div class="empty-ico">💰</div><p class="empty-ttl">${t().noTx}</p><p class="empty-sub">${t().tapAdd}</p></div>`;return;}
   const g={};fil.forEach(t=>{(g[t.date]=g[t.date]||[]).push(t);});
   el.innerHTML=Object.keys(g).sort().reverse().map(date=>{
     const dt=g[date].reduce((s,t)=>s+(t.type==='income'?t.amount:-t.amount),0);
@@ -1164,7 +1557,7 @@ document.getElementById('budget-save-btn').addEventListener('click',()=>{
   });
   localStorage.setItem(LS_BUDGETS,JSON.stringify(_budgets));
   closeModal('budget-modal');
-  toast('Budgets saved','success');
+  toast(t().budgetsSaved,'success');
   renderMoney();
 });
 function setTxType(type){
@@ -1195,7 +1588,7 @@ document.getElementById('tt-inc').addEventListener('click',()=>setTxType('income
 document.getElementById('new-tx-btn').addEventListener('click',()=>openTxModal());
 document.getElementById('tx-save').addEventListener('click',async()=>{
   const amount=parseFloat(document.getElementById('tx-amount').value);
-  if(!amount||amount<=0){toast('Enter a valid amount','error');return;}
+  if(!amount||amount<=0){toast(t().enterAmount,'error');return;}
   const btn=document.getElementById('tx-save');btn.disabled=true;btn.textContent='Saving…';
   try{
     await api('saveMoney',{id:document.getElementById('tx-id').value||undefined,date:document.getElementById('tx-date').value,type:_txType,category:document.getElementById('tx-cat').value,amount,notes:document.getElementById('tx-notes').value.trim()});
@@ -1219,6 +1612,7 @@ async function loadAll(){
 
 // Init calendar first then load data
 initCalendar();
+applyTranslations();
 loadAll();
 </script>
 </body>
