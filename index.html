@@ -409,6 +409,13 @@ img{max-width:100%;display:block}
 .diary-results-count{font-size:.75rem;color:var(--text3);margin-bottom:.5rem;padding-left:2px}
 /* Highlight search matches */
 .search-hl{background:var(--amber-l);color:var(--amber-d);border-radius:2px;padding:0 1px}
+.export-section{margin-bottom:.5rem}
+.export-section-title{font-size:.72rem;text-transform:uppercase;letter-spacing:.07em;color:var(--text3);font-weight:500;margin-bottom:.65rem}
+.export-grid{display:grid;grid-template-columns:1fr 1fr;gap:.55rem}
+.export-btn{display:flex;flex-direction:column;align-items:center;gap:.35rem;padding:.85rem .5rem;background:var(--surface);border:1px solid var(--border);border-radius:var(--r);cursor:pointer;transition:all var(--ease);box-shadow:var(--shadow)}
+.export-btn:hover{border-color:var(--amber);box-shadow:0 2px 10px rgba(0,0,0,.1);transform:translateY(-1px)}
+.exp-icon{font-size:1.4rem;line-height:1}
+.exp-label{font-size:.75rem;font-weight:500;color:var(--text2);text-align:center;line-height:1.3}
 @keyframes spin{to{transform:rotate(360deg)}}
 #ev-time-row.hidden{display:none}
 @keyframes toastIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
@@ -735,6 +742,57 @@ img{max-width:100%;display:block}
   </div>
 </div>
 
+<!-- Export Modal -->
+<div class="overlay" id="export-modal">
+  <div class="modal">
+    <div class="modal-hdr">
+      <h2 class="modal-ttl" id="export-modal-ttl">Export Data</h2>
+      <button class="modal-x" data-close="export-modal">✕</button>
+    </div>
+
+    <!-- CSV exports -->
+    <div class="export-section">
+      <div class="export-section-title" id="export-csv-title">📄 CSV Export</div>
+      <div class="export-grid">
+        <button class="export-btn" id="exp-money-csv">
+          <span class="exp-icon">💰</span>
+          <span class="exp-label" id="exp-money-csv-lbl">Money (All)</span>
+        </button>
+        <button class="export-btn" id="exp-money-month-csv">
+          <span class="exp-icon">📅</span>
+          <span class="exp-label" id="exp-money-month-lbl">Money (This Month)</span>
+        </button>
+        <button class="export-btn" id="exp-diary-csv">
+          <span class="exp-icon">📓</span>
+          <span class="exp-label" id="exp-diary-lbl">Diary</span>
+        </button>
+        <button class="export-btn" id="exp-agenda-csv">
+          <span class="exp-icon">📅</span>
+          <span class="exp-label" id="exp-agenda-lbl">Agenda</span>
+        </button>
+      </div>
+    </div>
+
+    <hr style="border:none;border-top:1px solid var(--border);margin:1rem 0">
+
+    <!-- PDF report -->
+    <div class="export-section">
+      <div class="export-section-title" id="export-pdf-title">🖨 Monthly Report (Print / PDF)</div>
+      <div class="frow" style="margin-bottom:.75rem">
+        <div class="fg">
+          <label class="flabel" id="exp-report-month-lbl">Month</label>
+          <select class="fi" id="exp-report-month"></select>
+        </div>
+      </div>
+      <button class="btn btn-primary" style="width:100%" id="exp-pdf-btn">🖨 Print / Save as PDF</button>
+    </div>
+
+    <div class="modal-actions">
+      <button class="btn btn-ghost" data-close="export-modal" data-i18n="cancel">Cancel</button>
+    </div>
+  </div>
+</div>
+
 <!-- Carousel -->
 <div class="carousel" id="carousel">
   <div class="c-inner">
@@ -832,6 +890,7 @@ img{max-width:100%;display:block}
       <div class="s-val" id="api-display">—</div>
     </div>
     <hr style="border:none;border-top:1px solid var(--border);margin:1rem 0">
+    <button class="btn btn-ghost" style="width:100%;margin-bottom:.5rem" id="export-btn" id-i18n="exportData">⬇ Export Data</button>
     <button class="btn btn-ghost" style="width:100%;margin-bottom:.5rem" id="refresh-btn" data-i18n="refreshData">↺ Refresh all data</button>
   </div>
 </div>
@@ -1122,6 +1181,15 @@ function applyTranslations(){
   safeText('tt-exp',            tr.expenseBtn);
   safeText('tt-inc',            tr.incomeBtn);
   safeText('budget-modal-ttl',   tr.monthlyBudgets);
+  safeText('export-modal-ttl',   tr.exportData||'Export Data');
+  safeText('export-csv-title',   '📄 CSV Export');
+  safeText('export-pdf-title',   '🖨 ' + (tr.monthlyReport||'Monthly Report') + ' (Print / PDF)');
+  safeText('exp-money-csv-lbl',  (tr.money||'Money') + ' (' + (tr.allTime||'All time') + ')');
+  safeText('exp-money-month-lbl',(tr.money||'Money') + ' (' + (tr.thisMonth||'This month') + ')');
+  safeText('exp-diary-lbl',      tr.diary||'Diary');
+  safeText('exp-agenda-lbl',     tr.agenda||'Agenda');
+  safeText('exp-report-month-lbl', tr.dateFormat ? (tr.monthlyReport||'Month') : 'Month');
+  safeText('export-btn',         tr.exportData||'⬇ Export Data');
   safeText('s-lbl-theme',        tr.theme||'Theme');
   const tBtns={'light':tr.themeLight||'☀️ Light','dark':tr.themeDark||'🌙 Dark','auto':tr.themeAuto||'⚙ Auto'};
   Object.entries(tBtns).forEach(([k,v])=>{const el=document.getElementById('theme-'+k);if(el)el.textContent=v;});
@@ -2588,6 +2656,191 @@ function renderHome(){
     el.innerHTML=`<div style="padding:1rem;color:var(--red);font-size:.85rem">⚠ Dashboard error: ${esc(err.message)}</div>`;
   }
 }
+
+// ═══════════════════════════════════════════════════════
+//  EXPORT (CSV + PDF)
+// ═══════════════════════════════════════════════════════
+
+// ── CSV helpers ─────────────────────────────────────────
+function csvEscape(val){
+  const s = String(val==null?'':val).replace(/"/g,'""');
+  return (s.indexOf(',')>=0 || s.indexOf('"')>=0 || s.indexOf('\n')>=0) ? ('"'+s+'"') : s;
+}
+function csvRow(arr){ return arr.map(csvEscape).join(','); }
+function downloadCSV(filename, rows){
+  const content = rows.join('\r\n');
+  const blob = new Blob([content], {type:'text/csv;charset=utf-8;'});
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
+  a.href=url; a.download=filename; a.click();
+  setTimeout(()=>URL.revokeObjectURL(url), 2000);
+}
+function exportMoneyCsv(monthFilter){
+  const tr = t();
+  let txs = [..._money];
+  if(monthFilter) txs = txs.filter(t=>t.date.slice(0,7)===monthFilter);
+  txs.sort((a,b)=>a.date.localeCompare(b.date));
+  const headers = ['Date','Type','Category','Amount','Notes'];
+  const rows = [csvRow(headers)];
+  txs.forEach(tx=>{
+    const ci = catInfo(tx.category);
+    rows.push(csvRow([tx.date, tx.type, ci.label.replace(/^[^\s]+ /,''), tx.amount, tx.notes||'']));
+  });
+  // Summary footer
+  let totalInc=0, totalExp=0;
+  txs.forEach(t=>{ if(t.type==='income')totalInc+=t.amount; else totalExp+=t.amount; });
+  rows.push('');
+  rows.push(csvRow(['','','Total Income',''+totalInc,'']));
+  rows.push(csvRow(['','','Total Expense',''+totalExp,'']));
+  rows.push(csvRow(['','','Balance',''+(totalInc-totalExp),'']));
+  const fname = monthFilter ? `lumina-money-${monthFilter}.csv` : 'lumina-money-all.csv';
+  downloadCSV(fname, rows);
+  toast('Downloaded: '+fname, 'success');
+}
+
+// ── Diary CSV ────────────────────────────────────────────
+function exportDiaryCsv(){
+  const entries = [..._diary].sort((a,b)=>a.date.localeCompare(b.date));
+  const headers = ['Date','Title','Content'];
+  const rows = [csvRow(headers)];
+  entries.forEach(e=>{
+    const text = e.content_html ? e.content_html.replace(/<[^>]*>/g,'').replace(/&amp;/g,'&').replace(/&lt;/g,'<').replace(/&gt;/g,'>') : '';
+    rows.push(csvRow([e.date, e.title||'', text]));
+  });
+  downloadCSV('lumina-diary.csv', rows);
+  toast('Downloaded: lumina-diary.csv', 'success');
+}
+
+// ── Agenda CSV ───────────────────────────────────────────
+function exportAgendaCsv(){
+  const events = [..._agenda].sort((a,b)=>(a.date||'').localeCompare(b.date||''));
+  const headers = ['Date','End Date','Start Time','End Time','Title','Description','Recurring','Reminder'];
+  const rows = [csvRow(headers)];
+  events.forEach(ev=>{
+    const startTime = ev.start_time ? ev.start_time.slice(11,16) : '';
+    const endTime   = ev.end_time   ? ev.end_time.slice(11,16)   : '';
+    rows.push(csvRow([ev.date||'', ev.end_date||ev.date||'', startTime, endTime,
+      ev.title||'', ev.description||'', ev.recur||'', ev.reminder||'']));
+  });
+  downloadCSV('lumina-agenda.csv', rows);
+  toast('Downloaded: lumina-agenda.csv', 'success');
+}
+
+// ── PDF Monthly Report ───────────────────────────────────
+function printMonthlyReport(month){
+  const tr   = t();
+  const txs  = _money.filter(t=>t.date.slice(0,7)===month).sort((a,b)=>a.date.localeCompare(b.date));
+  let totalInc=0, totalExp=0;
+  txs.forEach(t=>{ if(t.type==='income')totalInc+=t.amount; else totalExp+=t.amount; });
+
+  // Build category breakdown
+  const catTotals = {};
+  txs.filter(t=>t.type==='expense').forEach(t=>{
+    catTotals[t.category] = (catTotals[t.category]||0) + t.amount;
+  });
+  const catRows = Object.entries(catTotals)
+    .sort((a,b)=>b[1]-a[1])
+    .map(([id,amt])=>`<tr><td>${catInfo(id).label}</td><td style="text-align:right">${idr(amt)}</td></tr>`)
+    .join('');
+
+  // Build transaction table
+  const txRows = txs.map(tx=>`
+    <tr>
+      <td>${fmtDate(tx.date)}</td>
+      <td>${catInfo(tx.category).label}</td>
+      <td>${esc(tx.notes||'')}</td>
+      <td style="text-align:right;color:${tx.type==='income'?'#16a34a':'#dc2626'}">${tx.type==='income'?'+':'-'}${idr(tx.amount)}</td>
+    </tr>`).join('');
+
+  const reportHtml = `<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Lumina — ${fmtMonth(month)}</title>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{font-family:'DM Sans',system-ui,sans-serif;color:#1c1710;padding:32px;font-size:13px;line-height:1.6}
+  .report-header{display:flex;justify-content:space-between;align-items:flex-end;border-bottom:2px solid #d97706;padding-bottom:12px;margin-bottom:24px}
+  .report-title{font-size:22px;font-weight:700;color:#d97706;font-family:Georgia,serif}
+  .report-month{font-size:16px;font-weight:600;color:#1c1710}
+  .report-date{font-size:11px;color:#a8967e}
+  .summary{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:24px}
+  .sum-card{padding:12px 16px;border-radius:8px;border:1px solid #e6ddd0}
+  .sum-lbl{font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:#a8967e;margin-bottom:4px}
+  .sum-val{font-size:18px;font-weight:700;font-family:Georgia,serif}
+  .inc{color:#16a34a}.exp{color:#dc2626}.bal{color:${(totalInc-totalExp)>=0?'#16a34a':'#dc2626'}}
+  h3{font-size:12px;text-transform:uppercase;letter-spacing:.08em;color:#a8967e;margin:20px 0 8px}
+  table{width:100%;border-collapse:collapse;font-size:12px}
+  th{text-align:left;padding:6px 8px;border-bottom:2px solid #e6ddd0;font-size:10px;text-transform:uppercase;letter-spacing:.06em;color:#6b5e4c}
+  td{padding:7px 8px;border-bottom:1px solid #f3ede3}
+  tr:last-child td{border-bottom:none}
+  .footer{margin-top:32px;padding-top:12px;border-top:1px solid #e6ddd0;font-size:10px;color:#a8967e;text-align:center}
+  @media print{body{padding:20px}.no-print{display:none}}
+</style>
+</head>
+<body>
+<div class="report-header">
+  <div>
+    <div class="report-title">✦ Lumina</div>
+    <div class="report-month">${tr.monthlyReport||'Monthly Report'} — ${fmtMonth(month)}</div>
+  </div>
+  <div class="report-date">${tr.generatedOn||'Generated'}: ${fmtDate(new Date().toISOString().slice(0,10))}</div>
+</div>
+
+<div class="summary">
+  <div class="sum-card"><div class="sum-lbl">${tr.income||'Income'}</div><div class="sum-val inc">${idr(totalInc)}</div></div>
+  <div class="sum-card"><div class="sum-lbl">${tr.expense||'Expense'}</div><div class="sum-val exp">${idr(totalExp)}</div></div>
+  <div class="sum-card"><div class="sum-lbl">${tr.balance||'Balance'}</div><div class="sum-val bal">${idr(totalInc-totalExp)}</div></div>
+</div>
+
+${catRows ? `<h3>${tr.byCategory||'By Category'}</h3>
+<table><thead><tr><th>${tr.categoryLabel||'Category'}</th><th style="text-align:right">${tr.amountLabel||'Amount'}</th></tr></thead>
+<tbody>${catRows}</tbody></table>` : ''}
+
+<h3>${tr.transactions||'Transactions'}</h3>
+${txRows ? `<table>
+<thead><tr><th>${tr.date||'Date'}</th><th>${tr.categoryLabel||'Category'}</th><th>${tr.notesLabel||'Notes'}</th><th style="text-align:right">${tr.amountLabel||'Amount'}</th></tr></thead>
+<tbody>${txRows}</tbody>
+</table>` : `<p style="color:#a8967e;font-size:12px">${tr.noTx||'No transactions this month'}</p>`}
+
+<div class="footer">Lumina · ${fmtMonth(month)} · ${new Date().toLocaleDateString()}</div>
+</body></html>`;
+
+  const win = window.open('','_blank','width=800,height=700');
+  if(!win){ toast('Allow popups to open the report','warning',5000); return; }
+  win.document.write(reportHtml);
+  win.document.close();
+  setTimeout(()=>win.print(), 600);
+}
+
+// ── Export modal wiring ──────────────────────────────────
+function openExportModal(){
+  // Populate month selector for PDF report
+  const sel = document.getElementById('exp-report-month');
+  if(sel){
+    const months = [...new Set(_money.map(t=>t.date.slice(0,7)))].sort().reverse();
+    const now = `${new Date().getFullYear()}-${String(new Date().getMonth()+1).padStart(2,'0')}`;
+    if(!months.includes(now)) months.unshift(now);
+    sel.innerHTML = months.map(m=>`<option value="${m}">${fmtMonth(m)}</option>`).join('');
+  }
+  openModal('export-modal');
+}
+
+document.getElementById('export-btn')?.addEventListener('click',()=>{
+  document.getElementById('settings-ol').classList.remove('open');
+  openExportModal();
+});
+
+document.getElementById('exp-money-csv')?.addEventListener('click',()=>exportMoneyCsv(''));
+document.getElementById('exp-money-month-csv')?.addEventListener('click',()=>exportMoneyCsv(_month));
+document.getElementById('exp-diary-csv')?.addEventListener('click',()=>exportDiaryCsv());
+document.getElementById('exp-agenda-csv')?.addEventListener('click',()=>exportAgendaCsv());
+document.getElementById('exp-pdf-btn')?.addEventListener('click',()=>{
+  const month = document.getElementById('exp-report-month')?.value;
+  if(!month){ toast('Select a month','error'); return; }
+  closeModal('export-modal');
+  printMonthlyReport(month);
+});
 
 // ═══════════════════════════════════════════════════════
 //  NOTIFICATIONS & REMINDERS
