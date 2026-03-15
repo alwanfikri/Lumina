@@ -769,94 +769,100 @@ const fmtDateLbl = s => formatDateLabel(s);
 // ── Apply translations to DOM ──────────────────────────
 function applyTranslations(){
   const tr = t();
-  // Tab labels
-  const tabs = document.querySelectorAll('.tab-btn');
-  const tabKeys = ['agenda','diary','photos','money'];
-  tabs.forEach((btn,i)=>{ const ti=btn.querySelector('.ti'); if(ti&&tabKeys[i])btn.innerHTML=ti.outerHTML+(tr[tabKeys[i]]||''); });
+
+  // ── Safe text-only updates (no innerHTML, no event listener destruction) ──
+
+  // Tab labels - update only the text node, preserve .ti span
+  const tabIds=['agenda','diary','photos','money'];
+  document.querySelectorAll('.tab-btn').forEach((btn,i)=>{
+    const key=tabIds[i];
+    // Find or create a text node after the .ti span
+    let textNode=null;
+    btn.childNodes.forEach(n=>{ if(n.nodeType===3)textNode=n; });
+    if(textNode) textNode.textContent=tr[key]||key;
+  });
 
   // Section titles
+  const panels={agenda:tr.agenda,diary:tr.diary,photos:tr.photos,money:tr.money};
   document.querySelectorAll('.sec-title').forEach(el=>{
     const tab=el.closest('.panel')?.id?.replace('panel-','');
-    if(tab&&tr[tab])el.textContent=tr[tab];
+    if(tab&&panels[tab])el.textContent=panels[tab];
   });
 
-  // Summary cards
-  const sumLabels=['income','expense','balance'];
-  document.querySelectorAll('.mc-lbl').forEach((el,i)=>{ if(tr[sumLabels[i]])el.textContent=tr[sumLabels[i]]; });
+  // Summary card labels
+  const mcLabels=document.querySelectorAll('.mc-lbl');
+  if(mcLabels[0])mcLabels[0].textContent=tr.income;
+  if(mcLabels[1])mcLabels[1].textContent=tr.expense;
+  if(mcLabels[2])mcLabels[2].textContent=tr.balance;
 
-  // Buttons with data-i18n
-  document.querySelectorAll('[data-i18n]').forEach(el=>{
-    const key=el.dataset.i18n;
-    if(tr[key])el.textContent=tr[key];
-  });
+  // Top buttons (safe - these have no child spans with listeners)
+  const safeText=(id,txt)=>{const el=document.getElementById(id);if(el&&txt)el.textContent=txt;};
+  safeText('new-ev-btn',    tr.newEvent);
+  safeText('new-diary-btn', tr.newEntry);
+  safeText('new-tx-btn',    tr.addTx);
+  safeText('budget-btn',    tr.budgets);
+  safeText('refresh-btn',   tr.refreshData);
+  safeText('setting-apply', tr.applySettings);
+  safeText('api-save',      tr.saveReload);
+  safeText('budget-save-btn', tr.saveBudgets);
+  safeText('tt-exp',        tr.expenseBtn);
+  safeText('tt-inc',        tr.incomeBtn);
 
-  // Form labels inside modals
-  const labelMap = {
-    'ev-ttl':null, // set dynamically
-    'flabel': null,
-  };
+  // Settings title
+  const sttl=document.querySelector('.s-ttl');if(sttl)sttl.textContent=tr.settings;
 
   // Photos empty state
-  document.querySelector('#gallery-empty .empty-ttl')&&(document.querySelector('#gallery-empty .empty-ttl').textContent=tr.noPhotos);
-  document.querySelector('#gallery-empty .empty-sub')&&(document.querySelector('#gallery-empty .empty-sub').textContent=tr.tapUpload);
+  const pEmpty=document.querySelector('#gallery-empty .empty-ttl');if(pEmpty)pEmpty.textContent=tr.noPhotos;
+  const pSub=document.querySelector('#gallery-empty .empty-sub');if(pSub)pSub.textContent=tr.tapUpload;
 
-  // Button labels that aren't data-i18n
-  document.getElementById('new-ev-btn').textContent=tr.newEvent;
-  document.getElementById('new-diary-btn').textContent=tr.newEntry;
-  document.getElementById('new-tx-btn').textContent=tr.addTx;
-  document.getElementById('budget-btn').textContent=tr.budgets;
+  // Chart card titles
+  const chartTitles=document.querySelectorAll('.chart-card-title');
+  if(chartTitles[0])chartTitles[0].textContent=tr.spendingByCategory;
+  if(chartTitles[1])chartTitles[1].textContent=tr.monthlyTrend;
 
-  // Settings panel labels
-  document.querySelector('.s-ttl').textContent=tr.settings;
-
-  // Money amount label
-  const amtLabel = document.querySelector('label[for] + #tx-amount')?.previousElementSibling;
-  // Update all flabels by matching parent fg content
+  // Modal labels (form labels only — no listeners on these)
   updateModalLabels();
 
-  // Update format preview
+  // Format preview
   updateFormatPreview();
 
-  // Re-render money if loaded
-  if(_money.length) renderMoney();
-  if(_diary.length) renderDiary();
+  // Re-render data views if already loaded
+  if(_money.length)renderMoney();
+  if(_diary.length)renderDiary();
 }
 
 function updateModalLabels(){
-  const tr = t();
-  // Map label text to translation key
-  const labelMap = {
-    'Title':tr.titleLabel,'Start Date':tr.startDate,'End Date':tr.endDate,
-    'Start Time':tr.startTime,'End Time':tr.endTime,'All day event':tr.allDayEvent,
-    'Repeat':tr.repeat,'Repeat Until':tr.repeatUntil,'Description':tr.description,
-    'Color':tr.color,'Date':tr.date,'Content':tr.content,
-    'Attach Photos':tr.attachPhotos,'Type':tr.titleLabel,
-    'Category':tr.categoryLabel,'Notes':tr.notesLabel,
-    'Override API URL':tr.overrideApi,'Active Endpoint':tr.activeEndpoint,
-    'Language':tr.language,'Currency':tr.currency,
-    'Date Format':tr.dateFormat,'Number Format':tr.numberFormat,
-    'Preview':tr.preview,
-  };
-  // Amount label special case
-  const amtFg = document.getElementById('tx-amount')?.closest('.fg');
-  if(amtFg){ const lbl=amtFg.querySelector('.flabel'); if(lbl) lbl.textContent=tr.amountLabel+' ('+(_locale.currency||'IDR')+')'; }
-  
+  const tr=t();
+  // Only update .flabel text — these are plain elements with no child event listeners
+  const setLbl=(id,txt)=>{const el=document.getElementById(id);if(!el)return;const lbl=el.closest('.fg')?.querySelector('.flabel');if(lbl&&txt)lbl.textContent=txt;};
+  setLbl('ev-title',   tr.titleLabel);
+  setLbl('ev-date',    tr.startDate);
+  setLbl('ev-end-date',tr.endDate);
+  setLbl('ev-time',    tr.startTime);
+  setLbl('ev-end-time',tr.endTime);
+  setLbl('ev-recur',   tr.repeat);
+  setLbl('ev-recur-end',tr.repeatUntil);
+  setLbl('ev-desc',    tr.description);
+  setLbl('diary-date', tr.date);
+  setLbl('diary-title',tr.titleLabel);
+  setLbl('tx-date',    tr.date);
+  setLbl('tx-notes',   tr.notesLabel);
+  setLbl('tx-cat',     tr.categoryLabel);
+  // Amount label with currency
+  const amtFg=document.getElementById('tx-amount')?.closest('.fg');
+  if(amtFg){const lbl=amtFg.querySelector('.flabel');if(lbl)lbl.textContent=tr.amountLabel+' ('+(_locale.currency||'IDR')+')';}
+  // All day checkbox label
+  const alldayLbl=document.querySelector('label[for="ev-allday"]');
+  if(alldayLbl)alldayLbl.textContent=tr.allDayEvent;
   // Repeat options
-  const recurSel = document.getElementById('ev-recur');
-  if(recurSel){
-    const opts = [tr.doesNotRepeat,tr.everyDay,tr.everyWeek,tr.everyMonth,tr.everyWeekday];
-    recurSel.options[0].text=opts[0]; recurSel.options[1].text=opts[1];
-    recurSel.options[2].text=opts[2]; recurSel.options[3].text=opts[3];
-    recurSel.options[4].text=opts[4];
+  const recurSel=document.getElementById('ev-recur');
+  if(recurSel&&recurSel.options.length>=5){
+    recurSel.options[0].text=tr.doesNotRepeat;
+    recurSel.options[1].text=tr.everyDay;
+    recurSel.options[2].text=tr.everyWeek;
+    recurSel.options[3].text=tr.everyMonth;
+    recurSel.options[4].text=tr.everyWeekday;
   }
-
-  // Expense/Income toggle buttons
-  document.getElementById('tt-exp').textContent=tr.expenseBtn;
-  document.getElementById('tt-inc').textContent=tr.incomeBtn;
-
-  // Add Photo button
-  const addPhotoLabel = document.querySelector('label[for="diary-photo-input"]');
-  if(addPhotoLabel){ const inp=addPhotoLabel.querySelector('input'); addPhotoLabel.textContent=tr.addPhoto; if(inp)addPhotoLabel.appendChild(inp); }
 }
 
 function updateFormatPreview(){
@@ -910,10 +916,7 @@ const openModal=id=>{document.getElementById(id).classList.add('open');document.
 const closeModal=id=>{document.getElementById(id).classList.remove('open');document.body.style.overflow=''};
 const esc=s=>(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 const stripHtml=h=>{const d=document.createElement('div');d.innerHTML=h;return d.textContent||''};
-const fmtDate=s=>{if(!s)return'';try{return new Date(s+'T12:00:00').toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'})}catch{return s}};
-const fmtDateLbl=s=>{if(!s)return'';try{return new Date(s+'T12:00:00').toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'})}catch{return s}};
 const today=()=>new Date().toISOString().slice(0,10);
-const idr=n=>'Rp '+Math.abs(n).toLocaleString('id-ID');
 // Extract Drive file ID and build thumbnail URL
 const driveThumb=(url,sz='w200')=>{
   if(!url)return '';
