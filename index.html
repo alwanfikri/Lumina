@@ -77,6 +77,38 @@ img{max-width:100%;display:block}
 
 /* AGENDA / FULLCALENDAR */
 .cal-view-btns{display:flex;gap:.3rem}
+/* Calendar filter bar */
+.cal-filter-bar{display:flex;align-items:center;gap:.5rem;margin-bottom:.75rem;flex-wrap:wrap}
+.cal-filter-list{display:flex;gap:.4rem;flex-wrap:wrap;flex:1}
+.cal-filter-loading{font-size:.78rem;color:var(--text3);padding:.2rem 0}
+.cal-chip{display:inline-flex;align-items:center;gap:.35rem;padding:.3rem .65rem;border-radius:20px;font-size:.75rem;font-weight:500;cursor:pointer;border:2px solid transparent;transition:all var(--ease);user-select:none}
+.cal-chip input[type=checkbox]{width:13px;height:13px;cursor:pointer;accent-color:var(--chip-color,var(--amber));flex-shrink:0}
+.cal-chip.active{border-color:var(--chip-color,var(--amber));background:color-mix(in srgb,var(--chip-color,var(--amber)) 12%,transparent)}
+.cal-chip:not(.active){opacity:.55;background:var(--surface2)}
+.cal-chip-dot{width:9px;height:9px;border-radius:50%;flex-shrink:0}
+.cal-chip-name{max-width:100px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.cal-chip-badge{font-size:.65rem;background:rgba(0,0,0,.1);padding:1px 5px;border-radius:10px}
+.cal-import-btn{padding:.3rem .7rem;border-radius:var(--r-sm);font-size:.75rem;font-weight:500;color:var(--text2);border:1px solid var(--border);background:var(--surface);cursor:pointer;transition:all var(--ease);white-space:nowrap;flex-shrink:0}
+.cal-import-btn:hover{background:var(--surface2)}
+.cal-import-btn.loading{opacity:.6;pointer-events:none}
+/* Calendar picker in modal */
+.cal-picker-item{display:flex;align-items:center;gap:.75rem;padding:.65rem .1rem;border-bottom:1px solid var(--border);cursor:pointer;transition:background var(--ease)}
+.cal-picker-item:last-child{border-bottom:none}
+.cal-picker-item:hover{background:var(--surface2);margin:0 -.5rem;padding:.65rem .6rem;border-radius:var(--r-sm)}
+.cal-picker-cb{width:18px;height:18px;cursor:pointer;accent-color:var(--item-color,var(--amber));flex-shrink:0}
+.cal-picker-dot{width:14px;height:14px;border-radius:50%;flex-shrink:0}
+.cal-picker-info{flex:1;min-width:0}
+.cal-picker-name{font-size:.88rem;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cal-picker-meta{font-size:.72rem;color:var(--text3);margin-top:1px}
+.cal-picker-badge{font-size:.65rem;padding:.15rem .45rem;border-radius:10px;font-weight:600;flex-shrink:0}
+.badge-lumina{background:var(--amber-l);color:var(--amber-d)}
+.badge-primary{background:var(--green-l);color:#15803d}
+.badge-holiday{background:#dcfce7;color:#166534}
+.badge-gcal{background:#dbeafe;color:#1e40af}
+
+/* GCal event source badge in FC */
+.fc-event-lumina{border-left:3px solid transparent!important}
+.fc-event-gcal{border-left:3px solid #4285f4!important;opacity:.85}
 .cal-view-btns button{padding:.3rem .6rem;border-radius:var(--r-sm);font-size:.75rem;font-weight:500;color:var(--text2);border:1px solid var(--border);transition:all var(--ease)}
 .cal-view-btns button.active{background:var(--amber);color:#fff;border-color:var(--amber)}
 
@@ -356,6 +388,18 @@ img{max-width:100%;display:block}
       <span id="notif-banner-text">🔔 Enable notifications to get reminders for your events</span>
       <button class="btn btn-primary btn-sm" id="notif-enable-btn">Enable</button>
     </div>
+
+    <!-- Calendar filter panel -->
+    <div id="cal-filter-wrap">
+      <div class="cal-filter-bar">
+        <div class="cal-filter-list" id="cal-filter-list">
+          <!-- Calendar checkboxes rendered by JS -->
+          <div class="cal-filter-loading">Loading calendars…</div>
+        </div>
+        <button class="cal-import-btn" id="cal-import-btn" title="Sync from Google Calendar">↺ Sync GCal</button>
+      </div>
+    </div>
+
     <div id="cal-container"></div>
   </div>
 
@@ -575,6 +619,26 @@ img{max-width:100%;display:block}
     <div class="modal-actions">
       <button class="btn btn-ghost" data-close="budget-modal" data-i18n="cancel">Cancel</button>
       <button class="btn btn-primary" id="budget-save-btn">t().saveBudgets</button>
+    </div>
+  </div>
+</div>
+
+<!-- Calendar Import Modal -->
+<div class="overlay" id="cal-import-modal">
+  <div class="modal">
+    <div class="modal-hdr">
+      <h2 class="modal-ttl" id="cal-import-modal-ttl">Import from Google Calendar</h2>
+      <button class="modal-x" data-close="cal-import-modal">✕</button>
+    </div>
+    <p style="font-size:.82rem;color:var(--text2);margin-bottom:1rem" id="cal-import-modal-hint">
+      Select which calendars to show in Lumina. Your own events stay in Lumina; imported events are read-only.
+    </p>
+    <div id="cal-picker-list" style="max-height:340px;overflow-y:auto">
+      <div class="loading"><div class="spinner"></div>Loading calendars…</div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" data-close="cal-import-modal">Cancel</button>
+      <button class="btn btn-primary" id="cal-import-confirm-btn">↺ Import Selected</button>
     </div>
   </div>
 </div>
@@ -1027,6 +1091,10 @@ let API_URL = localStorage.getItem(LS_KEY) || DEFAULT_API;
 //  STATE
 // ═══════════════════════════════════════════════════════
 let _agenda=[], _diary=[], _photos=[], _money=[];
+let _gcalEvents=[];          // imported GCal events (not in sheet)
+let _calendars=[];           // user's calendar list from GCal
+let _enabledCals=new Set();  // calendar IDs currently shown
+const LS_ENABLED_CALS='lumina_enabled_cals';
 let _editEntry=null, _carIdx=0, _txType='expense';
 let _cal=null; // FullCalendar instance
 let _quill=null; // Quill instance
@@ -1134,7 +1202,7 @@ document.getElementById('setting-apply').addEventListener('click',()=>{
   // Rebuild calendar with new locale (must destroy + re-init to change FC locale)
   if(_cal){ _cal.destroy(); _cal=null; }
   initCalendar();
-  if(_agenda.length){ _agenda.forEach(ev=>_cal.addEvent(evToFCEvent(ev))); }
+  refreshCalendarView();
 
   // Re-render all tabs with new locale
   applyTranslations();
@@ -1155,6 +1223,241 @@ document.getElementById('api-save').addEventListener('click',()=>{
 document.getElementById('refresh-btn').addEventListener('click',()=>{document.getElementById('settings-ol').classList.remove('open');loadAll();toast(t().refreshing)});
 
 // ═══════════════════════════════════════════════════════
+//  CALENDAR MANAGEMENT (GCal import + filter)
+// ═══════════════════════════════════════════════════════
+
+// Restore enabled cals from localStorage
+function loadEnabledCals(){
+  try{
+    const saved=JSON.parse(localStorage.getItem(LS_ENABLED_CALS)||'null');
+    if(saved&&Array.isArray(saved))_enabledCals=new Set(saved);
+  }catch(_){}
+}
+function saveEnabledCals(){
+  localStorage.setItem(LS_ENABLED_CALS,JSON.stringify([..._enabledCals]));
+}
+
+// Fetch calendars + render filter chips + auto-import enabled ones
+async function loadCalendars(){
+  try{
+    const d=await api('getCalendars');
+    _calendars=d.calendars||[];
+
+    // First load: enable Lumina + primary by default
+    if(_enabledCals.size===0){
+      _calendars.forEach(cal=>{ if(cal.isLumina||cal.isPrimary)_enabledCals.add(cal.id); });
+      saveEnabledCals();
+    }
+
+    renderCalFilterChips();
+    await importEnabledGCals();
+  }catch(e){
+    const el=document.getElementById('cal-filter-list');
+    if(el)el.innerHTML=`<span class="cal-filter-loading" style="color:var(--red)">${esc(e.message)}</span>`;
+  }
+}
+
+// Render the display-toggle chips above the calendar
+function renderCalFilterChips(){
+  const el=document.getElementById('cal-filter-list');
+  if(!el)return;
+  if(!_calendars.length){el.innerHTML='<span class="cal-filter-loading">No calendars</span>';return;}
+
+  el.innerHTML=_calendars.map(cal=>{
+    const checked=_enabledCals.has(cal.id);
+    const color=cal.color||'#3b82f6';
+    const label=cal.isLumina?`📅 ${cal.name}`:cal.isHoliday?`🗓 ${cal.name}`:cal.name;
+    return `<label class="cal-chip ${checked?'active':''}" style="--chip-color:${color}" data-cal-id="${cal.id}">
+      <input type="checkbox" ${checked?'checked':''} data-cal-id="${cal.id}">
+      <span class="cal-chip-dot" style="background:${color}"></span>
+      <span class="cal-chip-name">${esc(label)}</span>
+    </label>`;
+  }).join('');
+
+  el.querySelectorAll('input[type=checkbox]').forEach(cb=>{
+    cb.addEventListener('change',async()=>{
+      const calId=cb.dataset.calId;
+      if(cb.checked)_enabledCals.add(calId); else _enabledCals.delete(calId);
+      saveEnabledCals();
+      cb.closest('.cal-chip')?.classList.toggle('active',cb.checked);
+      refreshCalendarView();
+    });
+  });
+}
+
+// ── Import selection modal ────────────────────────────
+// Track which calendars are selected FOR IMPORT (separate from display toggle)
+let _importSelection=new Set();
+
+function openCalImportModal(){
+  openModal('cal-import-modal');
+  renderCalPickerList();
+}
+
+function renderCalPickerList(){
+  const el=document.getElementById('cal-picker-list');
+  if(!el)return;
+
+  if(!_calendars.length){
+    el.innerHTML='<div class="loading"><div class="spinner"></div>Loading…</div>';
+    api('getCalendars').then(d=>{_calendars=d.calendars||[];renderCalPickerList();}).catch(e=>{
+      el.innerHTML=`<div style="color:var(--red);font-size:.84rem;padding:.5rem">${esc(e.message)}</div>`;
+    });
+    return;
+  }
+
+  // Non-Lumina calendars only (Lumina events already in Lumina)
+  const importable=_calendars.filter(cal=>!cal.isLumina);
+  if(!importable.length){el.innerHTML='<div style="font-size:.84rem;color:var(--text2);padding:.5rem">No other calendars found.</div>';return;}
+
+  // Init selection to currently enabled non-Lumina cals
+  if(_importSelection.size===0){
+    _calendars.filter(c=>!c.isLumina&&_enabledCals.has(c.id)).forEach(c=>_importSelection.add(c.id));
+  }
+
+  el.innerHTML=importable.map(cal=>{
+    const checked=_importSelection.has(cal.id)||_enabledCals.has(cal.id);
+    const color=cal.color||'#3b82f6';
+    let badge='', badgeCls='';
+    if(cal.isPrimary){badge='Primary';badgeCls='badge-primary';}
+    else if(cal.isHoliday){badge='Holidays 🇮🇩';badgeCls='badge-holiday';}
+    else{badge='Calendar';badgeCls='badge-gcal';}
+
+    return `<div class="cal-picker-item" style="--item-color:${color}">
+      <input type="checkbox" class="cal-picker-cb" data-cal-id="${cal.id}" ${checked?'checked':''}>
+      <div class="cal-picker-dot" style="background:${color}"></div>
+      <div class="cal-picker-info">
+        <div class="cal-picker-name">${esc(cal.name)}</div>
+        <div class="cal-picker-meta">${esc(cal.id.length>40?cal.id.slice(0,38)+'…':cal.id)}</div>
+      </div>
+      <span class="cal-picker-badge ${badgeCls}">${badge}</span>
+    </div>`;
+  }).join('');
+
+  // Clicking row toggles checkbox
+  el.querySelectorAll('.cal-picker-item').forEach(row=>{
+    row.addEventListener('click',e=>{
+      if(e.target.type==='checkbox')return;
+      const cb=row.querySelector('input[type=checkbox]');
+      cb.checked=!cb.checked;
+      cb.dispatchEvent(new Event('change'));
+    });
+    row.querySelector('input')?.addEventListener('change',e=>{
+      const calId=e.target.dataset.calId;
+      if(e.target.checked)_importSelection.add(calId); else _importSelection.delete(calId);
+    });
+  });
+}
+
+// Confirm import: enable selected, disable unselected (non-Lumina), then fetch
+document.getElementById('cal-import-confirm-btn')?.addEventListener('click',async()=>{
+  const btn=document.getElementById('cal-import-confirm-btn');
+  btn.disabled=true; btn.textContent='↻ Importing…';
+
+  // Apply selection: keep Lumina enabled, toggle others by selection
+  const luminaIds=new Set(_calendars.filter(c=>c.isLumina).map(c=>c.id));
+  // Remove non-lumina from enabled first
+  [..._enabledCals].forEach(id=>{ if(!luminaIds.has(id))_enabledCals.delete(id); });
+  // Add selected
+  _importSelection.forEach(id=>_enabledCals.add(id));
+  saveEnabledCals();
+
+  closeModal('cal-import-modal');
+  renderCalFilterChips();
+
+  await importEnabledGCals();
+
+  btn.disabled=false; btn.textContent='↺ Import Selected';
+  _importSelection.clear();
+});
+
+// Sync button → open picker modal
+document.getElementById('cal-import-btn')?.addEventListener('click',()=>{
+  _importSelection.clear();
+  openCalImportModal();
+});
+
+// ── Import events from enabled non-Lumina calendars ──
+async function importEnabledGCals(){
+  const btn=document.getElementById('cal-import-btn');
+  if(btn)btn.classList.add('loading');
+
+  const luminaIds=new Set(_calendars.filter(c=>c.isLumina).map(c=>c.id));
+  const toImport=[..._enabledCals].filter(id=>!luminaIds.has(id));
+
+  if(!toImport.length){
+    _gcalEvents=[];
+    if(btn)btn.classList.remove('loading');
+    refreshCalendarView();
+    return;
+  }
+
+  try{
+    const start=new Date(); start.setMonth(start.getMonth()-3);
+    const end=new Date();   end.setMonth(end.getMonth()+6);
+    const d=await api('importFromGCal',{
+      calendarIds:toImport,
+      start:start.toISOString(),
+      end:end.toISOString()
+    });
+    _gcalEvents=d.events||[];
+    console.log(`[Cal] Imported ${_gcalEvents.length} GCal events`);
+  }catch(e){
+    console.warn('[Cal] Import failed:',e.message);
+    _gcalEvents=[];
+  }
+
+  if(btn)btn.classList.remove('loading');
+  refreshCalendarView();
+}
+
+// Refresh FullCalendar with Lumina + GCal events, respecting enabled filter
+function refreshCalendarView(){
+  if(!_cal)return;
+  _cal.removeAllEvents();
+
+  const luminaIds=new Set(_calendars.filter(c=>c.isLumina).map(c=>c.id));
+  const showLumina=_calendars.some(c=>c.isLumina&&_enabledCals.has(c.id))||_enabledCals.size===0;
+
+  if(showLumina){
+    _agenda.forEach(ev=>{
+      const fcEv=evToFCEvent(ev);
+      fcEv.classNames=['fc-event-lumina'];
+      fcEv.extendedProps.source='lumina';
+      _cal.addEvent(fcEv);
+    });
+  }
+
+  const luminaGCalIds=new Set(_agenda.map(e=>e.gcal_id).filter(Boolean));
+  _gcalEvents.forEach(ev=>{
+    if(luminaGCalIds.has(ev.gcal_id))return; // already shown via Lumina
+    if(!_enabledCals.has(ev.calendar_id))return;
+
+    const start=ev.start_time||ev.date;
+    let end=ev.end_time||null;
+    if(ev.all_day&&ev.end_date&&ev.end_date!==ev.date){
+      const d=new Date(ev.end_date+'T12:00:00');d.setDate(d.getDate()+1);
+      end=d.toISOString().slice(0,10);
+    }
+    _cal.addEvent({
+      id:'gcal_'+ev.gcal_id,
+      title:ev.title,
+      start,end,
+      allDay:ev.all_day,
+      backgroundColor:ev.color||'#3b82f6',
+      borderColor:ev.color||'#3b82f6',
+      classNames:['fc-event-gcal'],
+      extendedProps:{
+        source:'gcal',gcal_id:ev.gcal_id,
+        description:ev.description,
+        calendar_name:ev.calendar_name,
+        readOnly:true
+      }
+    });
+  });
+}
+
+// ═══════════════════════════════════════════════════════
 //  AGENDA — FullCalendar
 // ═══════════════════════════════════════════════════════
 function initCalendar(){
@@ -1167,7 +1470,16 @@ function initCalendar(){
     firstDay:1,
     events: _agenda.map(evToFCEvent),
     eventClick(info){
-      // Find the original data record — don't rely on FC's allDay which may differ
+      const ext = info.event.extendedProps;
+      // Read-only GCal events — show info toast, don't open edit modal
+      if(ext.source === 'gcal' || ext.readOnly){
+        const timeStr = info.event.start
+          ? info.event.start.toLocaleTimeString(_locale.lang==='id'?'id-ID':'en-US',{hour:'2-digit',minute:'2-digit'})
+          : '';
+        toast(`📅 ${info.event.title}${timeStr?' · '+timeStr:''}${ext.calendar_name?' ('+ext.calendar_name+')':''}`, 'info', 4000);
+        return;
+      }
+      // Lumina event — open edit modal
       const ev=_agenda.find(e=>e.id===info.event.id);
       if(ev)openEvModal(ev);
     },
@@ -1239,7 +1551,7 @@ async function loadAgenda(){
   try{
     const d=await api('getAgendas',{});
     _agenda=d.events||[];
-    if(_cal){_cal.removeAllEvents();_agenda.forEach(ev=>_cal.addEvent(evToFCEvent(ev)));}
+    if(_cal){refreshCalendarView();}
     renderUpcoming();
     updateNotifBanner();
     scheduleAllReminders();
@@ -2102,6 +2414,7 @@ function renderUpcoming(){
 //  INIT
 // ═══════════════════════════════════════════════════════
 async function loadAll(){
+  loadEnabledCals(); // restore saved calendar filter from localStorage
   setTxType('expense');
   await Promise.all([loadAgenda(),loadDiary(),loadPhotos(),loadMoney()]);
 }
