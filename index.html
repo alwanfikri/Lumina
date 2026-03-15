@@ -965,7 +965,7 @@ const TRANSLATIONS = {
     recentPhotos:'Recent Photos', thisMonth:'This month',
     noUpcoming:'No upcoming events', noRecentDiary:'No diary entries yet',
     noRecentPhotos:'No photos yet', applySettings:'Apply Settings',
-    saveReload:'Save & Reload', enterUrl:'Enter a URL', loading:'Loading…', theme:'Theme', themeLight:'☀️ Light', themeDark:'🌙 Dark', themeAuto:'⚙ Auto', refreshData:'↺ Refresh all data',
+    saveReload:'Save & Reload', enterUrl:'Enter a URL', loading:'Loading…', allTime:'All time', noResults:'No results', tryDifferent:'Try a different search', moodLabel:'Mood', allMoods:'All moods', untitled:'Untitled', theme:'Theme', themeLight:'☀️ Light', themeDark:'🌙 Dark', themeAuto:'⚙ Auto', refreshData:'↺ Refresh all data',
     // Tabs
     agenda:'Agenda', diary:'Diary', photos:'Photos', money:'Money',
     // Section titles
@@ -1039,7 +1039,7 @@ const TRANSLATIONS = {
     recentPhotos:'Foto Terbaru', thisMonth:'Bulan ini',
     noUpcoming:'Tidak ada acara mendatang', noRecentDiary:'Belum ada catatan',
     noRecentPhotos:'Belum ada foto', applySettings:'Terapkan Pengaturan',
-    saveReload:'Simpan & Muat Ulang', enterUrl:'Masukkan URL', loading:'Memuat…', theme:'Tema', themeLight:'☀️ Terang', themeDark:'🌙 Gelap', themeAuto:'⚙ Otomatis', refreshData:'↺ Perbarui semua data',
+    saveReload:'Simpan & Muat Ulang', enterUrl:'Masukkan URL', loading:'Memuat…', allTime:'Semua waktu', noResults:'Tidak ada hasil', tryDifferent:'Coba kata kunci lain', moodLabel:'Suasana hati', allMoods:'Semua suasana', untitled:'Tanpa judul', theme:'Tema', themeLight:'☀️ Terang', themeDark:'🌙 Gelap', themeAuto:'⚙ Otomatis', refreshData:'↺ Perbarui semua data',
     agenda:'Agenda', diary:'Diari', photos:'Foto', money:'Keuangan',
     newEvent:'+ Acara', newEntry:'+ Catatan', upload:'+ Unggah', addTx:'+ Tambah',
     budgets:'🎯 Anggaran',
@@ -1250,6 +1250,8 @@ function applyTranslations(){
   if(agendaS) agendaS.placeholder=tr.searchEvents||'Search events…';
   const monthSel=document.getElementById('diary-month-filter');
   if(monthSel&&monthSel.options[0]) monthSel.options[0].text=tr.allTime||'All time';
+  const moodFSel=document.getElementById('diary-mood-filter');
+  if(moodFSel&&moodFSel.options[0]) moodFSel.options[0].text=tr.allMoods||'All moods';
   // Filter chip labels
   const flumina=document.getElementById('filter-lumina');
   const fgcal=document.getElementById('filter-gcal');
@@ -1309,8 +1311,11 @@ function updateModalLabels(){
   setLbl('ev-recur',   tr.repeat);
   setLbl('ev-recur-end',tr.repeatUntil);
   setLbl('ev-desc',    tr.description);
-  setLbl('diary-date', tr.date);
-  setLbl('diary-title',tr.titleLabel);
+  setLbl('diary-date',  tr.date);
+  setLbl('diary-title', tr.titleLabel);
+  // diary-date-lbl and diary-mood-lbl are in the frow layout
+  safeText('diary-date-lbl', tr.date||'Date');
+  const dmlbl=document.getElementById('diary-mood-lbl');if(dmlbl)dmlbl.textContent=tr.moodLabel||'Mood';
   setLbl('tx-date',    tr.date);
   setLbl('tx-notes',   tr.notesLabel);
   setLbl('tx-cat',     tr.categoryLabel);
@@ -1845,7 +1850,7 @@ async function loadAgenda(){
 
 function openEvModal(ev=null,dateStr=null){
   const n=!ev;
-  document.getElementById('ev-ttl').textContent=n?'New Event':'Edit Event';
+  document.getElementById('ev-ttl').textContent=n?t().newEventTitle:t().editEventTitle;
   document.getElementById('ev-id').value=ev?.id||'';
   document.getElementById('ev-gcal-id').value=ev?.gcal_id||'';
   document.getElementById('ev-title').value=ev?.title||'';
@@ -2082,7 +2087,7 @@ function renderDiary(){
         <div class="dc-date">${fmtDate(e.date)}</div>
         ${e.mood?`<span class="dc-mood">${e.mood}</span>`:''}
       </div>
-      <div class="dc-title">${highlight(e.title||'Untitled',_diaryQuery)}</div>
+      <div class="dc-title">${highlight(e.title||t().untitled||'Untitled',_diaryQuery)}</div>
       <div class="dc-preview">${highlight(preview,_diaryQuery)}</div>
       ${thumbHtml?`<div class="dc-photos">${thumbHtml}</div>`:''}
     </div>`;
@@ -2099,7 +2104,7 @@ function openDiaryView(entry){
       <div class="dv-date">${fmtDate(entry.date)}</div>
       ${entry.mood?`<span style="font-size:1.8rem">${entry.mood}</span>`:''}
     </div>
-    <div class="dv-title">${esc(entry.title||'Untitled')}</div>
+    <div class="dv-title">${esc(entry.title||t().untitled||'Untitled')}</div>
     <div class="dv-body">${entry.content_html||'<em>No content</em>'}</div>
     ${photoHtml}`;
   // Make photos in viewer clickable
@@ -2139,7 +2144,7 @@ function initQuill(){
 
 function openDiaryModal(entry=null){
   const n=!entry;
-  document.getElementById('diary-modal-ttl').textContent=n?'New Entry':'Edit Entry';
+  document.getElementById('diary-modal-ttl').textContent=n?t().newEntry2:t().editEntry;
   document.getElementById('diary-id').value=entry?.id||'';
   document.getElementById('diary-date').value=entry?.date||today();
   document.getElementById('diary-title').value=entry?.title||'';
@@ -2523,7 +2528,7 @@ function setTxType(type){
 }
 function openTxModal(tx=null){
   const n=!tx;
-  document.getElementById('tx-ttl').textContent=n?'New Transaction':'Edit Transaction';
+  document.getElementById('tx-ttl').textContent=n?t().newTx:t().editTx;
   document.getElementById('tx-id').value=tx?.id||'';
   document.getElementById('tx-date').value=tx?.date||today();
   document.getElementById('tx-amount').value=tx?.amount||'';
@@ -2649,7 +2654,7 @@ function renderHome(){
   const diaryHtml=recentDiary.length ? recentDiary.map(e=>`
     <div class="home-diary-item" data-id="${e.id}">
       <div class="home-diary-date">${fmtDate(e.date)}</div>
-      <div class="home-diary-title">${esc(e.title||'Untitled')}</div>
+      <div class="home-diary-title">${esc(e.title||t().untitled||'Untitled')}</div>
       <div class="home-diary-preview">${esc(stripHtml(e.content_html||''))}</div>
     </div>`).join('') : `<div class="home-empty">${tr.noRecentDiary||'No diary entries yet'}</div>`;
 
