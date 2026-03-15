@@ -42,10 +42,10 @@
   --shadow:0 1px 3px rgba(0,0,0,.3),0 4px 16px rgba(0,0,0,.2);
   --shadow-lg:0 8px 40px rgba(0,0,0,.5);
 }
-/* Smooth theme transition */
-*, *::before, *::after { transition: background-color .2s ease, border-color .2s ease, color .1s ease; }
+/* Smooth theme transition - only active after page loads */
+.theme-ready *, .theme-ready *::before, .theme-ready *::after { transition: background-color .2s ease, border-color .2s ease, color .1s ease; }
 /* Override for elements that shouldn't transition */
-.spinner, .fc-event, canvas { transition: none !important; }
+.spinner, .fc-event, canvas, .theme-ready .spinner, .theme-ready canvas { transition: none !important; }
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 html{font-size:16px;-webkit-tap-highlight-color:transparent}
 body{font-family:var(--font-u);background:var(--bg);color:var(--text);min-height:100dvh;display:flex;flex-direction:column}
@@ -3086,9 +3086,28 @@ async function loadAll(){
   loadEnabledCals();
   setTxType('expense');
   // Use allSettled so one failing load doesn't block others
-  await Promise.allSettled([loadAgenda(),loadDiary(),loadPhotos(),loadMoney()]);
+  const results = await Promise.allSettled([loadAgenda(),loadDiary(),loadPhotos(),loadMoney()]);
+  // Check if all failed — likely API URL issue
+  const allFailed = results.every(r=>r.status==='rejected');
+  if(allFailed){
+    toast('⚠ Could not connect to API — check URL in Settings', 'error', 8000);
+  }
   loadCalendars();
 }
+
+// Apply theme immediately before page renders to prevent flash
+(function(){
+  try{
+    const saved = JSON.parse(localStorage.getItem('lumina_locale')||'{}');
+    const theme = saved.theme || 'auto';
+    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    if(theme === 'dark' || (theme === 'auto' && prefersDark)){
+      document.documentElement.setAttribute('data-theme','dark');
+    }
+    // Enable smooth transitions after load (prevents flash on theme apply)
+    setTimeout(()=>document.documentElement.classList.add('theme-ready'), 300);
+  }catch(e){}
+})();
 
 // Warn if opened as file:// (fetch won't work)
 if(location.protocol==='file:'){
@@ -3110,7 +3129,7 @@ applyTranslations();
 applyTheme(_locale.theme||'auto');
 renderHome();
 
-// Start loading immediately — don't wait for ping
+// Start loading — DOM is ready since script is at end of body
 loadAll();
 </script>
 </body>
