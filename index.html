@@ -9,6 +9,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,600;1,400&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500&display=swap" rel="stylesheet">
 <!-- FullCalendar -->
 <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/locales/id.global.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@fullcalendar/rrule@6.1.11/index.global.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/rrule@2.8.1/dist/es5/rrule.min.js"></script>
 <!-- Quill -->
@@ -244,6 +245,76 @@ img{max-width:100%;display:block}
 .toast{background:var(--text);color:#fff;padding:.6rem 1rem;border-radius:var(--r-sm);font-size:.83rem;box-shadow:var(--shadow-lg);animation:toastIn .2s ease;width:100%;text-align:center}
 .toast.success{background:var(--green)}.toast.error{background:var(--red)}.toast.warning{background:var(--amber-d)}
 
+/* Notification banner */
+.notif-banner{display:flex;align-items:center;justify-content:space-between;gap:.75rem;padding:.7rem .9rem;background:var(--amber-l);border:1px solid #fde68a;border-radius:var(--r-sm);font-size:.82rem;color:var(--amber-d);margin-bottom:.9rem}
+
+/* Upcoming events widget */
+.upcoming-section{margin-bottom:1rem}
+.upcoming-title{font-size:.72rem;text-transform:uppercase;letter-spacing:.07em;color:var(--text3);font-weight:500;margin-bottom:.5rem}
+.upcoming-list{display:flex;flex-direction:column;gap:.4rem}
+.upcoming-item{display:flex;align-items:center;gap:.7rem;padding:.65rem .9rem;background:var(--surface);border:1px solid var(--border);border-radius:var(--r);box-shadow:var(--shadow);cursor:pointer;transition:all var(--ease)}
+.upcoming-item:hover{box-shadow:0 2px 10px rgba(0,0,0,.09);transform:translateY(-1px)}
+.upcoming-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+.upcoming-body{flex:1;min-width:0}
+.upcoming-ev-title{font-size:.88rem;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.upcoming-time{font-size:.76rem;color:var(--text3);margin-top:1px}
+.upcoming-badge{font-size:.7rem;font-weight:600;padding:.2rem .5rem;border-radius:20px;flex-shrink:0;white-space:nowrap}
+.badge-today{background:var(--amber-l);color:var(--amber-d)}
+.badge-tomorrow{background:var(--blue-l,#dbeafe);color:#1d4ed8}
+.badge-soon{background:var(--green-l);color:#15803d}
+.badge-has-reminder{background:#fce7f3;color:#be185d}
+/* ── HOME DASHBOARD ─────────────────────────────── */
+.home-greeting{margin-bottom:1.1rem}
+.home-greeting-date{font-size:.75rem;text-transform:uppercase;letter-spacing:.09em;color:var(--text3);font-weight:500;margin-bottom:.2rem}
+.home-greeting-text{font-family:var(--font-s);font-size:1.6rem;font-weight:600;letter-spacing:-.02em;line-height:1.2}
+.home-greeting-text span{color:var(--amber)}
+
+.home-section{margin-bottom:1.3rem}
+.home-section-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:.55rem}
+.home-section-title{font-size:.72rem;text-transform:uppercase;letter-spacing:.09em;color:var(--text3);font-weight:500}
+.home-section-link{font-size:.75rem;color:var(--amber);font-weight:500;cursor:pointer}
+.home-section-link:hover{text-decoration:underline}
+
+/* Money snapshot */
+.home-money-row{display:grid;grid-template-columns:repeat(3,1fr);gap:.5rem}
+.home-money-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:.7rem .75rem;box-shadow:var(--shadow);text-align:center}
+.home-money-lbl{font-size:.65rem;text-transform:uppercase;letter-spacing:.07em;color:var(--text3);font-weight:500;margin-bottom:.2rem}
+.home-money-val{font-family:var(--font-s);font-size:.95rem;font-weight:600}
+
+/* Recent diary */
+.home-diary-item{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:.8rem 1rem;box-shadow:var(--shadow);cursor:pointer;transition:all var(--ease)}
+.home-diary-item:hover{box-shadow:0 2px 10px rgba(0,0,0,.09);transform:translateY(-1px)}
+.home-diary-item+.home-diary-item{margin-top:.45rem}
+.home-diary-date{font-size:.68rem;text-transform:uppercase;letter-spacing:.08em;color:var(--amber);font-weight:500;margin-bottom:.18rem}
+.home-diary-title{font-family:var(--font-s);font-size:.95rem;font-weight:600;margin-bottom:.2rem}
+.home-diary-preview{font-size:.78rem;color:var(--text2);display:-webkit-box;-webkit-line-clamp:1;-webkit-box-orient:vertical;overflow:hidden}
+
+/* Photo strip */
+.home-photo-strip{display:flex;gap:6px;overflow-x:auto;padding-bottom:4px;scrollbar-width:none}
+.home-photo-strip::-webkit-scrollbar{display:none}
+.home-photo-thumb{width:72px;height:72px;border-radius:var(--r-sm);object-fit:cover;flex-shrink:0;cursor:pointer;transition:transform .2s}
+.home-photo-thumb:hover{transform:scale(1.06)}
+
+/* Quick actions */
+.quick-actions{display:grid;grid-template-columns:repeat(4,1fr);gap:.5rem;margin-bottom:1.3rem}
+.qa-btn{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:.75rem .5rem;text-align:center;cursor:pointer;transition:all var(--ease);box-shadow:var(--shadow)}
+.qa-btn:hover{background:var(--surface2);box-shadow:0 2px 10px rgba(0,0,0,.09);transform:translateY(-1px)}
+.qa-icon{font-size:1.4rem;margin-bottom:.25rem;line-height:1}
+.qa-label{font-size:.65rem;font-weight:500;color:var(--text2);text-transform:uppercase;letter-spacing:.05em}
+
+/* Upcoming mini */
+.home-upcoming-item{display:flex;align-items:center;gap:.65rem;padding:.65rem .85rem;background:var(--surface);border:1px solid var(--border);border-radius:var(--r);box-shadow:var(--shadow);cursor:pointer;transition:all var(--ease)}
+.home-upcoming-item:hover{transform:translateY(-1px);box-shadow:0 2px 10px rgba(0,0,0,.09)}
+.home-upcoming-item+.home-upcoming-item{margin-top:.4rem}
+.home-ev-dot{width:9px;height:9px;border-radius:50%;flex-shrink:0}
+.home-ev-body{flex:1;min-width:0}
+.home-ev-title{font-size:.87rem;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.home-ev-time{font-size:.73rem;color:var(--text3);margin-top:1px}
+.home-ev-badge{font-size:.68rem;font-weight:600;padding:.18rem .45rem;border-radius:20px;flex-shrink:0;white-space:nowrap}
+
+/* Empty mini */
+.home-empty{text-align:center;padding:1.2rem;color:var(--text3);font-size:.82rem;background:var(--surface);border:1px dashed var(--border);border-radius:var(--r)}
+
 @keyframes spin{to{transform:rotate(360deg)}}
 #ev-time-row.hidden{display:none}
 @keyframes toastIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
@@ -261,8 +332,13 @@ img{max-width:100%;display:block}
 
 <main class="main">
 
+  <!-- HOME -->
+  <div class="panel active" id="panel-home">
+    <div id="home-content"></div>
+  </div>
+
   <!-- AGENDA -->
-  <div class="panel active" id="panel-agenda">
+  <div class="panel" id="panel-agenda">
     <div class="sec-hdr">
       <h1 class="sec-title">Agenda</h1>
       <div style="display:flex;gap:.4rem;align-items:center">
@@ -273,6 +349,12 @@ img{max-width:100%;display:block}
         </div>
         <button class="btn btn-primary btn-sm" id="new-ev-btn">+ Event</button>
       </div>
+    </div>
+    <!-- Upcoming events & notification permission banner -->
+    <div id="upcoming-wrap"></div>
+    <div id="notif-banner" style="display:none" class="notif-banner">
+      <span id="notif-banner-text">🔔 Enable notifications to get reminders for your events</span>
+      <button class="btn btn-primary btn-sm" id="notif-enable-btn">Enable</button>
     </div>
     <div id="cal-container"></div>
   </div>
@@ -330,11 +412,11 @@ img{max-width:100%;display:block}
     <!-- Charts row -->
     <div class="charts-row">
       <div class="chart-card">
-        <div class="chart-card-title">${t().spendingByCategory}</div>
+        <div class="chart-card-title" id="chart-title-donut">Spending by Category</div>
         <div class="donut-wrap"><canvas id="chart-donut"></canvas><div class="donut-center" id="donut-center"></div></div>
       </div>
       <div class="chart-card">
-        <div class="chart-card-title">${t().monthlyTrend}</div>
+        <div class="chart-card-title" id="chart-title-bar">6-Month Trend</div>
         <canvas id="chart-bar" style="max-height:160px"></canvas>
       </div>
     </div>
@@ -349,7 +431,8 @@ img{max-width:100%;display:block}
 </main>
 
 <nav class="tab-bar">
-  <button class="tab-btn active" data-tab="agenda"><span class="ti">📅</span>Agenda</button>
+  <button class="tab-btn active" data-tab="home"><span class="ti">🏠</span>Home</button>
+  <button class="tab-btn" data-tab="agenda"><span class="ti">📅</span>Agenda</button>
   <button class="tab-btn" data-tab="diary"><span class="ti">📓</span>Diary</button>
   <button class="tab-btn" data-tab="photos"><span class="ti">🖼</span>Photos</button>
   <button class="tab-btn" data-tab="money"><span class="ti">💰</span>Money</button>
@@ -360,14 +443,14 @@ img{max-width:100%;display:block}
   <div class="modal">
     <div class="modal-hdr"><h2 class="modal-ttl" id="ev-ttl">New Event</h2><button class="modal-x" data-close="ev-modal">✕</button></div>
     <input type="hidden" id="ev-id"><input type="hidden" id="ev-gcal-id">
-    <div class="fg"><label class="flabel">Title</label><input class="fi" id="ev-title" placeholder="What's happening?"></div>
+    <div class="fg"><label class="flabel" id="ev-lbl-title">Title</label><input class="fi" id="ev-title" placeholder="What's happening?"></div>
     <div class="frow">
-      <div class="fg"><label class="flabel">Start Date</label><input class="fi" id="ev-date" type="date"></div>
-      <div class="fg"><label class="flabel">End Date</label><input class="fi" id="ev-end-date" type="date" title="Leave same as start for single-day"></div>
+      <div class="fg"><label class="flabel" id="ev-lbl-start-date">Start Date</label><input class="fi" id="ev-date" type="date"></div>
+      <div class="fg"><label class="flabel" id="ev-lbl-end-date">End Date</label><input class="fi" id="ev-end-date" type="date" title="Leave same as start for single-day"></div>
     </div>
     <div class="frow" id="ev-time-row">
-      <div class="fg"><label class="flabel">Start Time</label><input class="fi" id="ev-time" type="time"></div>
-      <div class="fg"><label class="flabel">End Time</label><input class="fi" id="ev-end-time" type="time"></div>
+      <div class="fg"><label class="flabel" id="ev-lbl-start-time">Start Time</label><input class="fi" id="ev-time" type="time"></div>
+      <div class="fg"><label class="flabel" id="ev-lbl-end-time">End Time</label><input class="fi" id="ev-end-time" type="time"></div>
     </div>
     <div class="fg" style="display:flex;align-items:center;gap:.4rem">
       <input type="checkbox" id="ev-allday" style="width:16px;height:16px;accent-color:var(--amber)">
@@ -387,7 +470,19 @@ img{max-width:100%;display:block}
       <label class="flabel">Repeat Until</label>
       <input class="fi" id="ev-recur-end" type="date" placeholder="No end date">
     </div>
-    <div class="fg"><label class="flabel">Description</label><textarea class="fta" id="ev-desc" rows="2" placeholder="Details…"></textarea></div>
+    <div class="fg">
+      <label class="flabel">Reminder</label>
+      <select class="fi" id="ev-reminder">
+        <option value="">No reminder</option>
+        <option value="5">5 minutes before</option>
+        <option value="15">15 minutes before</option>
+        <option value="30">30 minutes before</option>
+        <option value="60">1 hour before</option>
+        <option value="120">2 hours before</option>
+        <option value="1440">1 day before</option>
+      </select>
+    </div>
+    <div class="fg"><label class="flabel" id="ev-lbl-desc">Description</label><textarea class="fta" id="ev-desc" rows="2" placeholder="Details…"></textarea></div>
     <div class="fg"><label class="flabel">Color</label>
       <div class="swatches" id="ev-colors">
         <div class="swatch sel" data-c="#f59e0b" style="background:#f59e0b"></div>
@@ -400,8 +495,8 @@ img{max-width:100%;display:block}
       </div>
     </div>
     <div class="modal-actions">
-      <button class="btn btn-danger btn-sm" id="ev-del" style="display:none;margin-right:auto">🗑 Delete</button>
-      <button class="btn btn-ghost" data-close="ev-modal">Cancel</button>
+      <button class="btn btn-danger btn-sm" id="ev-del" style="display:none;margin-right:auto" data-i18n="deleteBtn">🗑 Delete</button>
+      <button class="btn btn-ghost" data-close="ev-modal" data-i18n="cancel">Cancel</button>
       <button class="btn btn-primary" id="ev-save">Save</button>
     </div>
   </div>
@@ -413,24 +508,24 @@ img{max-width:100%;display:block}
     <div class="modal-hdr"><h2 class="modal-ttl" id="diary-modal-ttl">New Entry</h2><button class="modal-x" data-close="diary-modal">✕</button></div>
     <input type="hidden" id="diary-id">
     <div class="fg"><label class="flabel">Date</label><input class="fi" id="diary-date" type="date"></div>
-    <div class="fg"><label class="flabel">Title</label><input class="fi" id="diary-title" placeholder="Give this entry a title…"></div>
+    <div class="fg"><label class="flabel" id="ev-lbl-title">Title</label><input class="fi" id="diary-title" placeholder="Give this entry a title…"></div>
     <div class="fg">
-      <label class="flabel">Content</label>
+      <label class="flabel" id="diary-content-lbl">Content</label>
       <div id="diary-editor-container"></div>
     </div>
     <div class="fg">
-      <label class="flabel">Attach Photos</label>
+      <label class="flabel" id="diary-attach-lbl">Attach Photos</label>
       <div class="photo-attach-row">
         <label class="btn btn-ghost btn-sm" style="cursor:pointer">
           📎 Add Photo<input type="file" id="diary-photo-input" accept="image/*" multiple style="display:none">
         </label>
-        <span style="font-size:.75rem;color:var(--text3)">Photos upload to Drive</span>
+        <span style="font-size:.75rem;color:var(--text3)" id="diary-attach-hint">Photos upload to Drive</span>
       </div>
       <div class="attach-preview" id="attach-preview"></div>
     </div>
     <div class="modal-actions">
-      <button class="btn btn-danger btn-sm" id="diary-del" style="display:none;margin-right:auto">🗑 Delete</button>
-      <button class="btn btn-ghost" data-close="diary-modal">Cancel</button>
+      <button class="btn btn-danger btn-sm" id="diary-del" style="display:none;margin-right:auto" data-i18n="deleteBtn">🗑 Delete</button>
+      <button class="btn btn-ghost" data-close="diary-modal" data-i18n="cancel">Cancel</button>
       <button class="btn btn-primary" id="diary-save">Save</button>
     </div>
   </div>
@@ -464,8 +559,8 @@ img{max-width:100%;display:block}
     <div class="fg"><label class="flabel">Category</label><select class="fi" id="tx-cat"></select></div>
     <div class="fg"><label class="flabel">Notes</label><input class="fi" id="tx-notes" placeholder="Optional…"></div>
     <div class="modal-actions">
-      <button class="btn btn-danger btn-sm" id="tx-del" style="display:none;margin-right:auto">🗑 Delete</button>
-      <button class="btn btn-ghost" data-close="tx-modal">Cancel</button>
+      <button class="btn btn-danger btn-sm" id="tx-del" style="display:none;margin-right:auto" data-i18n="deleteBtn">🗑 Delete</button>
+      <button class="btn btn-ghost" data-close="tx-modal" data-i18n="cancel">Cancel</button>
       <button class="btn btn-primary" id="tx-save">Save</button>
     </div>
   </div>
@@ -474,11 +569,11 @@ img{max-width:100%;display:block}
 <!-- Budget modal -->
 <div class="overlay" id="budget-modal">
   <div class="modal">
-    <div class="modal-hdr"><h2 class="modal-ttl">`${t().monthlyBudgets}`</h2><button class="modal-x" data-close="budget-modal">✕</button></div>
-    <p style="font-size:.82rem;color:var(--text2);margin-bottom:1rem">`${t().budgetHint}`</p>
+    <div class="modal-hdr"><h2 class="modal-ttl" id="budget-modal-ttl">Monthly Budgets</h2><button class="modal-x" data-close="budget-modal">✕</button></div>
+    <p id="budget-modal-hint" style="font-size:.82rem;color:var(--text2);margin-bottom:1rem">Set spending limits per category. Leave blank for no limit.</p>
     <div id="budget-inputs"></div>
     <div class="modal-actions">
-      <button class="btn btn-ghost" data-close="budget-modal">Cancel</button>
+      <button class="btn btn-ghost" data-close="budget-modal" data-i18n="cancel">Cancel</button>
       <button class="btn btn-primary" id="budget-save-btn">t().saveBudgets</button>
     </div>
   </div>
@@ -588,8 +683,15 @@ const TRANSLATIONS = {
   en: {
     settings:'Settings', language:'Language', currency:'Currency',
     dateFormat:'Date Format', numberFormat:'Number Format',
-    preview:'Preview', applySettings:'Apply Settings',
-    saveReload:'Save & Reload', refreshData:'↺ Refresh all data',
+    preview:'Preview',
+    home:'Home',
+    goodMorning:'Good morning', goodAfternoon:'Good afternoon', goodEvening:'Good evening',
+    quickAdd:'Quick Add', viewAll:'View all',
+    recentDiary:'Recent Diary', upcomingAgenda:'Upcoming',
+    recentPhotos:'Recent Photos', thisMonth:'This month',
+    noUpcoming:'No upcoming events', noRecentDiary:'No diary entries yet',
+    noRecentPhotos:'No photos yet', applySettings:'Apply Settings',
+    saveReload:'Save & Reload', enterUrl:'Enter a URL', refreshData:'↺ Refresh all data',
     // Tabs
     agenda:'Agenda', diary:'Diary', photos:'Photos', money:'Money',
     // Section titles
@@ -619,7 +721,7 @@ const TRANSLATIONS = {
     // Charts
     spendingByCategory:'Spending by Category', monthlyTrend:'6-Month Trend',
     totalSpent:'t().totalSpent', noExpenses:'t().noExpenses',
-    budgetProgress:'t().budgetProgress',
+    budgetProgress:'Budget Progress',
     noLimit:'No limit',
     // Empty states
     noPhotos:'No photos yet', tapUpload:'Tap + Upload to add images',
@@ -645,14 +747,25 @@ const TRANSLATIONS = {
     overrideApi:'API URL',
     // Repeat Until placeholder
     noEndDate:'No end date',
+    reminder:'Reminder', noReminder:'No reminder', notifBannerText:'🔔 Enable notifications to get reminders for your events',
+    reminderOptions:['5 minutes before','15 minutes before','30 minutes before','1 hour before','2 hours before','1 day before'],
+    upcomingEvents:'Upcoming Events',
+    today:'Today', tomorrow:'Tomorrow',
     detailsPlaceholder:'Details…',
     optionalPlaceholder:'Optional…',
   },
   id: {
     settings:'Pengaturan', language:'Bahasa', currency:'Mata Uang',
     dateFormat:'Format Tanggal', numberFormat:'Format Angka',
-    preview:'Pratinjau', applySettings:'Terapkan Pengaturan',
-    saveReload:'Simpan & Muat Ulang', refreshData:'↺ Perbarui semua data',
+    preview:'Pratinjau',
+    home:'Beranda',
+    goodMorning:'Selamat pagi', goodAfternoon:'Selamat siang', goodEvening:'Selamat malam',
+    quickAdd:'Tambah Cepat', viewAll:'Lihat semua',
+    recentDiary:'Diari Terbaru', upcomingAgenda:'Mendatang',
+    recentPhotos:'Foto Terbaru', thisMonth:'Bulan ini',
+    noUpcoming:'Tidak ada acara mendatang', noRecentDiary:'Belum ada catatan',
+    noRecentPhotos:'Belum ada foto', applySettings:'Terapkan Pengaturan',
+    saveReload:'Simpan & Muat Ulang', enterUrl:'Masukkan URL', refreshData:'↺ Perbarui semua data',
     agenda:'Agenda', diary:'Diari', photos:'Foto', money:'Keuangan',
     newEvent:'+ Acara', newEntry:'+ Catatan', upload:'+ Unggah', addTx:'+ Tambah',
     budgets:'🎯 Anggaran',
@@ -696,6 +809,10 @@ const TRANSLATIONS = {
     activeEndpoint:'Endpoint Aktif',
     overrideApi:'URL API',
     noEndDate:'Tanpa tanggal akhir',
+    reminder:'Pengingat', noReminder:'Tanpa pengingat', notifBannerText:'🔔 Aktifkan notifikasi untuk mendapatkan pengingat acara',
+    reminderOptions:['5 menit sebelum','15 menit sebelum','30 menit sebelum','1 jam sebelum','2 jam sebelum','1 hari sebelum'],
+    upcomingEvents:'Acara Mendatang',
+    today:'Hari ini', tomorrow:'Besok',
     detailsPlaceholder:'Detail…',
     optionalPlaceholder:'Opsional…',
   }
@@ -773,7 +890,7 @@ function applyTranslations(){
   // ── Safe text-only updates (no innerHTML, no event listener destruction) ──
 
   // Tab labels - update only the text node, preserve .ti span
-  const tabIds=['agenda','diary','photos','money'];
+  const tabIds=['home','agenda','diary','photos','money'];
   document.querySelectorAll('.tab-btn').forEach((btn,i)=>{
     const key=tabIds[i];
     // Find or create a text node after the .ti span
@@ -797,16 +914,37 @@ function applyTranslations(){
 
   // Top buttons (safe - these have no child spans with listeners)
   const safeText=(id,txt)=>{const el=document.getElementById(id);if(el&&txt)el.textContent=txt;};
-  safeText('new-ev-btn',    tr.newEvent);
-  safeText('new-diary-btn', tr.newEntry);
-  safeText('new-tx-btn',    tr.addTx);
-  safeText('budget-btn',    tr.budgets);
-  safeText('refresh-btn',   tr.refreshData);
-  safeText('setting-apply', tr.applySettings);
-  safeText('api-save',      tr.saveReload);
-  safeText('budget-save-btn', tr.saveBudgets);
-  safeText('tt-exp',        tr.expenseBtn);
-  safeText('tt-inc',        tr.incomeBtn);
+  safeText('new-ev-btn',        tr.newEvent);
+  safeText('new-diary-btn',     tr.newEntry);
+  safeText('new-tx-btn',        tr.addTx);
+  safeText('budget-btn',        tr.budgets);
+  safeText('refresh-btn',       tr.refreshData);
+  safeText('setting-apply',     tr.applySettings);
+  safeText('api-save',          tr.saveReload);
+  safeText('budget-save-btn',   tr.saveBudgets);
+  safeText('tt-exp',            tr.expenseBtn);
+  safeText('tt-inc',            tr.incomeBtn);
+  safeText('budget-modal-ttl',   tr.monthlyBudgets);
+  safeText('budget-modal-hint',  tr.budgetHint);
+  safeText('chart-title-donut',  tr.spendingByCategory);
+  safeText('chart-title-bar',    tr.monthlyTrend);
+  safeText('notif-banner-text',  tr.notifBannerText||(tr.language==='id'?'🔔 Aktifkan notifikasi untuk pengingat acara':'🔔 Enable notifications to get reminders for your events'));
+  safeText('diary-content-lbl',  tr.content||'Content');
+  safeText('diary-attach-lbl',   tr.attachPhotos);
+  safeText('diary-attach-hint',  tr.photosUploadNote);
+  // Event form labels
+  safeText('ev-lbl-title',        tr.titleLabel);
+  safeText('ev-lbl-start-date',   tr.startDate);
+  safeText('ev-lbl-end-date',     tr.endDate);
+  safeText('ev-lbl-start-time',   tr.startTime);
+  safeText('ev-lbl-end-time',     tr.endTime);
+  safeText('ev-lbl-repeat',       tr.repeat);
+  safeText('ev-lbl-desc',         tr.description);
+  safeText('ev-lbl-repeat-until', tr.repeatUntil);
+  safeText('ev-lbl-reminder',     tr.reminder);
+  // data-i18n Cancel/Delete buttons
+  document.querySelectorAll('[data-i18n="cancel"]').forEach(el=>el.textContent=tr.cancel);
+  document.querySelectorAll('[data-i18n="deleteBtn"]').forEach(el=>el.textContent=tr.deleteBtn);
 
   // Settings title
   const sttl=document.querySelector('.s-ttl');if(sttl)sttl.textContent=tr.settings;
@@ -829,6 +967,7 @@ function applyTranslations(){
   // Re-render data views if already loaded
   if(_money.length)renderMoney();
   if(_diary.length)renderDiary();
+  renderHome();
 }
 
 function updateModalLabels(){
@@ -937,11 +1076,8 @@ document.querySelectorAll('.overlay').forEach(o=>o.addEventListener('click',e=>{
 
 // Tabs
 document.querySelectorAll('.tab-btn').forEach(btn=>btn.addEventListener('click',()=>{
-  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
-  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
-  btn.classList.add('active');
-  document.getElementById(`panel-${btn.dataset.tab}`).classList.add('active');
-  if(btn.dataset.tab==='agenda'&&_cal)_cal.updateSize();
+  switchTab(btn.dataset.tab);
+  if(btn.dataset.tab==='home') renderHome();
 }));
 
 // Online status
@@ -988,18 +1124,30 @@ document.getElementById('lang-id').addEventListener('click',()=>{
 
 // Apply settings
 document.getElementById('setting-apply').addEventListener('click',()=>{
+  // _locale.lang is already updated live by lang toggle buttons
   _locale.currency   = document.getElementById('setting-currency').value;
   _locale.dateFormat = document.getElementById('setting-dateformat').value;
   _locale.numFormat  = document.getElementById('setting-numformat').value;
   localStorage.setItem(LS_LOCALE, JSON.stringify(_locale));
   document.getElementById('settings-ol').classList.remove('open');
+
+  // Rebuild calendar with new locale (must destroy + re-init to change FC locale)
+  if(_cal){ _cal.destroy(); _cal=null; }
+  initCalendar();
+  if(_agenda.length){ _agenda.forEach(ev=>_cal.addEvent(evToFCEvent(ev))); }
+
+  // Re-render all tabs with new locale
   applyTranslations();
+  if(_diary.length)  renderDiary();
+  if(_money.length)  renderMoney();
+  renderHome();
+
   toast(t().settingsApplied, 'success');
 });
 document.getElementById('settings-ol').addEventListener('click',e=>{if(e.target===document.getElementById('settings-ol'))document.getElementById('settings-ol').classList.remove('open')});
 document.getElementById('api-save').addEventListener('click',()=>{
   const url=document.getElementById('api-input').value.trim();
-  if(!url){toast('Enter a URL','error');return;}
+  if(!url){toast(t().enterUrl||'Enter a URL','error');return;}
   API_URL=url;localStorage.setItem(LS_KEY,url);
   document.getElementById('settings-ol').classList.remove('open');
   toast(t().saved,'success');loadAll();
@@ -1013,6 +1161,7 @@ function initCalendar(){
   const el=document.getElementById('cal-container');
   _cal=new FullCalendar.Calendar(el,{
     initialView:'dayGridMonth',
+    locale: _locale.lang==='id' ? 'id' : 'en',
     headerToolbar:{left:'prev,next today',center:'title',right:''},
     height:'auto',
     firstDay:1,
@@ -1091,6 +1240,10 @@ async function loadAgenda(){
     const d=await api('getAgendas',{});
     _agenda=d.events||[];
     if(_cal){_cal.removeAllEvents();_agenda.forEach(ev=>_cal.addEvent(evToFCEvent(ev)));}
+    renderUpcoming();
+    updateNotifBanner();
+    scheduleAllReminders();
+    renderHome();
   }catch(e){toast('Agenda: '+e.message,'error');}
 }
 
@@ -1111,6 +1264,7 @@ function openEvModal(ev=null,dateStr=null){
   document.getElementById('ev-recur').value=ev?.recur||'';
   document.getElementById('ev-recur-end').value=ev?.recur_end||'';
   document.getElementById('ev-recur-end-wrap').style.display=ev?.recur?'':'none';
+  document.getElementById('ev-reminder').value=ev?.reminder||'';
   document.getElementById('ev-desc').value=ev?.description||'';
   document.getElementById('ev-del').style.display=n?'none':'';
   const col=ev?.color||'#f59e0b';
@@ -1155,10 +1309,11 @@ document.getElementById('ev-save').addEventListener('click',async()=>{
       all_day:allDay,
       recur:recur||null,
       recur_end:recurEnd||null,
+      reminder:document.getElementById('ev-reminder').value||null,
       description:document.getElementById('ev-desc').value.trim(),
       color:document.querySelector('#ev-colors .swatch.sel')?.dataset.c||'#f59e0b'
     });
-    closeModal('ev-modal');toast(t().savedGcal,'success');loadAgenda();
+    closeModal('ev-modal');toast(t().savedGcal,'success');await loadAgenda();
   }catch(e){toast(e.message,'error');}
   finally{btn.disabled=false;btn.textContent=t().save;}
 });
@@ -1177,13 +1332,13 @@ document.getElementById('ev-del').addEventListener('click',async()=>{
 async function loadDiary(){
   document.getElementById('diary-list').innerHTML='<div class="loading"><div class="spinner"></div>Loading…</div>';
   try{
-    const d=await api('getDiaries');_diary=d.entries||[];renderDiary();
-  }catch(e){document.getElementById('diary-list').innerHTML=`<div class="empty"><div class="empty-ico">⚠️</div><p class="empty-ttl">${t().couldNotLoad}</p><p class="empty-sub">${esc(e.message)}</p></div>`;}
+    const d=await api('getDiaries');_diary=d.entries||[];renderDiary();renderHome();
+  }catch(e){document.getElementById('diary-list').innerHTML=`<div class="empty"><div class="empty-ico">⚠️</div><p class="empty-ttl">Could not load</p><p class="empty-sub">${esc(e.message)}</p></div>`;}
 }
 
 function renderDiary(){
   const el=document.getElementById('diary-list');
-  if(!_diary.length){el.innerHTML=`<div class="empty"><div class="empty-ico">📓</div><p class="empty-ttl">${t().noDiaries}</p><p class="empty-sub">${t().tapEntry}</p></div>`;return;}
+  if(!_diary.length){el.innerHTML=`<div class="empty"><div class="empty-ico">📓</div><p class="empty-ttl">No entries yet</p><p class="empty-sub">Tap + Entry to start writing</p></div>`;return;}
   el.innerHTML=_diary.map(e=>{
     const photoUrls=e.photo_urls?(e.photo_urls.split(',').filter(Boolean)):[]; 
     const thumbHtml=photoUrls.slice(0,4).map(u=>`<img src="${esc(driveThumb(u,'w80'))}" class="dc-photo-thumb" onerror="this.style.display='none'">`).join('');
@@ -1316,7 +1471,7 @@ document.getElementById('diary-save').addEventListener('click',async()=>{
   const title=document.getElementById('diary-title').value.trim();
   const content=_quill?_quill.root.innerHTML.trim():'';
   if(!title&&!content){toast(t().addTitleOrContent,'error');return;}
-  const btn=document.getElementById('diary-save');btn.disabled=true;btn.textContent='Saving…';
+  const btn=document.getElementById('diary-save');btn.disabled=true;btn.textContent=t().saving;
   try{
     const id=document.getElementById('diary-id').value||undefined;
     // Upload any new photos first
@@ -1327,7 +1482,7 @@ document.getElementById('diary-save').addEventListener('click',async()=>{
     await api('saveDiary',{id,date:document.getElementById('diary-date').value,title,content_html:content,photo_urls:photoUrls.join(',')});
     closeModal('diary-modal');toast('Entry saved','success');loadDiary();loadPhotos();
   }catch(e){toast(e.message,'error');}
-  finally{btn.disabled=false;btn.textContent='Save';}
+  finally{btn.disabled=false;btn.textContent=t().save;}
 });
 
 document.getElementById('diary-del').addEventListener('click',async()=>{
@@ -1340,7 +1495,7 @@ document.getElementById('diary-del').addEventListener('click',async()=>{
 //  PHOTOS
 // ═══════════════════════════════════════════════════════
 async function loadPhotos(){
-  try{const d=await api('getPhotos',{});_photos=d.photos||[];renderGallery();}
+  try{const d=await api('getPhotos',{});_photos=d.photos||[];renderGallery();renderHome();renderHome();}
   catch(e){toast('Photos: '+e.message,'error');}
 }
 function renderGallery(){
@@ -1441,15 +1596,21 @@ let _budgets = JSON.parse(localStorage.getItem(LS_BUDGETS)||'{}'); // {catId: am
 // Chart instances
 let _donutChart = null, _barChart = null;
 
-function fmtMonth(m){const[y,mo]=m.split('-');return new Date(+y,+mo-1,1).toLocaleDateString('en-US',{month:'long',year:'numeric'});}
+function fmtMonth(m){
+  const[y,mo]=m.split('-');
+  const months_en=['January','February','March','April','May','June','July','August','September','October','November','December'];
+  const months_id=['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
+  const mlist=_locale.lang==='id'?months_id:months_en;
+  return mlist[+mo-1]+' '+y;
+}
 function updateMonthLbl(){document.getElementById('month-lbl').textContent=fmtMonth(_month);}
 document.getElementById('month-prev').addEventListener('click',()=>{_month=addMonth(_month,-1);updateMonthLbl();renderMoney();});
 document.getElementById('month-next').addEventListener('click',()=>{_month=addMonth(_month,1);updateMonthLbl();renderMoney();});
 
 async function loadMoney(){
   document.getElementById('tx-list').innerHTML='<div class="loading"><div class="spinner"></div>Loading…</div>';
-  try{const d=await api('getMoneys',{});_money=d.transactions||[];updateMonthLbl();renderMoney();}
-  catch(e){document.getElementById('tx-list').innerHTML=`<div class="empty"><div class="empty-ico">⚠️</div><p class="empty-ttl">${t().couldNotLoad}</p><p class="empty-sub">${esc(e.message)}</p></div>`;}
+  try{const d=await api('getMoneys',{});_money=d.transactions||[];updateMonthLbl();renderMoney();renderHome();}
+  catch(e){document.getElementById('tx-list').innerHTML=`<div class="empty"><div class="empty-ico">⚠️</div><p class="empty-ttl">Could not load</p><p class="empty-sub">${esc(e.message)}</p></div>`;}
 }
 function renderMoney(){
   const fil=_money.filter(t=>t.date.slice(0,7)===_month);
@@ -1505,7 +1666,10 @@ function renderBarChart(){
   for(let i=5;i>=0;i--){months.push(addMonth(_month,-i));}
   const incomes=months.map(m=>_money.filter(t=>t.date.slice(0,7)===m&&t.type==='income').reduce((s,t)=>s+t.amount,0));
   const expenses=months.map(m=>_money.filter(t=>t.date.slice(0,7)===m&&t.type==='expense').reduce((s,t)=>s+t.amount,0));
-  const labels=months.map(m=>{const[y,mo]=m.split('-');return new Date(+y,+mo-1,1).toLocaleDateString('en-US',{month:'short'});});
+  const _men=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  const _mid=['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'];
+  const _mn=_locale.lang==='id'?_mid:_men;
+  const labels=months.map(m=>{const[,mo]=m.split('-');return _mn[+mo-1];});
 
   if(_barChart){_barChart.destroy();}
   const ctx=document.getElementById('chart-bar').getContext('2d');
@@ -1522,7 +1686,7 @@ function renderBudgetBars(fil){
   fil.filter(t=>t.type==='expense').forEach(t=>{ spent[t.category]=(spent[t.category]||0)+t.amount; });
 
   el.innerHTML=`<div class="budget-section">
-    <div class="budget-section-title">Budget Progress</div>
+    <div class="budget-section-title">${t().budgetProgress}</div>
     ${budgetCats.map(cat=>{
       const limit=_budgets[cat.id];
       const used=spent[cat.id]||0;
@@ -1532,7 +1696,7 @@ function renderBudgetBars(fil){
       return`<div class="budget-item">
         <div class="budget-item-hdr">
           <span class="budget-item-cat">${cat.label}</span>
-          <span class="budget-item-vals">${idr(used)} / ${idr(limit)} <span style="color:${remaining>=0?'var(--green)':'var(--red)'}">(${remaining>=0?'left: '+idr(remaining):'over: '+idr(-remaining)})</span></span>
+          <span class="budget-item-vals">${idr(used)} / ${idr(limit)} <span style="color:${remaining>=0?'var(--green)':'var(--red)'}">(${remaining>=0?t().left+': '+idr(remaining):t().over+': '+idr(-remaining)})</span></span>
         </div>
         <div class="budget-bar-track"><div class="budget-bar-fill ${cls}" style="width:${pct}%"></div></div>
       </div>`;
@@ -1546,7 +1710,7 @@ document.getElementById('budget-btn').addEventListener('click',()=>{
   el.innerHTML=EXPENSE_CATS.map(cat=>`
     <div class="fg">
       <label class="flabel">${cat.label}</label>
-      <input class="fi" type="number" min="0" step="10000" placeholder="No limit"
+      <input class="fi" type="number" min="0" step="10000" placeholder="${t().noLimit}"
              id="budget-${cat.id}" value="${_budgets[cat.id]||''}">
     </div>`).join('');
   openModal('budget-modal');
@@ -1592,18 +1756,347 @@ document.getElementById('new-tx-btn').addEventListener('click',()=>openTxModal()
 document.getElementById('tx-save').addEventListener('click',async()=>{
   const amount=parseFloat(document.getElementById('tx-amount').value);
   if(!amount||amount<=0){toast(t().enterAmount,'error');return;}
-  const btn=document.getElementById('tx-save');btn.disabled=true;btn.textContent='Saving…';
+  const btn=document.getElementById('tx-save');btn.disabled=true;btn.textContent=t().saving;
   try{
     await api('saveMoney',{id:document.getElementById('tx-id').value||undefined,date:document.getElementById('tx-date').value,type:_txType,category:document.getElementById('tx-cat').value,amount,notes:document.getElementById('tx-notes').value.trim()});
     closeModal('tx-modal');toast('Saved','success');loadMoney();
   }catch(e){toast(e.message,'error');}
-  finally{btn.disabled=false;btn.textContent='Save';}
+  finally{btn.disabled=false;btn.textContent=t().save;}
 });
 document.getElementById('tx-del').addEventListener('click',async()=>{
   const id=document.getElementById('tx-id').value;
   if(!id||!confirm('Delete this transaction?'))return;
   try{await api('deleteMoney',{id});closeModal('tx-modal');toast('Deleted','info');loadMoney();}catch(e){toast(e.message,'error');}
 });
+
+// ═══════════════════════════════════════════════════════
+//  HOME DASHBOARD
+// ═══════════════════════════════════════════════════════
+
+function switchTab(tabName){
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+  const btn=document.querySelector(`.tab-btn[data-tab="${tabName}"]`);
+  const panel=document.getElementById(`panel-${tabName}`);
+  if(btn)btn.classList.add('active');
+  if(panel)panel.classList.add('active');
+  if(tabName==='agenda'&&_cal)_cal.updateSize();
+}
+
+function getGreeting(){
+  const tr=t();
+  const h=new Date().getHours();
+  if(h<12)return tr.goodMorning;
+  if(h<17)return tr.goodAfternoon;
+  return tr.goodEvening;
+}
+
+function renderHome(){
+  const el=document.getElementById('home-content');
+  if(!el)return;
+  const tr=t();
+  const now=new Date();
+  const todayS=now.toISOString().slice(0,10);
+  const tomorrowS=new Date(now.getTime()+86400000).toISOString().slice(0,10);
+
+  // ── Greeting ──────────────────────────────────────────
+  const dayNames_en=['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+  const dayNames_id=['Minggu','Senin','Selasa','Rabu','Kamis','Jumat','Sabtu'];
+  const dayNames=_locale.lang==='id'?dayNames_id:dayNames_en;
+  const dayName=dayNames[now.getDay()];
+  const greeting=`<div class="home-greeting">
+    <div class="home-greeting-date">${dayName}, ${fmtDate(todayS)}</div>
+    <div class="home-greeting-text">${getGreeting()}, <span>Lumina ✦</span></div>
+  </div>`;
+
+  // ── Quick Actions ──────────────────────────────────────
+  const qa=`<div class="quick-actions">
+    <div class="qa-btn" onclick="switchTab('agenda');setTimeout(()=>document.getElementById('new-ev-btn').click(),150)">
+      <div class="qa-icon">📅</div><div class="qa-label">${tr.newEvent||'Event'}</div>
+    </div>
+    <div class="qa-btn" onclick="switchTab('diary');setTimeout(()=>document.getElementById('new-diary-btn').click(),150)">
+      <div class="qa-icon">📓</div><div class="qa-label">${tr.newEntry||'Diary'}</div>
+    </div>
+    <div class="qa-btn" onclick="switchTab('photos');document.getElementById('photo-input').click()">
+      <div class="qa-icon">📷</div><div class="qa-label">${tr.upload||'Photo'}</div>
+    </div>
+    <div class="qa-btn" onclick="switchTab('money');setTimeout(()=>document.getElementById('new-tx-btn').click(),150)">
+      <div class="qa-icon">💰</div><div class="qa-label">${tr.addTx||'Money'}</div>
+    </div>
+  </div>`;
+
+  // ── Upcoming events ────────────────────────────────────
+  const in3d=new Date(now.getTime()+3*86400000);
+  const upcoming=_agenda
+    .filter(ev=>ev.start_time&&new Date(ev.start_time)>=now&&new Date(ev.start_time)<=in3d)
+    .sort((a,b)=>new Date(a.start_time)-new Date(b.start_time))
+    .slice(0,3);
+
+  const upcomingHtml=upcoming.length ? upcoming.map(ev=>{
+    const startDt=new Date(ev.start_time);
+    const timeStr=startDt.toLocaleTimeString(_locale.lang==='id'?'id-ID':'en-US',{hour:'2-digit',minute:'2-digit'});
+    const isToday=ev.date===todayS, isTomorrow=ev.date===tomorrowS;
+    const badge=isToday?`<span class="home-ev-badge badge-today">${tr.today||'Today'}</span>`:
+                isTomorrow?`<span class="home-ev-badge badge-tomorrow">${tr.tomorrow||'Tomorrow'}</span>`:
+                `<span class="home-ev-badge badge-soon">${fmtDate(ev.date)}</span>`;
+    return`<div class="home-upcoming-item" data-id="${ev.id}">
+      <div class="home-ev-dot" style="background:${ev.color||'#f59e0b'}"></div>
+      <div class="home-ev-body">
+        <div class="home-ev-title">${esc(ev.title)}</div>
+        <div class="home-ev-time">${timeStr}${ev.reminder?` · 🔔${ev.reminder>=60?ev.reminder/60+'h':ev.reminder+'m'}`:''}${ev.description?` · ${esc(ev.description.slice(0,30))}`:''}</div>
+      </div>
+      ${badge}
+    </div>`;
+  }).join('') : `<div class="home-empty">${tr.noUpcoming||'No upcoming events'}</div>`;
+
+  const upcomingSection=`<div class="home-section">
+    <div class="home-section-hdr">
+      <div class="home-section-title">${tr.upcomingAgenda||'Upcoming'}</div>
+      <span class="home-section-link" onclick="switchTab('agenda')">${tr.viewAll||'View all'} →</span>
+    </div>
+    ${upcomingHtml}
+  </div>`;
+
+  // ── Recent diary ───────────────────────────────────────
+  const recentDiary=_diary.slice(0,2);
+  const diaryHtml=recentDiary.length ? recentDiary.map(e=>`
+    <div class="home-diary-item" data-id="${e.id}">
+      <div class="home-diary-date">${fmtDate(e.date)}</div>
+      <div class="home-diary-title">${esc(e.title||'Untitled')}</div>
+      <div class="home-diary-preview">${esc(stripHtml(e.content_html||''))}</div>
+    </div>`).join('') : `<div class="home-empty">${tr.noRecentDiary||'No diary entries yet'}</div>`;
+
+  const diarySection=`<div class="home-section">
+    <div class="home-section-hdr">
+      <div class="home-section-title">${tr.recentDiary||'Recent Diary'}</div>
+      <span class="home-section-link" onclick="switchTab('diary')">${tr.viewAll||'View all'} →</span>
+    </div>
+    ${diaryHtml}
+  </div>`;
+
+  // ── Photo strip ────────────────────────────────────────
+  const recentPhotos=_photos.slice(0,8);
+  const photoStripHtml=recentPhotos.length
+    ? `<div class="home-photo-strip">${recentPhotos.map((p,i)=>`<img src="${esc(p.thumbUrl)}" class="home-photo-thumb" loading="lazy" data-idx="${i}" onerror="this.style.display='none'">`).join('')}</div>`
+    : `<div class="home-empty">${tr.noRecentPhotos||'No photos yet'}</div>`;
+
+  const photoSection=`<div class="home-section">
+    <div class="home-section-hdr">
+      <div class="home-section-title">${tr.recentPhotos||'Recent Photos'}</div>
+      <span class="home-section-link" onclick="switchTab('photos')">${tr.viewAll||'View all'} →</span>
+    </div>
+    ${photoStripHtml}
+  </div>`;
+
+  // ── Money snapshot ─────────────────────────────────────
+  const _m=`${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
+  const fil=_money.filter(tx=>tx.date.slice(0,7)===_m);
+  let inc=0,exp=0;fil.forEach(tx=>{if(tx.type==='income')inc+=tx.amount;else exp+=tx.amount;});
+  const bal=inc-exp;
+  const moneySection=`<div class="home-section">
+    <div class="home-section-hdr">
+      <div class="home-section-title">${tr.thisMonth||'This month'} — ${fmtMonth(_m)}</div>
+      <span class="home-section-link" onclick="switchTab('money')">${tr.viewAll||'View all'} →</span>
+    </div>
+    <div class="home-money-row">
+      <div class="home-money-card">
+        <div class="home-money-lbl">${tr.income||'Income'}</div>
+        <div class="home-money-val" style="color:var(--green)">${idr(inc)}</div>
+      </div>
+      <div class="home-money-card">
+        <div class="home-money-lbl">${tr.expense||'Expense'}</div>
+        <div class="home-money-val" style="color:var(--red)">${idr(exp)}</div>
+      </div>
+      <div class="home-money-card">
+        <div class="home-money-lbl">${tr.balance||'Balance'}</div>
+        <div class="home-money-val" style="color:${bal>=0?'var(--green)':'var(--red)'}">${idr(bal)}</div>
+      </div>
+    </div>
+  </div>`;
+
+  // ── Assemble ───────────────────────────────────────────
+  el.innerHTML = greeting + qa + upcomingSection + diarySection + photoSection + moneySection;
+
+  // Wire up upcoming item clicks
+  el.querySelectorAll('.home-upcoming-item').forEach(item=>{
+    item.addEventListener('click',()=>{
+      const ev=_agenda.find(e=>e.id===item.dataset.id);
+      if(ev)openEvModal(ev);
+    });
+  });
+
+  // Wire up diary item clicks
+  el.querySelectorAll('.home-diary-item').forEach(item=>{
+    item.addEventListener('click',()=>{
+      const entry=_diary.find(e=>e.id===item.dataset.id);
+      if(entry){switchTab('diary');setTimeout(()=>openDiaryView(entry),100);}
+    });
+  });
+
+  // Wire up photo strip clicks
+  el.querySelectorAll('.home-photo-thumb').forEach(img=>{
+    img.addEventListener('click',()=>{
+      const idx=parseInt(img.dataset.idx);
+      switchTab('photos');
+      setTimeout(()=>{_photoOverride=null;openCarousel(idx);},100);
+    });
+  });
+}
+
+// ═══════════════════════════════════════════════════════
+//  NOTIFICATIONS & REMINDERS
+// ═══════════════════════════════════════════════════════
+
+const LS_NOTIF_SCHEDULED = 'lumina_scheduled_notifs'; // {eventId: scheduledAt}
+let _scheduledTimers = {}; // {eventId: timerId} — cleared on re-schedule
+
+// Check if notifications are supported and permission state
+function notifSupported(){ return 'Notification' in window; }
+function notifGranted()  { return notifSupported() && Notification.permission === 'granted'; }
+
+// Show permission banner if needed
+function updateNotifBanner(){
+  const banner = document.getElementById('notif-banner');
+  if(!banner) return;
+  if(!notifSupported() || notifGranted()){
+    banner.style.display = 'none';
+  } else {
+    banner.style.display = Notification.permission === 'denied' ? 'none' : '';
+  }
+}
+
+// Request permission
+document.getElementById('notif-enable-btn')?.addEventListener('click', async ()=>{
+  const perm = await Notification.requestPermission();
+  updateNotifBanner();
+  if(perm === 'granted'){
+    toast('🔔 Notifications enabled!', 'success');
+    scheduleAllReminders();
+  } else {
+    toast('Notifications blocked. Enable in browser settings.', 'warning', 5000);
+  }
+});
+
+// Schedule a browser notification for one event
+function scheduleReminder(ev){
+  if(!notifGranted()) return;
+  if(!ev.reminder || ev.all_day) return; // No reminder set or all-day
+  if(!ev.start_time) return; // No time set
+
+  const reminderMins = parseInt(ev.reminder);
+  if(!reminderMins) return;
+
+  const startMs  = new Date(ev.start_time).getTime();
+  const fireMs   = startMs - (reminderMins * 60 * 1000);
+  const nowMs    = Date.now();
+  const delayMs  = fireMs - nowMs;
+
+  // Clear any existing timer for this event
+  if(_scheduledTimers[ev.id]){ clearTimeout(_scheduledTimers[ev.id]); }
+
+  // Only schedule if it's in the future (within next 7 days to avoid memory waste)
+  if(delayMs <= 0 || delayMs > 7 * 24 * 60 * 60 * 1000) return;
+
+  _scheduledTimers[ev.id] = setTimeout(()=>{
+    const timeStr = new Date(ev.start_time).toLocaleTimeString(
+      _locale.lang === 'id' ? 'id-ID' : 'en-US',
+      {hour:'2-digit', minute:'2-digit'}
+    );
+    const body = ev.description
+      ? `${timeStr} — ${ev.description}`
+      : timeStr;
+
+    new Notification(`🗓 ${ev.title}`, {
+      body,
+      icon: 'https://www.gstatic.com/images/branding/product/1x/calendar_2020q4_48dp.png',
+      tag: ev.id, // Replaces duplicate notifications
+      requireInteraction: reminderMins >= 60 // Keep important ones visible
+    });
+
+    // Re-render upcoming widget after firing
+    renderUpcoming();
+  }, delayMs);
+
+  console.log(`[Notif] Scheduled "${ev.title}" in ${Math.round(delayMs/60000)} min`);
+}
+
+// Schedule reminders for all upcoming events
+function scheduleAllReminders(){
+  if(!notifGranted()) return;
+  _agenda.forEach(ev => scheduleReminder(ev));
+}
+
+// Render upcoming events widget (next 7 days with times)
+function renderUpcoming(){
+  const el = document.getElementById('upcoming-wrap');
+  if(!el) return;
+
+  const now    = new Date();
+  const in7d   = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
+  const todayS = now.toISOString().slice(0,10);
+  const tomorrowS = new Date(now.getTime() + 86400000).toISOString().slice(0,10);
+
+  // Filter: timed events in next 7 days, not already past
+  const upcoming = _agenda
+    .filter(ev => {
+      if(!ev.start_time) return false;
+      const s = new Date(ev.start_time);
+      return s >= now && s <= in7d;
+    })
+    .sort((a,b) => new Date(a.start_time) - new Date(b.start_time))
+    .slice(0, 5); // Show max 5
+
+  if(!upcoming.length){ el.innerHTML = ''; return; }
+
+  const tr = t();
+  const items = upcoming.map(ev => {
+    const startDt = new Date(ev.start_time);
+    const dateS   = ev.date;
+    const timeStr = startDt.toLocaleTimeString(
+      _locale.lang === 'id' ? 'id-ID' : 'en-US',
+      {hour:'2-digit', minute:'2-digit'}
+    );
+
+    // Badge
+    let badge = '', badgeCls = '';
+    if(dateS === todayS){
+      badge = tr.today||'Today'; badgeCls = 'badge-today';
+    } else if(dateS === tomorrowS){
+      badge = tr.tomorrow||'Tomorrow'; badgeCls = 'badge-tomorrow';
+    } else {
+      const days = Math.ceil((startDt - now) / 86400000);
+      badge = `${days}d`; badgeCls = 'badge-soon';
+    }
+
+    const reminderBadge = ev.reminder
+      ? `<span class="upcoming-badge badge-has-reminder">🔔 ${ev.reminder >= 60 ? (ev.reminder/60)+'h' : ev.reminder+'m'}</span>`
+      : '';
+
+    return `<div class="upcoming-item" data-id="${ev.id}">
+      <div class="upcoming-dot" style="background:${ev.color||'#f59e0b'}"></div>
+      <div class="upcoming-body">
+        <div class="upcoming-ev-title">${esc(ev.title)}</div>
+        <div class="upcoming-time">${fmtDate(dateS)} · ${timeStr}</div>
+      </div>
+      ${reminderBadge}
+      <span class="upcoming-badge ${badgeCls}">${badge}</span>
+    </div>`;
+  }).join('');
+
+  const upcomingLabel = tr.upcomingEvents || 'Upcoming';
+  el.innerHTML = `<div class="upcoming-section">
+    <div class="upcoming-title">${upcomingLabel}</div>
+    <div class="upcoming-list">${items}</div>
+  </div>`;
+
+  // Click to edit
+  el.querySelectorAll('.upcoming-item').forEach(item => {
+    item.addEventListener('click', ()=>{
+      const ev = _agenda.find(e => e.id === item.dataset.id);
+      if(ev) openEvModal(ev);
+    });
+  });
+}
 
 // ═══════════════════════════════════════════════════════
 //  INIT
@@ -1616,6 +2109,7 @@ async function loadAll(){
 // Init calendar first then load data
 initCalendar();
 applyTranslations();
+renderHome();
 loadAll();
 </script>
 </body>
