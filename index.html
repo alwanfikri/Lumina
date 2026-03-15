@@ -390,6 +390,25 @@ img{max-width:100%;display:block}
 /* Empty mini */
 .home-empty{text-align:center;padding:1.2rem;color:var(--text3);font-size:.82rem;background:var(--surface);border:1px dashed var(--border);border-radius:var(--r)}
 
+/* Search & Filter */
+.search-bar-wrap{margin-bottom:.75rem}
+.search-bar{display:flex;align-items:center;background:var(--surface);border:1px solid var(--border);border-radius:var(--r-sm);padding:.45rem .75rem;gap:.5rem;transition:border-color var(--ease),box-shadow var(--ease)}
+.search-bar:focus-within{border-color:var(--amber);box-shadow:0 0 0 3px var(--amber-l)}
+.search-icon{font-size:.9rem;flex-shrink:0;color:var(--text3)}
+.search-input{flex:1;border:none;background:transparent;outline:none;font-size:.88rem;color:var(--text);font-family:var(--font-u)}
+.search-input::placeholder{color:var(--text3)}
+.search-clear{background:none;border:none;cursor:pointer;color:var(--text3);font-size:.85rem;padding:0 2px;line-height:1;transition:color var(--ease)}
+.search-clear:hover{color:var(--text)}
+.filter-row{display:flex;gap:.5rem;margin-top:.5rem;flex-wrap:wrap;align-items:center}
+.filter-sel{padding:.3rem .6rem;border-radius:var(--r-sm);border:1px solid var(--border);background:var(--surface);color:var(--text2);font-size:.78rem;font-family:var(--font-u);cursor:pointer;outline:none}
+.filter-sel:focus{border-color:var(--amber)}
+.filter-chip-label{display:inline-flex;align-items:center;gap:.3rem;font-size:.76rem;font-weight:500;color:var(--text2);cursor:pointer;padding:.28rem .6rem;border-radius:20px;border:1px solid var(--border);background:var(--surface);transition:all var(--ease);user-select:none}
+.filter-chip-label:hover{background:var(--surface2)}
+.filter-chip-label input[type=checkbox]{width:13px;height:13px;cursor:pointer;accent-color:var(--amber);margin:0}
+.filter-chip-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.diary-results-count{font-size:.75rem;color:var(--text3);margin-bottom:.5rem;padding-left:2px}
+/* Highlight search matches */
+.search-hl{background:var(--amber-l);color:var(--amber-d);border-radius:2px;padding:0 1px}
 @keyframes spin{to{transform:rotate(360deg)}}
 #ev-time-row.hidden{display:none}
 @keyframes toastIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
@@ -425,6 +444,18 @@ img{max-width:100%;display:block}
         <button class="btn btn-primary btn-sm" id="new-ev-btn">+ Event</button>
       </div>
     </div>
+    <!-- Search bar for agenda -->
+    <div class="search-bar-wrap" id="agenda-search-wrap" style="margin-bottom:.6rem">
+      <div class="search-bar">
+        <span class="search-icon">🔍</span>
+        <input class="search-input" id="agenda-search" type="search" placeholder="Search events…" autocomplete="off">
+        <button class="search-clear" id="agenda-search-clear" style="display:none">✕</button>
+      </div>
+      <div class="filter-row">
+        <label class="filter-chip-label"><input type="checkbox" id="filter-lumina" checked> <span class="filter-chip-dot" style="background:var(--amber)"></span> Lumina</label>
+        <label class="filter-chip-label"><input type="checkbox" id="filter-gcal" checked> <span class="filter-chip-dot" style="background:#3b82f6"></span> Google Cal</label>
+      </div>
+    </div>
     <!-- Upcoming events & notification permission banner -->
     <div id="upcoming-wrap"></div>
     <div id="notif-banner" style="display:none" class="notif-banner">
@@ -452,6 +483,19 @@ img{max-width:100%;display:block}
       <h1 class="sec-title">Diary</h1>
       <button class="btn btn-primary btn-sm" id="new-diary-btn">+ Entry</button>
     </div>
+    <div class="search-bar-wrap">
+      <div class="search-bar">
+        <span class="search-icon">🔍</span>
+        <input class="search-input" id="diary-search" type="search" placeholder="Search entries…" autocomplete="off">
+        <button class="search-clear" id="diary-search-clear" style="display:none">✕</button>
+      </div>
+      <div class="filter-row" id="diary-filter-row">
+        <select class="filter-sel" id="diary-month-filter">
+          <option value="">All time</option>
+        </select>
+      </div>
+    </div>
+    <div id="diary-results-count" style="display:none"></div>
     <div id="diary-list"><div class="loading"><div class="spinner"></div><span class="loading-txt">Loading…</span></div></div>
   </div>
 
@@ -1084,6 +1128,18 @@ function applyTranslations(){
   safeText('budget-modal-hint',  tr.budgetHint);
   safeText('chart-title-donut',  tr.spendingByCategory);
   safeText('chart-title-bar',    tr.monthlyTrend);
+  // Search placeholders
+  const diaryS=document.getElementById('diary-search');
+  const agendaS=document.getElementById('agenda-search');
+  if(diaryS) diaryS.placeholder=tr.searchEntries||'Search entries…';
+  if(agendaS) agendaS.placeholder=tr.searchEvents||'Search events…';
+  const monthSel=document.getElementById('diary-month-filter');
+  if(monthSel&&monthSel.options[0]) monthSel.options[0].text=tr.allTime||'All time';
+  // Filter chip labels
+  const flumina=document.getElementById('filter-lumina');
+  const fgcal=document.getElementById('filter-gcal');
+  if(flumina)flumina.closest('label').lastChild.textContent=' Lumina';
+  if(fgcal)fgcal.closest('label').lastChild.textContent=' Google Cal';
   safeText('notif-banner-text',  tr.notifBannerText||(tr.language==='id'?'🔔 Aktifkan notifikasi untuk pengingat acara':'🔔 Enable notifications to get reminders for your events'));
   safeText('diary-content-lbl',  tr.content||'Content');
   safeText('diary-attach-lbl',   tr.attachPhotos);
@@ -1660,6 +1716,7 @@ async function loadAgenda(){
     const d=await api('getAgendas',{});
     _agenda=d.events||[];
     if(_cal){refreshCalendarView();}
+    initAgendaSearch();
     renderUpcoming();
     updateNotifBanner();
     scheduleAllReminders();
@@ -1751,6 +1808,116 @@ document.getElementById('ev-del').addEventListener('click',async()=>{
 });
 
 // ═══════════════════════════════════════════════════════
+//  SEARCH & FILTER
+// ═══════════════════════════════════════════════════════
+
+let _diaryQuery = '';
+let _diaryMonthFilter = '';
+let _agendaQuery = '';
+
+// ── Highlight search terms in text ──────────────────────
+function highlight(text, query){
+  if(!query || !text) return esc(text||'');
+  const safe = query.replace(/[.*+?^${}()|\[\]\\]/g,'\\$&');
+  const re = new RegExp(`(${safe})`, 'gi');
+  return esc(text).replace(re, '<mark class="search-hl">$1</mark>');
+}
+
+// ── DIARY SEARCH ────────────────────────────────────────
+function initDiarySearch(){
+  const input = document.getElementById('diary-search');
+  const clear = document.getElementById('diary-search-clear');
+  const monthSel = document.getElementById('diary-month-filter');
+  if(!input) return;
+
+  input.addEventListener('input', ()=>{
+    _diaryQuery = input.value.trim();
+    clear.style.display = _diaryQuery ? '' : 'none';
+    renderDiary();
+  });
+  clear.addEventListener('click', ()=>{
+    input.value = ''; _diaryQuery = '';
+    clear.style.display = 'none';
+    input.focus(); renderDiary();
+  });
+  monthSel.addEventListener('change', ()=>{
+    _diaryMonthFilter = monthSel.value;
+    renderDiary();
+  });
+}
+
+function buildDiaryMonthOptions(){
+  const sel = document.getElementById('diary-month-filter');
+  if(!sel || !_diary.length) return;
+  const months = [...new Set(_diary.map(e=>e.date.slice(0,7)))].sort().reverse();
+  const tr = t();
+  const current = sel.value;
+  sel.innerHTML = `<option value="">${tr.allTime||'All time'}</option>` +
+    months.map(m => `<option value="${m}" ${m===current?'selected':''}>${fmtMonth(m)}</option>`).join('');
+}
+
+function getFilteredDiary(){
+  let entries = [..._diary];
+  // Month filter
+  if(_diaryMonthFilter){
+    entries = entries.filter(e => e.date.slice(0,7) === _diaryMonthFilter);
+  }
+  // Text search — title + content
+  if(_diaryQuery){
+    const q = _diaryQuery.toLowerCase();
+    entries = entries.filter(e =>
+      (e.title||'').toLowerCase().includes(q) ||
+      (e.content_html||'').replace(/<[^>]*>/g,'').toLowerCase().includes(q)
+    );
+  }
+  return entries;
+}
+
+// ── AGENDA SEARCH ────────────────────────────────────────
+function initAgendaSearch(){
+  const input = document.getElementById('agenda-search');
+  const clear = document.getElementById('agenda-search-clear');
+  const filterLumina = document.getElementById('filter-lumina');
+  const filterGcal   = document.getElementById('filter-gcal');
+  if(!input) return;
+
+  input.addEventListener('input', ()=>{
+    _agendaQuery = input.value.trim();
+    clear.style.display = _agendaQuery ? '' : 'none';
+    applyAgendaSearch();
+  });
+  clear.addEventListener('click', ()=>{
+    input.value = ''; _agendaQuery = '';
+    clear.style.display = 'none';
+    input.focus(); applyAgendaSearch();
+  });
+  filterLumina?.addEventListener('change', applyAgendaSearch);
+  filterGcal?.addEventListener('change',   applyAgendaSearch);
+}
+
+function applyAgendaSearch(){
+  if(!_cal) return;
+  const q = _agendaQuery.toLowerCase();
+  const showLumina = document.getElementById('filter-lumina')?.checked ?? true;
+  const showGcal   = document.getElementById('filter-gcal')?.checked   ?? true;
+
+  // FullCalendar event filtering — toggle visibility via event sources
+  _cal.getEvents().forEach(fcEv => {
+    const src = fcEv.extendedProps?.source || 'lumina';
+    const title = (fcEv.title||'').toLowerCase();
+    const desc  = (fcEv.extendedProps?.description||'').toLowerCase();
+
+    let visible = true;
+    if(src === 'gcal'   && !showGcal)   visible = false;
+    if(src === 'lumina' && !showLumina) visible = false;
+    if(q && !title.includes(q) && !desc.includes(q)) visible = false;
+
+    // FullCalendar doesn't have a hide API — we use setProp to toggle display
+    fcEv.setProp('display', visible ? 'auto' : 'none');
+  });
+}
+
+// ═══════════════════════════════════════════════════════
 //  DIARY
 // ═══════════════════════════════════════════════════════
 async function loadDiary(){
@@ -1767,13 +1934,35 @@ async function loadDiary(){
 function renderDiary(){
   const el=document.getElementById('diary-list');
   if(!_diary.length){el.innerHTML=`<div class="empty"><div class="empty-ico">📓</div><p class="empty-ttl">No entries yet</p><p class="empty-sub">Tap + Entry to start writing</p></div>`;return;}
-  el.innerHTML=_diary.map(e=>{
+
+  buildDiaryMonthOptions();
+  const entries = getFilteredDiary();
+  const tr = t();
+
+  // Show results count when filtering
+  const countEl = document.getElementById('diary-results-count');
+  if(countEl){
+    if(_diaryQuery || _diaryMonthFilter){
+      countEl.style.display = '';
+      countEl.textContent = `${entries.length} ${entries.length===1?(tr.entry||'entry'):(tr.entries||'entries')} found`;
+    } else {
+      countEl.style.display = 'none';
+    }
+  }
+
+  if(!entries.length){
+    el.innerHTML=`<div class="empty"><div class="empty-ico">🔍</div><p class="empty-ttl">${tr.noResults||'No results'}</p><p class="empty-sub">${tr.tryDifferent||'Try a different search'}</p></div>`;
+    return;
+  }
+
+  el.innerHTML=entries.map(e=>{
     const photoUrls=e.photo_urls?(e.photo_urls.split(',').filter(Boolean)):[]; 
     const thumbHtml=photoUrls.slice(0,4).map(u=>`<img src="${esc(driveThumb(u,'w80'))}" class="dc-photo-thumb" onerror="this.style.display='none'">`).join('');
+    const preview = stripHtml(e.content_html||'');
     return`<div class="diary-card" data-id="${e.id}">
       <div class="dc-date">${fmtDate(e.date)}</div>
-      <div class="dc-title">${esc(e.title||'Untitled')}</div>
-      <div class="dc-preview">${esc(stripHtml(e.content_html||''))}</div>
+      <div class="dc-title">${highlight(e.title||'Untitled',_diaryQuery)}</div>
+      <div class="dc-preview">${highlight(preview,_diaryQuery)}</div>
       ${thumbHtml?`<div class="dc-photos">${thumbHtml}</div>`:''}
     </div>`;
   }).join('');
