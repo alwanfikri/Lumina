@@ -1115,13 +1115,16 @@ let _month=`${_now.getFullYear()}-${String(_now.getMonth()+1).padStart(2,'0')}`;
 //  API
 // ═══════════════════════════════════════════════════════
 async function api(action,params={}){
-  const ms=action==='uploadPhoto'?90000:22000;
-  const ctrl=new AbortController();const t=setTimeout(()=>ctrl.abort(),ms);
+  const ms=action==='uploadPhoto'?90000:15000; // 15s timeout (was 22s)
+  const ctrl=new AbortController();const tmr=setTimeout(()=>ctrl.abort(),ms);
   try{
     const r=await fetch(API_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({action,...params}),signal:ctrl.signal});
     if(!r.ok)throw new Error(`HTTP ${r.status}`);
-    const j=await r.json();if(!j.ok)throw new Error(j.error||'API error');return j.data;
-  }finally{clearTimeout(t);}
+    const txt=await r.text();
+    let j;try{j=JSON.parse(txt);}catch(pe){throw new Error('Invalid response: '+txt.slice(0,80));}
+    if(!j.ok)throw new Error(j.error||'API error');
+    return j.data;
+  }finally{clearTimeout(tmr);}
 }
 
 // ═══════════════════════════════════════════════════════
@@ -1565,7 +1568,11 @@ async function loadAgenda(){
     updateNotifBanner();
     scheduleAllReminders();
     renderHome();
-  }catch(e){toast('Agenda: '+e.message,'error');}
+  }catch(e){
+    const msg=e.message.includes('abort')?'Request timed out — check API URL in Settings':e.message;
+    toast('Agenda: '+msg,'error',6000);
+    if(_cal)_cal.removeAllEvents();
+  }
 }
 
 function openEvModal(ev=null,dateStr=null){
@@ -1654,7 +1661,11 @@ async function loadDiary(){
   document.getElementById('diary-list').innerHTML='<div class="loading"><div class="spinner"></div>Loading…</div>';
   try{
     const d=await api('getDiaries');_diary=d.entries||[];renderDiary();renderHome();
-  }catch(e){document.getElementById('diary-list').innerHTML=`<div class="empty"><div class="empty-ico">⚠️</div><p class="empty-ttl">Could not load</p><p class="empty-sub">${esc(e.message)}</p></div>`;}
+  }catch(e){
+    const msg=e.message.includes('abort')?'Request timed out — check API URL in Settings':e.message;
+    document.getElementById('diary-list').innerHTML=`<div class="empty"><div class="empty-ico">⚠️</div><p class="empty-ttl">Could not load diary</p><p class="empty-sub">${esc(msg)}</p></div>`;
+    toast('Diary: '+msg,'error',6000);
+  }
 }
 
 function renderDiary(){
@@ -1817,7 +1828,11 @@ document.getElementById('diary-del').addEventListener('click',async()=>{
 // ═══════════════════════════════════════════════════════
 async function loadPhotos(){
   try{const d=await api('getPhotos',{});_photos=d.photos||[];renderGallery();renderHome();renderHome();}
-  catch(e){toast('Photos: '+e.message,'error');}
+  catch(e){
+    const msg=e.message.includes('abort')?'Request timed out':e.message;
+    toast('Photos: '+msg,'error',6000);
+    document.getElementById('gallery-empty').style.display='';
+  }
 }
 function renderGallery(){
   const grid=document.getElementById('gallery'),empty=document.getElementById('gallery-empty');
@@ -1931,7 +1946,11 @@ document.getElementById('month-next').addEventListener('click',()=>{_month=addMo
 async function loadMoney(){
   document.getElementById('tx-list').innerHTML='<div class="loading"><div class="spinner"></div>Loading…</div>';
   try{const d=await api('getMoneys',{});_money=d.transactions||[];updateMonthLbl();renderMoney();renderHome();}
-  catch(e){document.getElementById('tx-list').innerHTML=`<div class="empty"><div class="empty-ico">⚠️</div><p class="empty-ttl">Could not load</p><p class="empty-sub">${esc(e.message)}</p></div>`;}
+  catch(e){
+    const msg=e.message.includes('abort')?'Request timed out — check API URL in Settings':e.message;
+    document.getElementById('tx-list').innerHTML=`<div class="empty"><div class="empty-ico">⚠️</div><p class="empty-ttl">Could not load money</p><p class="empty-sub">${esc(msg)}</p></div>`;
+    toast('Money: '+msg,'error',6000);
+  }
 }
 function renderMoney(){
   const fil=_money.filter(t=>t.date.slice(0,7)===_month);
@@ -2449,14 +2468,15 @@ async function loadAll(){
 // Warn if opened as file:// (fetch won't work)
 if(location.protocol==='file:'){
   document.body.insertAdjacentHTML('afterbegin',
-    '<div style="position:fixed;top:0;left:0;right:0;z-index:9999;background:#dc2626;color:#fff;padding:.6rem 1rem;font-size:.82rem;text-align:center">' +
-    '⚠ Lumina must be opened from a web server, not a local file. ' +
-    'Push to GitHub Pages or use a local server. ' +
-    '<a href="https://alwanfikri.github.io/Lumina/" style="color:#fde68a;text-decoration:underline">Open from GitHub Pages →</a>' +
+    '<div id="file-warning" style="position:fixed;top:0;left:0;right:0;z-index:9999;background:#92400e;color:#fff;padding:.65rem 1.2rem;font-size:.82rem;display:flex;align-items:center;gap:.75rem;flex-wrap:wrap">' +
+    '<span>⚠ <strong>Cannot load data from file://</strong> — Run a local server first:</span>' +
+    '<code style="background:rgba(0,0,0,.25);padding:.15rem .5rem;border-radius:4px;font-size:.78rem">python -m http.server 8080</code>' +
+    '<span>then open</span>' +
+    '<a href="http://localhost:8080" style="color:#fde68a;text-decoration:underline;font-weight:600">http://localhost:8080</a>' +
+    '<span style="margin-left:auto;opacity:.7;font-size:.75rem">or double-click serve.bat</span>' +
     '</div>'
   );
-  // Shift content down
-  document.querySelector('.header').style.marginTop='40px';
+  document.querySelector('.header').style.marginTop='44px';
 }
 
 // Init calendar first then load data
@@ -2464,18 +2484,8 @@ initCalendar();
 applyTranslations();
 renderHome();
 
-// Ping API first — show clear error if unreachable
-(async ()=>{
-  try{
-    await api('ping');
-    loadAll();
-  }catch(e){
-    const msg = e.message.includes('abort') ? 'API timeout — check your URL in Settings' : `API error: ${e.message}`;
-    toast(msg, 'error', 8000);
-    // Still try loading — might partially work
-    loadAll();
-  }
-})();
+// Start loading immediately — don't wait for ping
+loadAll();
 </script>
 </body>
 </html>
