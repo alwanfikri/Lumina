@@ -431,6 +431,32 @@ img{max-width:100%;display:block}
 .mood-stat-chip{display:inline-flex;align-items:center;gap:.3rem;padding:.25rem .6rem;border-radius:20px;background:var(--surface2);border:1px solid var(--border);font-size:.78rem;color:var(--text2)}
 .mood-stat-chip .ms-emoji{font-size:1rem}
 .mood-stat-chip .ms-count{font-weight:600;color:var(--text)}
+/* ── Quick Capture ─────────────────────────────────── */
+.qc-wrap{margin-bottom:1.3rem}
+.qc-form{display:flex;align-items:center;gap:.5rem;background:var(--surface);border:1.5px solid var(--border);border-radius:var(--r);padding:.55rem .75rem;box-shadow:var(--shadow);transition:border-color var(--ease),box-shadow var(--ease)}
+.qc-form:focus-within{border-color:var(--amber);box-shadow:0 0 0 3px var(--amber-l)}
+.qc-icon{font-size:1.1rem;flex-shrink:0}
+.qc-input{flex:1;border:none;background:transparent;outline:none;font-size:.9rem;color:var(--text);font-family:var(--font-u)}
+.qc-input::placeholder{color:var(--text3)}
+.qc-send{width:30px;height:30px;border-radius:var(--r-sm);background:var(--amber);color:#fff;font-size:1rem;display:flex;align-items:center;justify-content:center;cursor:pointer;border:none;flex-shrink:0;opacity:0;transition:opacity var(--ease),transform var(--ease)}
+.qc-send.visible{opacity:1}
+.qc-send:hover{background:var(--amber-d);transform:scale(1.08)}
+.qc-send:disabled{opacity:.4;pointer-events:none}
+.qc-hint{font-size:.72rem;color:var(--text3);margin-top:.4rem;padding-left:2px}
+.qc-result{display:flex;align-items:center;gap:.5rem;padding:.5rem .75rem;border-radius:var(--r-sm);font-size:.8rem;margin-top:.4rem;animation:toastIn .2s ease}
+.qc-result.money{background:var(--green-l);color:#15803d}
+.qc-result.agenda{background:var(--amber-l);color:var(--amber-d)}
+.qc-result.diary{background:var(--surface2);color:var(--text2)}
+.qc-result.error{background:var(--red-l);color:var(--red)}
+.inbox-recent{margin-top:.5rem}
+.inbox-item{display:flex;align-items:center;gap:.5rem;padding:.35rem .4rem;border-radius:var(--r-sm);font-size:.76rem;color:var(--text2)}
+.inbox-item-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+.inbox-item-raw{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.inbox-item-type{font-size:.65rem;font-weight:600;padding:.1rem .4rem;border-radius:10px;flex-shrink:0;text-transform:uppercase;letter-spacing:.05em}
+.type-money{background:var(--green-l);color:#15803d}
+.type-agenda{background:var(--amber-l);color:var(--amber-d)}
+.type-diary{background:var(--surface2);color:var(--text3)}
+.type-error{background:var(--red-l);color:var(--red)}
 @keyframes spin{to{transform:rotate(360deg)}}
 #ev-time-row.hidden{display:none}
 @keyframes toastIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
@@ -453,28 +479,6 @@ img{max-width:100%;display:block}
     <div id="home-content"></div>
   </div>
 
-<div style="padding:20px; max-width:600px; margin:auto; font-family:sans-serif;">
-  
-  <h2>⚡ Lumina Quick Input</h2>
-
-  <input id="quickInput" 
-         placeholder="ketik apa aja... (contoh: beli kopi 20rb)"
-         style="width:100%; padding:12px; font-size:16px; border-radius:8px; border:1px solid #ccc;" />
-
-  <button onclick="submitInput()" 
-          style="margin-top:10px; padding:10px 20px; border:none; background:black; color:white; border-radius:8px;">
-    Submit
-  </button>
-
-  <button onclick="loadToday()" 
-          style="margin-top:10px; margin-left:10px; padding:10px 20px;">
-    Today
-  </button>
-
-  <pre id="output" style="margin-top:20px; background:#f5f5f5; padding:10px;"></pre>
-
-</div>
-   
   <!-- AGENDA -->
   <div class="panel" id="panel-agenda">
     <div class="sec-hdr">
@@ -965,49 +969,7 @@ img{max-width:100%;display:block}
 </div>
 
 <div id="toasts"></div>
-<script>
-const API_URL = "https://script.google.com/macros/s/AKfycbzbYdcPjuZkMm6XwARZ-OCxCim-KyUNgVrjKIVWBfri2pIYEML7T6sOb2I0eYAia4HX/exec";
 
-async function submitInput(){
-  const text = document.getElementById("quickInput").value;
-
-  if(!text) return alert("isi dulu");
-
-  // 1. masuk inbox
-  await fetch(API_URL, {
-    method:"POST",
-    body: JSON.stringify({
-      action:"addInbox",
-      text:text
-    })
-  });
-
-  // 2. langsung process
-  await fetch(API_URL, {
-    method:"POST",
-    body: JSON.stringify({
-      action:"processInbox"
-    })
-  });
-
-  document.getElementById("quickInput").value = "";
-  document.getElementById("output").innerText = "✅ processed";
-
-  loadToday();
-}
-
-async function loadToday(){
-  const res = await fetch(API_URL, {
-    method:"POST",
-    body: JSON.stringify({
-      action:"getToday"
-    })
-  });
-
-  const data = await res.json();
-  document.getElementById("output").innerText = JSON.stringify(data, null, 2);
-}
-</script>
 <script>
 'use strict';
 // ═══════════════════════════════════════════════════════
@@ -1024,6 +986,7 @@ const TRANSLATIONS = {
     preview:'Preview',
     home:'Home',
     goodMorning:'Good morning', goodAfternoon:'Good afternoon', goodEvening:'Good evening',
+    quickCapture:'Quick Capture', qcPlaceholder:'Type anything… "lunch 50k", "meeting tomorrow 10am", "feeling tired"', qcHintMoney:'💰 money', qcHintAgenda:'📅 event', qcHintDiary:'📓 diary', qcSaved:'Saved as', qcError:'Could not save',
     quickAdd:'Quick Add', viewAll:'View all',
     recentDiary:'Recent Diary', upcomingAgenda:'Upcoming',
     recentPhotos:'Recent Photos', thisMonth:'This month',
@@ -1098,6 +1061,7 @@ const TRANSLATIONS = {
     preview:'Pratinjau',
     home:'Beranda',
     goodMorning:'Selamat pagi', goodAfternoon:'Selamat siang', goodEvening:'Selamat malam',
+    quickCapture:'Catat Cepat', qcPlaceholder:'Ketik apa saja… "makan 50rb", "meeting besok jam 10", "hari ini capek"', qcHintMoney:'💰 uang', qcHintAgenda:'📅 acara', qcHintDiary:'📓 diari', qcSaved:'Tersimpan sebagai', qcError:'Gagal menyimpan',
     quickAdd:'Tambah Cepat', viewAll:'Lihat semua',
     recentDiary:'Diari Terbaru', upcomingAgenda:'Mendatang',
     recentPhotos:'Foto Terbaru', thisMonth:'Bulan ini',
@@ -1425,7 +1389,8 @@ let API_URL = localStorage.getItem(LS_KEY) || DEFAULT_API;
 //  STATE
 // ═══════════════════════════════════════════════════════
 let _agenda=[], _diary=[], _photos=[], _money=[];
-let _gcalEvents=[];          // imported GCal events (not in sheet)
+let _gcalEvents=[];
+let _inbox=[];          // recent inbox items          // imported GCal events (not in sheet)
 let _calendars=[];           // user's calendar list from GCal
 let _enabledCals=new Set();  // calendar IDs currently shown
 const LS_ENABLED_CALS='lumina_enabled_cals';
@@ -2667,6 +2632,31 @@ function renderHome(){
     <div class="home-greeting-text">${getGreeting()}, <span>Lumina ✦</span></div>
   </div>`;
 
+  // ── Quick Capture ──────────────────────────────────────
+  const qcHints = [tr.qcHintMoney||'💰 money', tr.qcHintAgenda||'📅 event', tr.qcHintDiary||'📓 diary'];
+  const recentInbox = _inbox.slice(0,3);
+  const typeColors = {money:'#16a34a',agenda:'#d97706',diary:'#a8967e',error:'#dc2626'};
+  const inboxRecentHtml = recentInbox.length ? `<div class="inbox-recent">${
+    recentInbox.map(item=>`<div class="inbox-item">
+      <div class="inbox-item-dot" style="background:${typeColors[item.detected_type]||'var(--text3)'}"></div>
+      <span class="inbox-item-raw">${esc(item.raw_input)}</span>
+      <span class="inbox-item-type type-${item.detected_type||'diary'}">${item.detected_type||'…'}</span>
+    </div>`).join('')
+  }</div>` : '';
+
+  const quickCapture=`<div class="qc-wrap">
+    <div class="qc-form">
+      <span class="qc-icon">✦</span>
+      <input class="qc-input" id="qc-input" type="text"
+        placeholder="${esc(tr.qcPlaceholder||'Type anything…')}"
+        autocomplete="off" autocorrect="off">
+      <button class="qc-send" id="qc-send" disabled>↑</button>
+    </div>
+    <div class="qc-hint">${qcHints.join(' · ')}</div>
+    <div id="qc-result"></div>
+    ${inboxRecentHtml}
+  </div>`;
+
   // ── Quick Actions ──────────────────────────────────────
   const qa=`<div class="quick-actions">
     <div class="qa-btn" onclick="switchTab('agenda');setTimeout(()=>document.getElementById('new-ev-btn').click(),150)">
@@ -2773,7 +2763,7 @@ function renderHome(){
   </div>`;
 
   // ── Assemble ───────────────────────────────────────────
-  el.innerHTML = greeting + qa + upcomingSection + diarySection + photoSection + moneySection;
+  el.innerHTML = greeting + quickCapture + qa + upcomingSection + diarySection + photoSection + moneySection;
 
   // Wire up upcoming item clicks
   el.querySelectorAll('.home-upcoming-item').forEach(item=>{
@@ -2799,6 +2789,10 @@ function renderHome(){
       setTimeout(()=>{_photoOverride=null;openCarousel(idx);},100);
     });
   });
+
+  // Wire up Quick Capture
+  _initQuickCapture();
+
   }catch(err){
     console.error('[renderHome] Error:', err);
     el.innerHTML=`<div style="padding:1rem;color:var(--red);font-size:.85rem">⚠ Dashboard error: ${esc(err.message)}</div>`;
@@ -2991,6 +2985,168 @@ document.getElementById('exp-pdf-btn')?.addEventListener('click',()=>{
 });
 
 // ═══════════════════════════════════════════════════════
+//  UNIVERSAL INBOX / QUICK CAPTURE
+// ═══════════════════════════════════════════════════════
+
+// Type display config
+const INBOX_TYPE_CONFIG = {
+  money:  { icon:'💰', label: ()=>t().money||'Money',  tab:'money'  },
+  agenda: { icon:'📅', label: ()=>t().agenda||'Agenda', tab:'agenda' },
+  diary:  { icon:'📓', label: ()=>t().diary||'Diary',   tab:'diary'  },
+};
+
+// Load recent inbox items
+async function loadInbox(){
+  try{
+    const d = await api('getInbox', { limit: 10 });
+    _inbox = d.items || [];
+  }catch(e){
+    // Non-fatal — inbox may not exist yet
+    console.warn('[Inbox] getInbox failed:', e.message);
+    _inbox = [];
+  }
+}
+
+// Submit one raw input through addInbox → processInbox
+async function submitQuickCapture(raw){
+  if(!raw || !raw.trim()) return null;
+
+  // 1. Add to Inbox
+  const added = await api('addInbox', { raw_input: raw.trim() });
+
+  // 2. Process immediately
+  const processed = await api('processInbox', { id: added.id });
+
+  // 3. Update local inbox cache
+  const result = processed.results && processed.results[0];
+  if(result){
+    _inbox.unshift({
+      id:           added.id,
+      raw_input:    raw.trim(),
+      detected_type:result.type,
+      status:       result.status,
+      timestamp:    new Date().toISOString()
+    });
+    if(_inbox.length > 20) _inbox.pop();
+  }
+
+  return result;
+}
+
+// Init Quick Capture input on home panel
+function _initQuickCapture(){
+  const input = document.getElementById('qc-input');
+  const send  = document.getElementById('qc-send');
+  const result= document.getElementById('qc-result');
+  if(!input || !send) return;
+
+  // Show/hide send button based on content
+  input.addEventListener('input', ()=>{
+    const hasText = input.value.trim().length > 0;
+    send.classList.toggle('visible', hasText);
+    send.disabled = !hasText;
+    if(result) result.innerHTML = '';
+  });
+
+  // Submit on Enter
+  input.addEventListener('keydown', e=>{
+    if(e.key === 'Enter' && !e.shiftKey){
+      e.preventDefault();
+      _handleQuickCapture(input, send, result);
+    }
+  });
+
+  // Submit on button click
+  send.addEventListener('click', ()=>{
+    _handleQuickCapture(input, send, result);
+  });
+}
+
+async function _handleQuickCapture(input, send, resultEl){
+  const raw = input.value.trim();
+  if(!raw) return;
+
+  // Optimistic UI — disable and show loading
+  input.disabled = true;
+  send.disabled  = true;
+  send.textContent = '…';
+
+  try{
+    const res = _parseInputFrontend(raw); // quick local preview
+    const typeConf = INBOX_TYPE_CONFIG[res.type] || INBOX_TYPE_CONFIG.diary;
+
+    // Show optimistic result immediately
+    if(resultEl){
+      resultEl.innerHTML = `<div class="qc-result ${res.type}">
+        ${typeConf.icon} <strong>${t().qcSaved||'Saved as'} ${typeConf.label()}</strong>
+        ${res.preview ? '— ' + esc(res.preview) : ''}
+      </div>`;
+    }
+
+    // Actually submit
+    const serverResult = await submitQuickCapture(raw);
+
+    // Clear input
+    input.value = '';
+    send.classList.remove('visible');
+    send.disabled = true;
+
+    // Refresh relevant tab data silently
+    if(serverResult){
+      const tab = (INBOX_TYPE_CONFIG[serverResult.type]||{}).tab || 'diary';
+      if(tab==='money')  loadMoney();
+      else if(tab==='agenda') loadAgenda();
+      else if(tab==='diary')  loadDiary();
+      // Re-render home to update inbox recent + relevant section
+      setTimeout(renderHome, 400);
+    }
+
+  }catch(e){
+    if(resultEl){
+      resultEl.innerHTML = `<div class="qc-result error">⚠ ${esc(t().qcError||'Could not save')}: ${esc(e.message)}</div>`;
+    }
+  }finally{
+    input.disabled = false;
+    send.textContent = '↑';
+    input.focus();
+  }
+}
+
+// ── Lightweight frontend parser for instant feedback ──
+// Mirrors the GAS NLP logic — purely for optimistic UI
+function _parseInputFrontend(text){
+  const lower = text.toLowerCase();
+
+  // Money
+  const moneyRe = /(\d[\d.,]*)\s*(rb|ribu|k|jt|juta|000)?/i;
+  const expenseKw = /beli|bayar|makan|minum|spend|paid|pay|jajan|bensin|kopi|coffee|lunch|dinner|transport|ojek|belanja/i;
+  const incomeKw  = /gaji|salary|bonus|income|pemasukan|dapat|terima|freelance/i;
+  if(moneyRe.test(text) && (expenseKw.test(text) || incomeKw.test(text))){
+    const m = text.match(moneyRe);
+    let amt = 0;
+    if(m){
+      const num = parseFloat(String(m[1]).replace(/[.,]/g,''));
+      const u = (m[2]||'').toLowerCase();
+      if(u==='rb'||u==='ribu'||u==='k') amt = num*1000;
+      else if(u==='jt'||u==='juta') amt = num*1000000;
+      else amt = num;
+    }
+    return { type:'money', preview: idr(amt) };
+  }
+
+  // Agenda
+  const timeRe = /jam\s*\d|pukul|\d{1,2}[.:]\d{2}|at\s+\d|\d\s*(am|pm)/i;
+  const dateKw  = /besok|tomorrow|lusa|minggu depan|senin|selasa|rabu|kamis|jumat|sabtu|meeting|rapat|event/i;
+  if(timeRe.test(text) || dateKw.test(text)){
+    const title = text.replace(/jam\s*\d{1,2}(?:[.:]\d{2})?/gi,'').replace(/besok|tomorrow|lusa/gi,'').trim();
+    return { type:'agenda', preview: title.slice(0,40) };
+  }
+
+  // Default: diary
+  return { type:'diary', preview: text.slice(0,40) };
+}
+
+// ═══════════════════════════════════════════════════════
 //  NOTIFICATIONS & REMINDERS
 // ═══════════════════════════════════════════════════════
 
@@ -3159,6 +3315,7 @@ async function loadAll(){
     toast('⚠ Could not connect to API — check URL in Settings', 'error', 8000);
   }
   loadCalendars();
+  loadInbox(); // non-blocking, refreshes inbox cache for Quick Capture history
 }
 
 // Apply theme immediately before page renders to prevent flash
