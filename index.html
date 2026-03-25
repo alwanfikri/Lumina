@@ -457,6 +457,26 @@ img{max-width:100%;display:block}
 .type-agenda{background:var(--amber-l);color:var(--amber-d)}
 .type-diary{background:var(--surface2);color:var(--text3)}
 .type-error{background:var(--red-l);color:var(--red)}
+/* ── Categories editor ──────────────────────── */
+.cats-tabs{display:flex;gap:.4rem;margin-bottom:.8rem}
+.cats-tab{flex:1;padding:.45rem;border-radius:var(--r-sm);font-size:.82rem;font-weight:500;border:1px solid var(--border);background:var(--surface);color:var(--text2);cursor:pointer;transition:all var(--ease)}
+.cats-tab.active{background:var(--amber);color:#fff;border-color:var(--amber)}
+.cats-list{max-height:240px;overflow-y:auto;margin-bottom:.75rem}
+.cats-item{display:flex;align-items:center;gap:.5rem;padding:.5rem .4rem;border-bottom:1px solid var(--border);border-radius:var(--r-sm)}
+.cats-item:last-child{border-bottom:none}
+.cats-item-emoji{width:28px;text-align:center;font-size:1rem;flex-shrink:0}
+.cats-item-label{flex:1;font-size:.86rem;color:var(--text)}
+.cats-item-del{background:none;border:none;cursor:pointer;color:var(--text3);font-size:.85rem;padding:2px 4px;border-radius:4px;transition:all var(--ease);flex-shrink:0}
+.cats-item-del:hover{background:var(--red-l);color:var(--red)}
+.cats-item-default{font-size:.65rem;color:var(--text3);padding:.1rem .35rem;border-radius:10px;background:var(--surface2);flex-shrink:0}
+.cats-add-row{display:flex;gap:.4rem;align-items:center;margin-bottom:.5rem}
+/* ── OCR preview ─────────────────────────────── */
+.ocr-preview-box{background:var(--surface2);border:1px solid var(--border);border-radius:var(--r-sm);padding:.6rem .75rem;font-size:.82rem}
+.ocr-preview-box .ocr-field{display:flex;justify-content:space-between;margin-bottom:.2rem;color:var(--text2)}
+.ocr-preview-box .ocr-field strong{color:var(--text)}
+.ocr-scanning{display:flex;align-items:center;gap:.5rem;font-size:.82rem;color:var(--text3);padding:.4rem}
+/* ── Payment method in tx list ───────────────── */
+.tx-pay-badge{font-size:.65rem;padding:.1rem .35rem;border-radius:10px;background:var(--surface2);color:var(--text3);margin-left:.3rem}
 @keyframes spin{to{transform:rotate(360deg)}}
 #ev-time-row.hidden{display:none}
 @keyframes toastIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
@@ -773,7 +793,26 @@ img{max-width:100%;display:block}
       <div class="fg"><label class="flabel">Amount (Rp)</label><input class="fi" id="tx-amount" type="number" min="0" step="1000" placeholder="0"></div>
     </div>
     <div class="fg"><label class="flabel">Category</label><select class="fi" id="tx-cat"></select></div>
-    <div class="fg"><label class="flabel">Notes</label><input class="fi" id="tx-notes" placeholder="Optional…"></div>
+    <div class="frow">
+      <div class="fg"><label class="flabel" id="tx-lbl-pay">Payment Method</label>
+        <select class="fi" id="tx-payment">
+          <option value="cash">💵 Cash</option>
+          <option value="debit">💳 Debit</option>
+          <option value="credit">💳 Credit</option>
+          <option value="transfer">🏦 Transfer</option>
+          <option value="ewallet">📱 E-Wallet</option>
+          <option value="other">📦 Other</option>
+        </select>
+      </div>
+      <div class="fg"><label class="flabel" id="tx-lbl-notes">Notes</label>
+        <div style="position:relative">
+          <input class="fi" id="tx-notes" placeholder="Optional…" style="padding-right:2.4rem">
+          <button id="ocr-btn" title="Scan receipt with camera or upload" style="position:absolute;right:.4rem;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;font-size:1.1rem;color:var(--amber);padding:0;transition:color var(--ease)" >📷</button>
+        </div>
+      </div>
+    </div>
+    <div id="ocr-preview" style="display:none;margin-top:.4rem"></div>
+    <input type="file" id="ocr-file-input" accept="image/*" style="display:none"><input type="file" id="ocr-camera-input" accept="image/*" capture="environment" style="display:none">
     <div class="modal-actions">
       <button class="btn btn-danger btn-sm" id="tx-del" style="display:none;margin-right:auto" data-i18n="deleteBtn">🗑 Delete</button>
       <button class="btn btn-ghost" data-close="tx-modal" data-i18n="cancel">Cancel</button>
@@ -811,6 +850,49 @@ img{max-width:100%;display:block}
     <div class="modal-actions">
       <button class="btn btn-ghost" data-close="cal-import-modal">Cancel</button>
       <button class="btn btn-primary" id="cal-import-confirm-btn">↺ Import Selected</button>
+    </div>
+  </div>
+</div>
+
+<!-- Categories Editor Modal -->
+<div class="overlay" id="cats-modal">
+  <div class="modal">
+    <div class="modal-hdr">
+      <h2 class="modal-ttl">Edit Categories</h2>
+      <button class="modal-x" data-close="cats-modal">✕</button>
+    </div>
+    <div class="cats-tabs">
+      <button class="cats-tab active" data-cats-tab="expense">💸 Expense</button>
+      <button class="cats-tab" data-cats-tab="income">💰 Income</button>
+    </div>
+    <div id="cats-expense-list" class="cats-list"></div>
+    <div id="cats-income-list" class="cats-list" style="display:none"></div>
+    <div class="cats-add-row">
+      <input class="fi" id="cats-new-emoji" placeholder="🏷" style="width:3rem;text-align:center;flex-shrink:0">
+      <input class="fi" id="cats-new-label" placeholder="Category name" style="flex:1">
+      <button class="btn btn-primary btn-sm" id="cats-add-btn">+ Add</button>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" data-close="cats-modal">Done</button>
+    </div>
+  </div>
+</div>
+
+<!-- Payment Methods Editor Modal -->
+<div class="overlay" id="payment-modal">
+  <div class="modal">
+    <div class="modal-hdr">
+      <h2 class="modal-ttl">Payment Methods</h2>
+      <button class="modal-x" data-close="payment-modal">✕</button>
+    </div>
+    <div id="payment-list" class="cats-list"></div>
+    <div class="cats-add-row">
+      <input class="fi" id="pay-new-emoji" placeholder="💳" style="width:3rem;text-align:center;flex-shrink:0">
+      <input class="fi" id="pay-new-label" placeholder="Method name" style="flex:1">
+      <button class="btn btn-primary btn-sm" id="pay-add-btn">+ Add</button>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" data-close="payment-modal">Done</button>
     </div>
   </div>
 </div>
@@ -952,6 +1034,26 @@ img{max-width:100%;display:block}
 
     <hr style="border:none;border-top:1px solid var(--border);margin:1rem 0">
 
+    <!-- OCR Settings -->
+    <div class="fg" style="margin-bottom:.9rem">
+      <div class="s-lbl">📷 Receipt OCR</div>
+      <div style="margin-top:6px;margin-bottom:8px">
+        <label style="font-size:.78rem;color:var(--text2);display:block;margin-bottom:4px">Provider</label>
+        <select class="fi" id="ocr-provider" style="font-size:.84rem">
+          <option value="gemini">Gemini (Google) — Free tier available</option>
+          <option value="anthropic">Claude (Anthropic) — Paid</option>
+        </select>
+      </div>
+      <label style="font-size:.78rem;color:var(--text2);display:block;margin-bottom:4px" id="ocr-key-label">API Key</label>
+      <input class="fi" id="ocr-key-input" type="password" placeholder="Paste API key…" style="margin-top:2px;font-family:monospace;font-size:.8rem">
+      <div style="font-size:.7rem;color:var(--text3);margin-top:4px" id="ocr-key-hint">
+        Get a free Gemini key at <strong>aistudio.google.com</strong> → Get API Key
+      </div>
+      <button class="btn btn-primary btn-sm" id="ocr-key-save" style="margin-top:8px;width:100%">Save Key</button>
+      <div id="ocr-key-status" style="font-size:.72rem;margin-top:4px"></div>
+    </div>
+    <hr style="border:none;border-top:1px solid var(--border);margin:1rem 0">
+
     <!-- API -->
     <div class="fg">
       <div class="s-lbl">API URL</div>
@@ -963,7 +1065,16 @@ img{max-width:100%;display:block}
       <div class="s-val" id="api-display">—</div>
     </div>
     <hr style="border:none;border-top:1px solid var(--border);margin:1rem 0">
-    <button class="btn btn-ghost" style="width:100%;margin-bottom:.5rem" id="export-btn" id-i18n="exportData">⬇ Export Data</button>
+    <hr style="border:none;border-top:1px solid var(--border);margin:1rem 0">
+
+    <!-- Categories & Payment Methods -->
+    <div style="margin-bottom:.75rem">
+      <div class="s-lbl">Money Settings</div>
+      <button class="btn btn-ghost" style="width:100%;margin-bottom:.5rem;margin-top:6px" id="edit-cats-btn">🏷 Edit Categories</button>
+      <button class="btn btn-ghost" style="width:100%;margin-bottom:.5rem" id="edit-payment-btn">💳 Edit Payment Methods</button>
+    </div>
+
+    <button class="btn btn-ghost" style="width:100%;margin-bottom:.5rem" id="export-btn">⬇ Export Data</button>
     <button class="btn btn-ghost" style="width:100%;margin-bottom:.5rem" id="refresh-btn" data-i18n="refreshData">↺ Refresh all data</button>
   </div>
 </div>
@@ -1468,6 +1579,27 @@ document.getElementById('settings-btn').addEventListener('click',()=>{
   ['light','dark','auto'].forEach(th=>{
     document.getElementById('theme-'+th)?.classList.toggle('active',(_locale.theme||'auto')===th);
   });
+  // OCR key + provider status
+  const ocrStatus = document.getElementById('ocr-key-status');
+  const ocrProv   = document.getElementById('ocr-provider');
+  if(ocrProv){
+    const savedProv = localStorage.getItem('lumina_ocr_provider')||'gemini';
+    ocrProv.value = savedProv;
+    const info = _ocrProviderHints?.[savedProv] || {placeholder:'Paste API key…', hint:'', label:'API Key'};
+    const inp = document.getElementById('ocr-key-input');
+    const lbl = document.getElementById('ocr-key-label');
+    const hnt = document.getElementById('ocr-key-hint');
+    if(inp) inp.placeholder = info.placeholder;
+    if(lbl) lbl.textContent = info.label;
+    if(hnt) hnt.innerHTML  = info.hint;
+  }
+  if(ocrStatus){
+    const hasKey  = !!localStorage.getItem('lumina_ocr_key');
+    const prov    = localStorage.getItem('lumina_ocr_provider')||'gemini';
+    const provName= prov==='gemini'?'Gemini':'Claude';
+    ocrStatus.textContent = hasKey ? `✅ ${provName} key is set` : '⚠ No key set — receipt scanning disabled';
+    ocrStatus.style.color = hasKey ? 'var(--green)' : 'var(--text3)';
+  }
   updateFormatPreview();
   document.getElementById('settings-ol').classList.add('open');
 });
@@ -1536,6 +1668,32 @@ document.getElementById('api-save').addEventListener('click',()=>{
   toast(t().saved,'success');loadAll();
 });
 document.getElementById('refresh-btn').addEventListener('click',()=>{document.getElementById('settings-ol').classList.remove('open');loadAll();toast(t().refreshing)});
+
+// OCR provider + key
+const _ocrProviderHints = {
+  gemini:    { placeholder:'AIza…',   hint:'Get a free key at <strong>aistudio.google.com</strong> → Get API Key', label:'Gemini API Key' },
+  anthropic: { placeholder:'sk-ant-…', hint:'Get a key at <strong>console.anthropic.com</strong> (paid)', label:'Anthropic API Key' },
+};
+document.getElementById('ocr-provider')?.addEventListener('change', ()=>{
+  const prov = document.getElementById('ocr-provider').value;
+  const info = _ocrProviderHints[prov] || _ocrProviderHints.gemini;
+  document.getElementById('ocr-key-input').placeholder = info.placeholder;
+  document.getElementById('ocr-key-hint').innerHTML = info.hint;
+  document.getElementById('ocr-key-label').textContent = info.label;
+  localStorage.setItem('lumina_ocr_provider', prov);
+});
+document.getElementById('ocr-key-save')?.addEventListener('click',()=>{
+  const key  = document.getElementById('ocr-key-input').value.trim();
+  const prov = document.getElementById('ocr-provider')?.value || 'gemini';
+  if(!key){ toast('Enter an API key','error'); return; }
+  localStorage.setItem('lumina_ocr_key', key);
+  localStorage.setItem('lumina_ocr_provider', prov);
+  const status = document.getElementById('ocr-key-status');
+  status.textContent = '✅ Key saved';
+  status.style.color = 'var(--green)';
+  document.getElementById('ocr-key-input').value = '';
+  toast('OCR key saved','success');
+});;
 
 // ═══════════════════════════════════════════════════════
 //  CALENDAR MANAGEMENT (GCal import + filter)
@@ -2389,7 +2547,7 @@ document.getElementById('c-del').addEventListener('click',async()=>{
 // ═══════════════════════════════════════════════════════
 const EXPENSE_CATS=[{id:'food',label:'🍜 Food & Drink',cls:'cf',color:'#f97316'},{id:'transport',label:'🚗 Transport',cls:'ct',color:'#3b82f6'},{id:'shopping',label:'🛍 Shopping',cls:'cs',color:'#a855f7'},{id:'health',label:'💊 Health',cls:'ch',color:'#ef4444'},{id:'entertain',label:'🎬 Entertainment',cls:'ce',color:'#ec4899'},{id:'bills',label:'📋 Bills & Utilities',cls:'cb',color:'#6b7280'},{id:'other',label:'📦 Other',cls:'co',color:'#d97706'}];
 const INCOME_CATS=[{id:'salary',label:'💼 Salary',cls:'csl',color:'#16a34a'},{id:'freelance',label:'💻 Freelance',cls:'cfl',color:'#10b981'},{id:'other',label:'📦 Other Income',cls:'co',color:'#d97706'}];
-const catInfo=id=>[...EXPENSE_CATS,...INCOME_CATS].find(c=>c.id===id)||{label:id,cls:'co',color:'#d97706'};
+const catInfo=id=>_catInfo(id);  // delegates to custom cats (overridden after settings JS loads)
 
 // Budget storage (localStorage)
 const LS_BUDGETS = 'lumina_budgets';
@@ -2447,7 +2605,8 @@ function renderMoney(){
   el.innerHTML=Object.keys(g).sort().reverse().map(date=>{
     const dt=g[date].reduce((s,t)=>s+(t.type==='income'?t.amount:-t.amount),0);
     return`<div class="tx-group"><div class="tx-dlbl"><span>${fmtDateLbl(date)}</span><span style="color:${dt>=0?'var(--green)':'var(--red)'};">${dt>=0?'+':'-'}${idr(dt)}</span></div>${
-      g[date].map(t=>{const ci=catInfo(t.category);return`<div class="tx-item" data-id="${t.id}"><div class="tx-dot ${ci.cls}"></div><div class="tx-body"><div class="tx-cat">${ci.label}</div>${t.notes?`<div class="tx-note">${esc(t.notes)}</div>`:''}</div><div class="tx-amt ${t.type}">${t.type==='income'?'+':'-'}${idr(t.amount)}</div></div>`;}).join('')
+      g[date].map(t=>{const ci=catInfo(t.category);const payMethods=getPaymentMethods();const pm=payMethods.find(m=>m.id===t.payment_method);
+    return`<div class="tx-item" data-id="${t.id}"><div class="tx-dot ${ci.cls}"></div><div class="tx-body"><div class="tx-cat">${ci.label}${pm?`<span class="tx-pay-badge">${pm.emoji} ${pm.label}</span>`:''}</div>${t.notes?`<div class="tx-note">${esc(t.notes)}</div>`:''}</div><div class="tx-amt ${t.type}">${t.type==='income'?'+':'-'}${idr(t.amount)}</div></div>`;}).join('')
     }</div>`;
   }).join('');
   el.querySelectorAll('.tx-item').forEach(c=>c.addEventListener('click',()=>openTxModal(_money.find(t=>t.id===c.dataset.id))));
@@ -2554,8 +2713,9 @@ function setTxType(type){
   document.getElementById('tt-exp').className=type==='expense'?'tt-exp':'';
   document.getElementById('tt-inc').className=type==='income'?'tt-inc':'';
   const sel=document.getElementById('tx-cat');
-  const cats=_txType==='income'?INCOME_CATS:EXPENSE_CATS;
-  sel.innerHTML=cats.map(c=>`<option value="${c.id}">${c.label}</option>`).join('');
+  if(!sel)return;
+  const cats=_txType==='income'?getIncomeCats():getExpenseCats();
+  populateCatSelect(sel, cats);
 }
 function openTxModal(tx=null){
   const n=!tx;
@@ -2564,6 +2724,11 @@ function openTxModal(tx=null){
   document.getElementById('tx-date').value=tx?.date||today();
   document.getElementById('tx-amount').value=tx?.amount||'';
   document.getElementById('tx-notes').value=tx?.notes||'';
+  document.getElementById('tx-payment').value=tx?.payment_method||'cash';
+  document.getElementById('ocr-preview').style.display='none';
+  document.getElementById('ocr-preview').innerHTML='';
+  _refreshPaymentSelect();
+  initOCR();
   document.getElementById('tx-del').style.display=n?'none':'';
   setTxType(tx?.type||'expense');
   if(tx?.category){
@@ -2580,7 +2745,7 @@ document.getElementById('tx-save').addEventListener('click',async()=>{
   if(!amount||amount<=0){toast(t().enterAmount,'error');return;}
   const btn=document.getElementById('tx-save');btn.disabled=true;btn.textContent=t().saving;
   try{
-    await api('saveMoney',{id:document.getElementById('tx-id').value||undefined,date:document.getElementById('tx-date').value,type:_txType,category:document.getElementById('tx-cat').value,amount,notes:document.getElementById('tx-notes').value.trim()});
+    await api('saveMoney',{id:document.getElementById('tx-id').value||undefined,date:document.getElementById('tx-date').value,type:_txType,category:document.getElementById('tx-cat').value,amount,notes:document.getElementById('tx-notes').value.trim(),payment_method:document.getElementById('tx-payment')?.value||'cash'});
     closeModal('tx-modal');toast('Saved','success');loadMoney();
   }catch(e){toast(e.message,'error');}
   finally{btn.disabled=false;btn.textContent=t().save;}
@@ -2797,6 +2962,360 @@ function renderHome(){
     console.error('[renderHome] Error:', err);
     el.innerHTML=`<div style="padding:1rem;color:var(--red);font-size:.85rem">⚠ Dashboard error: ${esc(err.message)}</div>`;
   }
+}
+
+// ═══════════════════════════════════════════════════════
+//  CUSTOM CATEGORIES + PAYMENT METHODS
+// ═══════════════════════════════════════════════════════
+
+const LS_CUSTOM_CATS    = 'lumina_custom_cats';
+const LS_PAYMENT_METHODS= 'lumina_payment_methods';
+
+// Default payment methods
+const DEFAULT_PAYMENT_METHODS = [
+  {id:'cash',    emoji:'💵', label:'Cash'},
+  {id:'debit',   emoji:'💳', label:'Debit'},
+  {id:'credit',  emoji:'💳', label:'Credit'},
+  {id:'transfer',emoji:'🏦', label:'Transfer'},
+  {id:'ewallet', emoji:'📱', label:'E-Wallet'},
+];
+
+// Load custom cats (merges defaults with user additions/deletions)
+function getExpenseCats(){
+  try{
+    const saved = JSON.parse(localStorage.getItem(LS_CUSTOM_CATS)||'null');
+    if(saved && saved.expense) return saved.expense;
+  }catch(_){}
+  return EXPENSE_CATS.map(c=>({...c}));
+}
+function getIncomeCats(){
+  try{
+    const saved = JSON.parse(localStorage.getItem(LS_CUSTOM_CATS)||'null');
+    if(saved && saved.income) return saved.income;
+  }catch(_){}
+  return INCOME_CATS.map(c=>({...c}));
+}
+function getPaymentMethods(){
+  try{
+    const saved = JSON.parse(localStorage.getItem(LS_PAYMENT_METHODS)||'null');
+    if(saved && Array.isArray(saved)) return saved;
+  }catch(_){}
+  return DEFAULT_PAYMENT_METHODS.map(m=>({...m}));
+}
+function saveCats(expense, income){
+  localStorage.setItem(LS_CUSTOM_CATS, JSON.stringify({expense, income}));
+}
+function savePaymentMethods(methods){
+  localStorage.setItem(LS_PAYMENT_METHODS, JSON.stringify(methods));
+}
+
+// Override catInfo to use custom cats
+const _catInfo = id => {
+  const all = [...getExpenseCats(), ...getIncomeCats()];
+  return all.find(c=>c.id===id) || {label:id, cls:'co', color:'#d97706'};
+};
+
+// ── Categories modal ───────────────────────────────────
+let _catsTab = 'expense';
+
+function openCatsModal(){
+  _catsTab = 'expense';
+  document.querySelectorAll('.cats-tab').forEach(b=>b.classList.toggle('active', b.dataset.catsTab==='expense'));
+  document.getElementById('cats-expense-list').style.display='';
+  document.getElementById('cats-income-list').style.display='none';
+  renderCatsList();
+  openModal('cats-modal');
+}
+
+function renderCatsList(){
+  const expCats = getExpenseCats();
+  const incCats = getIncomeCats();
+  const defaultExpIds = new Set(EXPENSE_CATS.map(c=>c.id));
+  const defaultIncIds = new Set(INCOME_CATS.map(c=>c.id));
+
+  const makeList = (cats, defaultIds, type) =>
+    cats.map(cat=>`
+      <div class="cats-item" data-id="${esc(cat.id)}" data-type="${type}">
+        <span class="cats-item-emoji">${cat.emoji||cat.label.split(' ')[0]}</span>
+        <span class="cats-item-label">${esc(cat.label.replace(/^[^\s]+\s/,''))}</span>
+        ${defaultIds.has(cat.id) ? '<span class="cats-item-default">default</span>' : ''}
+        <button class="cats-item-del" data-id="${esc(cat.id)}" data-type="${type}" title="Delete">✕</button>
+      </div>`).join('');
+
+  document.getElementById('cats-expense-list').innerHTML = makeList(expCats, defaultExpIds, 'expense');
+  document.getElementById('cats-income-list').innerHTML  = makeList(incCats, defaultIncIds, 'income');
+
+  // Wire delete buttons
+  document.querySelectorAll('.cats-item-del').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      const id   = btn.dataset.id;
+      const type = btn.dataset.type;
+      if(type==='expense'){
+        const cats = getExpenseCats().filter(c=>c.id!==id);
+        saveCats(cats, getIncomeCats());
+      } else {
+        const cats = getIncomeCats().filter(c=>c.id!==id);
+        saveCats(getExpenseCats(), cats);
+      }
+      renderCatsList();
+      _refreshCategorySelects();
+    });
+  });
+}
+
+// Tab switching
+document.querySelectorAll('.cats-tab').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    _catsTab = btn.dataset.catsTab;
+    document.querySelectorAll('.cats-tab').forEach(b=>b.classList.toggle('active', b===btn));
+    document.getElementById('cats-expense-list').style.display = _catsTab==='expense' ? '' : 'none';
+    document.getElementById('cats-income-list').style.display  = _catsTab==='income'  ? '' : 'none';
+  });
+});
+
+// Add new category
+document.getElementById('cats-add-btn')?.addEventListener('click', ()=>{
+  const emoji = document.getElementById('cats-new-emoji').value.trim() || '🏷';
+  const label = document.getElementById('cats-new-label').value.trim();
+  if(!label){ toast('Enter a category name','error'); return; }
+  const id = 'custom_' + label.toLowerCase().replace(/\s+/g,'_') + '_' + Date.now().toString(36);
+  const newCat = {id, emoji, label: emoji+' '+label, cls:'co', color:'#d97706'};
+  if(_catsTab==='expense'){
+    saveCats([...getExpenseCats(), newCat], getIncomeCats());
+  } else {
+    saveCats(getExpenseCats(), [...getIncomeCats(), newCat]);
+  }
+  document.getElementById('cats-new-emoji').value='';
+  document.getElementById('cats-new-label').value='';
+  renderCatsList();
+  _refreshCategorySelects();
+});
+
+document.getElementById('edit-cats-btn')?.addEventListener('click', ()=>{
+  document.getElementById('settings-ol').classList.remove('open');
+  openCatsModal();
+});
+
+// ── Payment Methods modal ──────────────────────────────
+function openPaymentModal(){
+  renderPaymentList();
+  openModal('payment-modal');
+}
+
+function renderPaymentList(){
+  const methods = getPaymentMethods();
+  const defaultIds = new Set(DEFAULT_PAYMENT_METHODS.map(m=>m.id));
+  document.getElementById('payment-list').innerHTML = methods.map(m=>`
+    <div class="cats-item">
+      <span class="cats-item-emoji">${m.emoji||'💳'}</span>
+      <span class="cats-item-label">${esc(m.label)}</span>
+      ${defaultIds.has(m.id) ? '<span class="cats-item-default">default</span>' : ''}
+      <button class="cats-item-del" data-pay-id="${esc(m.id)}" title="Delete">✕</button>
+    </div>`).join('');
+
+  document.querySelectorAll('[data-pay-id]').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      const methods = getPaymentMethods().filter(m=>m.id!==btn.dataset.payId);
+      savePaymentMethods(methods);
+      renderPaymentList();
+      _refreshPaymentSelect();
+    });
+  });
+}
+
+document.getElementById('pay-add-btn')?.addEventListener('click', ()=>{
+  const emoji = document.getElementById('pay-new-emoji').value.trim() || '💳';
+  const label = document.getElementById('pay-new-label').value.trim();
+  if(!label){ toast('Enter a method name','error'); return; }
+  const id = 'pay_' + label.toLowerCase().replace(/\s+/g,'_') + '_' + Date.now().toString(36);
+  savePaymentMethods([...getPaymentMethods(), {id, emoji, label}]);
+  document.getElementById('pay-new-emoji').value='';
+  document.getElementById('pay-new-label').value='';
+  renderPaymentList();
+  _refreshPaymentSelect();
+});
+
+document.getElementById('edit-payment-btn')?.addEventListener('click', ()=>{
+  document.getElementById('settings-ol').classList.remove('open');
+  openPaymentModal();
+});
+
+// Refresh category/payment selects when data changes
+function _refreshCategorySelects(){
+  const sel = document.getElementById('tx-cat');
+  if(sel) populateCatSelect(sel, _txType==='expense' ? getExpenseCats() : getIncomeCats());
+}
+function _refreshPaymentSelect(){
+  const sel = document.getElementById('tx-payment');
+  if(!sel) return;
+  const current = sel.value;
+  sel.innerHTML = getPaymentMethods().map(m=>`<option value="${m.id}">${m.emoji} ${m.label}</option>`).join('');
+  if(current) sel.value = current;
+}
+function populateCatSelect(sel, cats){
+  const current = sel.value;
+  sel.innerHTML = cats.map(c=>`<option value="${c.id}">${c.label}</option>`).join('');
+  if(cats.find(c=>c.id===current)) sel.value=current;
+}
+
+// ═══════════════════════════════════════════════════════
+//  OCR — RECEIPT SCANNER (Claude Vision API)
+// ═══════════════════════════════════════════════════════
+
+const OCR_SYSTEM_PROMPT = `You are a receipt/bill parser. Extract information from the image and respond ONLY with valid JSON (no markdown, no explanation):
+{"amount": <number or null>, "category": "<food|transport|shopping|health|bills|entertain|other>", "notes": "<merchant or item name, max 40 chars>", "date": "<YYYY-MM-DD or null>", "payment_method": "<cash|debit|credit|transfer|ewallet|other or null>"}`;
+
+async function scanReceiptOCR(imageBase64, mimeType){
+  const apiKey  = localStorage.getItem('lumina_ocr_key')||'';
+  const provider= localStorage.getItem('lumina_ocr_provider')||'gemini';
+  if(!apiKey) throw new Error('No OCR API key set — open Settings and add your key');
+
+  let rawText;
+
+  if(provider === 'gemini'){
+    // ── Gemini Vision (free tier: 15 req/min, 1M tokens/day) ──
+    const model = 'gemini-2.0-flash';
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
+    const resp = await fetch(url, {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({
+        contents:[{
+          parts:[
+            { inline_data:{ mime_type: mimeType, data: imageBase64 } },
+            { text: OCR_SYSTEM_PROMPT + '\n\nExtract transaction details from this receipt. Return ONLY valid JSON, no markdown.' }
+          ]
+        }],
+        generationConfig:{ maxOutputTokens:300, temperature:0.1 }
+      })
+    });
+    if(!resp.ok){
+      const err = await resp.json().catch(()=>({}));
+      throw new Error('Gemini error: '+(err?.error?.message||resp.status));
+    }
+    const data = await resp.json();
+    rawText = data?.candidates?.[0]?.content?.parts?.[0]?.text || '';
+
+  } else {
+    // ── Anthropic Claude (paid) ──
+    const resp = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': apiKey,
+        'anthropic-version': '2023-06-01',
+        'anthropic-dangerous-direct-browser-access': 'true'
+      },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 300,
+        system: OCR_SYSTEM_PROMPT,
+        messages:[{
+          role:'user',
+          content:[
+            { type:'image', source:{ type:'base64', media_type: mimeType, data: imageBase64 } },
+            { type:'text',  text:'Extract the transaction details from this receipt.' }
+          ]
+        }]
+      })
+    });
+    if(!resp.ok) throw new Error('Claude API error: '+resp.status);
+    const data = await resp.json();
+    rawText = data.content?.find(b=>b.type==='text')?.text || '';
+  }
+
+  // Parse JSON — strip any markdown fences
+  const clean = rawText.replace(/```json|```/g,'').trim();
+  if(!clean) throw new Error('Empty response from OCR');
+  try{ return JSON.parse(clean); }
+  catch(e){ throw new Error('Could not parse OCR response: '+clean.slice(0,80)); }
+}
+
+function initOCR(){
+  const ocrBtn   = document.getElementById('ocr-btn');
+  const fileInput= document.getElementById('ocr-file-input');
+  const preview  = document.getElementById('ocr-preview');
+  if(!ocrBtn || !fileInput) return;
+
+  const cameraInput = document.getElementById('ocr-camera-input');
+
+  ocrBtn.addEventListener('click', ()=>{
+    const key = localStorage.getItem('lumina_ocr_key');
+    if(!key){
+      toast('Set your Anthropic API key in Settings first','warning',5000);
+      return;
+    }
+    // On mobile: show choice. On desktop: just file picker
+    if(/Mobi|Android|iPhone/i.test(navigator.userAgent)){
+      const choice = document.createElement('div');
+      choice.style.cssText='position:fixed;bottom:1rem;left:1rem;right:1rem;z-index:9999;display:flex;gap:.5rem;flex-direction:column';
+      choice.innerHTML=`
+        <button onclick="document.getElementById('ocr-camera-input').click();this.parentElement.remove()" style="padding:.85rem;border-radius:var(--r);background:var(--amber);color:#fff;font-size:.95rem;font-weight:600;border:none;cursor:pointer">📷 Take Photo</button>
+        <button onclick="document.getElementById('ocr-file-input').click();this.parentElement.remove()" style="padding:.85rem;border-radius:var(--r);background:var(--surface);color:var(--text);font-size:.95rem;font-weight:600;border:1px solid var(--border);cursor:pointer">🖼 Choose from Library</button>
+        <button onclick="this.parentElement.remove()" style="padding:.6rem;border-radius:var(--r);background:var(--surface2);color:var(--text3);font-size:.85rem;border:none;cursor:pointer">Cancel</button>`;
+      document.body.appendChild(choice);
+      setTimeout(()=>{ if(choice.parentElement) choice.remove(); }, 10000);
+    } else {
+      fileInput.click();
+    }
+  });
+
+  const handleOCRFile = async (file)=>{
+    if(!file) return;
+    // Show scanning state
+    preview.style.display = '';
+    preview.innerHTML = '<div class="ocr-scanning"><div class="spinner"></div> Scanning receipt…</div>';
+    ocrBtn.disabled = true;
+
+    try{
+      const base64 = await new Promise((res,rej)=>{
+        const reader = new FileReader();
+        reader.onload = ()=> res(reader.result.split(',')[1]);
+        reader.onerror = rej;
+        reader.readAsDataURL(file);
+      });
+
+      const result = await scanReceiptOCR(base64, file.type);
+
+      // Auto-fill fields
+      if(result.amount && result.amount > 0){
+        document.getElementById('tx-amount').value = result.amount;
+      }
+      if(result.notes){
+        document.getElementById('tx-notes').value = result.notes;
+      }
+      if(result.category){
+        const catSel = document.getElementById('tx-cat');
+        const opt = [...catSel.options].find(o=>o.value===result.category);
+        if(opt) catSel.value = result.category;
+      }
+      if(result.date){
+        document.getElementById('tx-date').value = result.date;
+      }
+      if(result.payment_method){
+        const paySel = document.getElementById('tx-payment');
+        const opt = [...paySel.options].find(o=>o.value===result.payment_method);
+        if(opt) paySel.value = result.payment_method;
+      }
+
+      // Show preview
+      preview.innerHTML = `<div class="ocr-preview-box">
+        <div class="ocr-field"><span>Amount</span><strong>${result.amount ? idr(result.amount) : '—'}</strong></div>
+        <div class="ocr-field"><span>Category</span><strong>${result.category||'—'}</strong></div>
+        <div class="ocr-field"><span>Notes</span><strong>${esc(result.notes||'—')}</strong></div>
+        ${result.payment_method ? `<div class="ocr-field"><span>Payment</span><strong>${result.payment_method}</strong></div>` : ''}
+        <div style="font-size:.7rem;color:var(--text3);margin-top:.3rem">✅ Auto-filled from receipt — review before saving</div>
+      </div>`;
+
+    }catch(e){
+      preview.innerHTML = `<div class="qc-result error">⚠ ${esc(e.message.includes('API')?'OCR failed — check connection':e.message)}</div>`;
+    }finally{
+      ocrBtn.disabled = false;
+    }
+  };
+
+  fileInput.addEventListener('change',  ()=>{ if(fileInput.files[0])  { const f=fileInput.files[0];  fileInput.value='';  handleOCRFile(f); }});
+  if(cameraInput) cameraInput.addEventListener('change', ()=>{ if(cameraInput.files[0]) { const f=cameraInput.files[0]; cameraInput.value=''; handleOCRFile(f); }});
 }
 
 // ═══════════════════════════════════════════════════════
