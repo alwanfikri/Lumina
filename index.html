@@ -666,6 +666,25 @@ img{max-width:100%;display:block}
     <div id="tx-list"><div class="loading"><div class="spinner"></div><span class="loading-txt">Loading…</span></div></div>
   </div>
 
+  <!-- NOTES -->
+  <div class="panel" id="panel-notes">
+    <div class="sec-hdr">
+      <h1 class="sec-title" id="notes-title">Notes</h1>
+      <div style="display:flex;gap:.4rem">
+        <button class="btn btn-ghost btn-sm" id="notes-search-btn">&#128269;</button>
+        <button class="btn btn-primary btn-sm" id="new-note-btn">+ Note</button>
+      </div>
+    </div>
+    <div class="search-bar-wrap" id="notes-search-wrap" style="display:none;margin-bottom:.75rem">
+      <div class="search-bar">
+        <span class="search-icon">&#128269;</span>
+        <input class="search-input" id="notes-search" type="search" placeholder="Search notes..." autocomplete="off">
+        <button class="search-clear" id="notes-search-clear" style="display:none">&#x2715;</button>
+      </div>
+    </div>
+    <div id="notes-list"><div class="loading"><div class="spinner"></div><span class="loading-txt">Loading...</span></div></div>
+  </div>
+
 </main>
 
 <nav class="tab-bar">
@@ -674,6 +693,7 @@ img{max-width:100%;display:block}
   <button class="tab-btn" data-tab="diary"><span class="ti">📓</span>Diary</button>
   <button class="tab-btn" data-tab="photos"><span class="ti">🖼</span>Photos</button>
   <button class="tab-btn" data-tab="money"><span class="ti">💰</span>Money</button>
+  <button class="tab-btn" data-tab="notes"><span class="ti">&#128221;</span>Notes</button>
 </nav>
 
 <!-- Event modal -->
@@ -851,6 +871,76 @@ img{max-width:100%;display:block}
       <button class="btn btn-ghost" data-close="budget-modal" data-i18n="cancel">Cancel</button>
       <button class="btn btn-primary" id="budget-save-btn">t().saveBudgets</button>
     </div>
+  </div>
+</div>
+
+<!-- Note Editor Modal -->
+<div class="overlay" id="note-modal">
+  <div class="modal note-modal-inner">
+    <div class="modal-hdr">
+      <h2 class="modal-ttl" id="note-modal-ttl">New Note</h2>
+      <div style="display:flex;gap:.4rem;align-items:center">
+        <button class="note-color-btn" id="note-color-btn" title="Color">&#127912;</button>
+        <button class="note-pin-btn" id="note-pin-btn" title="Pin">&#128204;</button>
+        <button class="modal-x" data-close="note-modal">&#x2715;</button>
+      </div>
+    </div>
+    <input type="hidden" id="note-id">
+    <input type="hidden" id="note-pinned" value="false">
+    <input type="hidden" id="note-color-val" value="#ffffff">
+    <input class="fi note-title-input" id="note-title" placeholder="Title..." autocomplete="off">
+    <div class="note-mode-toggle">
+      <button class="note-mode-btn active" id="note-mode-text" data-mode="text">&#9000; Text</button>
+      <button class="note-mode-btn" id="note-mode-draw" data-mode="draw">&#9998; Draw</button>
+    </div>
+    <div id="note-text-area">
+      <div id="note-editor-container" style="min-height:200px"></div>
+    </div>
+    <div id="note-draw-area" style="display:none">
+      <div class="canvas-toolbar">
+        <div class="canvas-tools">
+          <button class="canvas-tool active" id="tool-pen"    data-tool="pen"    title="Pen">&#9998;</button>
+          <button class="canvas-tool"         id="tool-marker" data-tool="marker" title="Marker">&#128394;</button>
+          <button class="canvas-tool"         id="tool-eraser" data-tool="eraser" title="Eraser">&#9633;</button>
+        </div>
+        <div class="canvas-sizes">
+          <button class="canvas-size"        data-size="2"  title="Fine">&#183;</button>
+          <button class="canvas-size active" data-size="4"  title="Medium">&#8226;</button>
+          <button class="canvas-size"        data-size="8"  title="Thick">&#9679;</button>
+          <button class="canvas-size"        data-size="16" title="Bold">&#11044;</button>
+        </div>
+        <div class="canvas-colors" id="canvas-color-row">
+          <button class="canvas-color active" data-color="#1c1710" style="background:#1c1710"></button>
+          <button class="canvas-color" data-color="#d97706" style="background:#d97706"></button>
+          <button class="canvas-color" data-color="#dc2626" style="background:#dc2626"></button>
+          <button class="canvas-color" data-color="#16a34a" style="background:#16a34a"></button>
+          <button class="canvas-color" data-color="#3b82f6" style="background:#3b82f6"></button>
+          <button class="canvas-color" data-color="#8b5cf6" style="background:#8b5cf6"></button>
+        </div>
+        <button class="btn btn-ghost btn-sm" id="canvas-clear-btn">Clear</button>
+      </div>
+      <div class="canvas-wrap"><canvas id="note-canvas"></canvas></div>
+    </div>
+    <input class="fi note-tags-input" id="note-tags" placeholder="Tags (comma separated)..." style="margin-top:.6rem;font-size:.82rem">
+    <div class="modal-actions">
+      <button class="btn btn-danger btn-sm" id="note-del" style="display:none;margin-right:auto" data-i18n="deleteBtn">&#128465; Delete</button>
+      <button class="btn btn-ghost" data-close="note-modal" data-i18n="cancel">Cancel</button>
+      <button class="btn btn-primary" id="note-save">Save</button>
+    </div>
+  </div>
+</div>
+<div id="note-color-picker" style="display:none;position:fixed;z-index:1100;background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:.6rem;box-shadow:var(--shadow-lg)">
+  <div style="display:grid;grid-template-columns:repeat(5,28px);gap:4px">
+    <div class="note-color-swatch" data-color="#ffffff" style="background:#ffffff;border:1px solid var(--border)"></div>
+    <div class="note-color-swatch" data-color="#fef3c7" style="background:#fef3c7"></div>
+    <div class="note-color-swatch" data-color="#dcfce7" style="background:#dcfce7"></div>
+    <div class="note-color-swatch" data-color="#dbeafe" style="background:#dbeafe"></div>
+    <div class="note-color-swatch" data-color="#f3e8ff" style="background:#f3e8ff"></div>
+    <div class="note-color-swatch" data-color="#ffe4e6" style="background:#ffe4e6"></div>
+    <div class="note-color-swatch" data-color="#fce7f3" style="background:#fce7f3"></div>
+    <div class="note-color-swatch" data-color="#f1f5f9" style="background:#f1f5f9"></div>
+    <div class="note-color-swatch" data-color="#1c1710" style="background:#1c1710"></div>
+    <div class="note-color-swatch" data-color="#1e3a5f" style="background:#1e3a5f"></div>
   </div>
 </div>
 
@@ -1141,7 +1231,7 @@ const TRANSLATIONS = {
     noRecentPhotos:'No photos yet', applySettings:'Apply Settings',
     saveReload:'Save & Reload', enterUrl:'Enter a URL', loading:'Loading…', allTime:'All time', noResults:'No results', tryDifferent:'Try a different search', moodLabel:'Mood', allMoods:'All moods', untitled:'Untitled', theme:'Theme', themeLight:'☀️ Light', themeDark:'🌙 Dark', themeAuto:'⚙ Auto', refreshData:'↺ Refresh all data',
     // Tabs
-    agenda:'Agenda', diary:'Diary', photos:'Photos', money:'Money',
+    agenda:'Agenda', diary:'Diary', photos:'Photos', money:'Money', notes:'Notes',
     // Section titles
     newEvent:'+ Event', newEntry:'+ Entry', upload:'+ Upload', addTx:'+ Add',
     budgets:'🎯 Budgets',
@@ -1215,7 +1305,7 @@ const TRANSLATIONS = {
     noUpcoming:'Tidak ada acara mendatang', noRecentDiary:'Belum ada catatan',
     noRecentPhotos:'Belum ada foto', applySettings:'Terapkan Pengaturan',
     saveReload:'Simpan & Muat Ulang', enterUrl:'Masukkan URL', loading:'Memuat…', allTime:'Semua waktu', noResults:'Tidak ada hasil', tryDifferent:'Coba kata kunci lain', moodLabel:'Suasana hati', allMoods:'Semua suasana', untitled:'Tanpa judul', theme:'Tema', themeLight:'☀️ Terang', themeDark:'🌙 Gelap', themeAuto:'⚙ Otomatis', refreshData:'↺ Perbarui semua data', exportData:'⬇ Ekspor Data', customizeHome:'Kustomisasi Beranda', widgetHint:'Seret untuk mengurutkan · Matikan untuk menyembunyikan', done:'Selesai', reset:'Reset', monthlyReport:'Laporan Bulanan', generatedOn:'Dibuat', byCategory:'Per Kategori', transactions:'Transaksi',
-    agenda:'Agenda', diary:'Diari', photos:'Foto', money:'Keuangan',
+    agenda:'Agenda', diary:'Diari', photos:'Foto', money:'Keuangan', notes:'Catatan',
     newEvent:'+ Acara', newEntry:'+ Catatan', upload:'+ Unggah', addTx:'+ Tambah',
     budgets:'🎯 Anggaran',
     newEventTitle:'Acara Baru', editEventTitle:'Edit Acara',
@@ -1599,6 +1689,7 @@ document.querySelectorAll('.overlay').forEach(o=>o.addEventListener('click',e=>{
 document.querySelectorAll('.tab-btn').forEach(btn=>btn.addEventListener('click',()=>{
   switchTab(btn.dataset.tab);
   if(btn.dataset.tab==='home') renderHome();
+  if(btn.dataset.tab==='notes'&&!_notes.length) loadNotes();
 }));
 
 // Online status
@@ -3843,6 +3934,175 @@ document.getElementById('widget-reset-btn')?.addEventListener('click', ()=>{
 // Customize button wiring (added dynamically in renderHome)
 function _openWidgetModal(){ openWidgetModal(); }
 
+// NOTES_MODULE_START
+let _notes=[], _notesQuery='', _noteQuill=null;
+const _draw={active:false,tool:'pen',color:'#1c1710',size:4,isDrawing:false,lastX:0,lastY:0,history:[],canvas:null,ctx:null};
+
+async function loadNotes(){
+  const el=document.getElementById('notes-list');
+  if(!el)return;
+  el.innerHTML='<div class="loading"><div class="spinner"></div><span class="loading-txt">Loading...</span></div>';
+  try{
+    const d=await api('getNotes');
+    _notes=d.notes||[];
+    renderNotes();
+  }catch(e){
+    el.innerHTML='<div class="empty"><div class="empty-ico">&#9888;&#65039;</div><p class="empty-ttl">Could not load notes</p><p class="empty-sub">'+esc(e.message)+'</p></div>';
+  }
+}
+
+function renderNotes(){
+  const el=document.getElementById('notes-list');
+  if(!el)return;
+  const tr=t();
+  const q=_notesQuery.toLowerCase();
+  let notes=[..._notes];
+  if(q) notes=notes.filter(n=>(n.title||'').toLowerCase().includes(q)||(n.content_html||'').replace(/<[^>]*>/g,'').toLowerCase().includes(q)||(n.tags||'').toLowerCase().includes(q));
+  if(!notes.length){
+    el.innerHTML='<div class="empty"><div class="empty-ico">&#128221;</div><p class="empty-ttl">'+(q?(tr.noResults||'No results'):(tr.noNotes||'No notes yet'))+'</p><p class="empty-sub">'+(q?(tr.tryDifferent||'Try a different search'):(tr.tapNote||'Tap + Note to start writing'))+'</p></div>';
+    return;
+  }
+  el.innerHTML='<div class="notes-grid">'+notes.map(function(note){
+    const isCanvas=!!note.canvas_data&&!note.content_html;
+    const bg=note.color&&note.color!=='#ffffff'?'style="background:'+note.color+'"':'';
+    const preview=isCanvas?'<img class="note-card-canvas-thumb" src="'+note.canvas_data+'" alt="Drawing" loading="lazy">':'<div class="note-card-preview">'+(note.content_html||'').replace(/<[^>]*>/g,'').slice(0,120)+'</div>';
+    const tags=(note.tags||'').split(',').filter(Boolean).slice(0,3).map(function(tag){return'<span class="note-tag">'+esc(tag.trim())+'</span>';}).join('');
+    return '<div class="note-card'+(note.pinned?' pinned':'')+'" data-id="'+note.id+'" '+bg+'>'
+      +'<div class="note-card-title">'+highlight(note.title||tr.untitled||'Untitled',q)+'</div>'
+      +preview+'<div class="note-card-footer"><span class="note-card-date">'+fmtDate((note.updatedAt||'').slice(0,10))+'</span>'
+      +'<div class="note-card-tags">'+tags+'</div></div></div>';
+  }).join('')+'</div>';
+  el.querySelectorAll('.note-card').forEach(function(card){
+    card.addEventListener('click',function(){const note=_notes.find(function(n){return n.id===card.dataset.id;});if(note)openNoteModal(note);});
+  });
+}
+
+function openNoteModal(note){
+  const isNew=!note;
+  document.getElementById('note-modal-ttl').textContent=isNew?t().newNote||'New Note':t().editNote||'Edit Note';
+  document.getElementById('note-id').value=note&&note.id||'';
+  document.getElementById('note-title').value=note&&note.title||'';
+  document.getElementById('note-tags').value=note&&note.tags||'';
+  document.getElementById('note-pinned').value=note&&note.pinned?'true':'false';
+  document.getElementById('note-del').style.display=isNew?'none':'';
+  const color=note&&note.color||'#ffffff';
+  document.getElementById('note-color-val').value=color;
+  _setNoteCardColor(color);
+  document.getElementById('note-pin-btn').classList.toggle('pinned',!!(note&&note.pinned));
+  const startInDraw=!!(note&&note.canvas_data&&!note.content_html);
+  _switchNoteMode(startInDraw?'draw':'text');
+  _initNoteQuill();
+  if(_noteQuill){_noteQuill.setContents([]);if(note&&note.content_html)_noteQuill.clipboard.dangerouslyPasteHTML(note.content_html);}
+  setTimeout(function(){_initCanvas();if(note&&note.canvas_data)_loadCanvasImage(note.canvas_data);else _clearCanvas();},80);
+  openModal('note-modal');
+  setTimeout(function(){document.getElementById('note-title').focus();},80);
+}
+
+function _setNoteCardColor(color){
+  const m=document.querySelector('.note-modal-inner');
+  if(m)m.style.background=(color&&color!=='#ffffff')?color:'';
+}
+function _switchNoteMode(mode){
+  document.getElementById('note-text-area').style.display=mode==='text'?'':'none';
+  document.getElementById('note-draw-area').style.display=mode==='draw'?'':'none';
+  document.querySelectorAll('.note-mode-btn').forEach(function(b){b.classList.toggle('active',b.dataset.mode===mode);});
+  _draw.active=mode==='draw';
+}
+
+document.getElementById('note-mode-text')&&document.getElementById('note-mode-text').addEventListener('click',function(){_switchNoteMode('text');});
+document.getElementById('note-mode-draw')&&document.getElementById('note-mode-draw').addEventListener('click',function(){_switchNoteMode('draw');setTimeout(_initCanvas,60);});
+document.getElementById('note-pin-btn')&&document.getElementById('note-pin-btn').addEventListener('click',function(){
+  const cur=document.getElementById('note-pinned').value==='true';
+  document.getElementById('note-pinned').value=cur?'false':'true';
+  document.getElementById('note-pin-btn').classList.toggle('pinned',!cur);
+});
+document.getElementById('note-color-btn')&&document.getElementById('note-color-btn').addEventListener('click',function(e){
+  const picker=document.getElementById('note-color-picker');if(!picker)return;
+  const r=e.target.getBoundingClientRect();
+  picker.style.cssText='display:block;position:fixed;top:'+(r.bottom+4)+'px;left:'+r.left+'px;z-index:1100;background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:.6rem;box-shadow:var(--shadow-lg)';
+  picker.querySelectorAll('.note-color-swatch').forEach(function(sw){
+    sw.onclick=function(){document.getElementById('note-color-val').value=sw.dataset.color;_setNoteCardColor(sw.dataset.color);picker.style.display='none';};
+  });
+  setTimeout(function(){document.addEventListener('click',function hide(ev){if(!picker.contains(ev.target)){picker.style.display='none';document.removeEventListener('click',hide);}});},10);
+});
+
+document.getElementById('note-save')&&document.getElementById('note-save').addEventListener('click',async function(){
+  const btn=document.getElementById('note-save');
+  btn.disabled=true;btn.textContent=t().saving||'Saving...';
+  try{
+    const id=document.getElementById('note-id').value;
+    const title=document.getElementById('note-title').value.trim();
+    const tags=document.getElementById('note-tags').value.trim();
+    const color=document.getElementById('note-color-val').value||'#ffffff';
+    const pinned=document.getElementById('note-pinned').value;
+    let content_html='',canvas_data='';
+    if(!_draw.active){
+      content_html=_noteQuill?_noteQuill.root.innerHTML.trim():'';
+      if(content_html==='<p><br></p>')content_html='';
+    }else{
+      const cv=document.getElementById('note-canvas');
+      if(cv)canvas_data=cv.toDataURL('image/png');
+    }
+    if(!title&&!content_html&&!canvas_data){toast(t().noteCantBeEmpty||'Note needs a title or content','error');return;}
+    await api('saveNote',{id:id||undefined,title,content_html,canvas_data,color,pinned,tags});
+    closeModal('note-modal');toast(t().saved||'Saved','success');loadNotes();
+  }catch(e){toast(e.message,'error');}
+  finally{btn.disabled=false;btn.textContent=t().save||'Save';}
+});
+document.getElementById('note-del')&&document.getElementById('note-del').addEventListener('click',async function(){
+  const id=document.getElementById('note-id').value;if(!id)return;
+  try{await api('deleteNote',{id});closeModal('note-modal');toast(t().deleted||'Deleted','info');loadNotes();}
+  catch(e){toast(e.message,'error');}
+});
+document.getElementById('new-note-btn')&&document.getElementById('new-note-btn').addEventListener('click',function(){openNoteModal(null);});
+document.getElementById('notes-search-btn')&&document.getElementById('notes-search-btn').addEventListener('click',function(){
+  const wrap=document.getElementById('notes-search-wrap');
+  const hidden=wrap.style.display==='none'||!wrap.style.display;
+  wrap.style.display=hidden?'':'none';
+  if(hidden)document.getElementById('notes-search')&&document.getElementById('notes-search').focus();
+});
+document.getElementById('notes-search')&&document.getElementById('notes-search').addEventListener('input',function(e){
+  _notesQuery=e.target.value.trim();
+  const clr=document.getElementById('notes-search-clear');
+  if(clr)clr.style.display=_notesQuery?'':'none';
+  renderNotes();
+});
+document.getElementById('notes-search-clear')&&document.getElementById('notes-search-clear').addEventListener('click',function(){
+  const inp=document.getElementById('notes-search');if(inp){inp.value='';inp.focus();}
+  _notesQuery='';document.getElementById('notes-search-clear').style.display='none';renderNotes();
+});
+
+function _initNoteQuill(){
+  if(_noteQuill)return;
+  const container=document.getElementById('note-editor-container');
+  if(!container||typeof Quill==='undefined')return;
+  _noteQuill=new Quill(container,{theme:'snow',placeholder:t().writeHere||'Write here...',
+    modules:{toolbar:[['bold','italic','underline'],[{header:[1,2,false]}],[{list:'ordered'},{list:'bullet'}],['blockquote','code-block'],['clean']]}});
+}
+
+function _initCanvas(){
+  const cv=document.getElementById('note-canvas');
+  if(!cv||cv._initialized)return;
+  cv._initialized=true;_draw.canvas=cv;_draw.ctx=cv.getContext('2d');
+  const wrap=cv.parentElement;cv.width=wrap.offsetWidth||600;cv.height=280;
+  cv.addEventListener('pointerdown',_onPD,{passive:false});
+  cv.addEventListener('pointermove',_onPM,{passive:false});
+  cv.addEventListener('pointerup',_onPU);cv.addEventListener('pointerout',_onPU);
+  document.querySelectorAll('.canvas-tool').forEach(function(btn){btn.addEventListener('click',function(){document.querySelectorAll('.canvas-tool').forEach(function(b){b.classList.remove('active');});btn.classList.add('active');_draw.tool=btn.dataset.tool;});});
+  document.querySelectorAll('.canvas-size').forEach(function(btn){btn.addEventListener('click',function(){document.querySelectorAll('.canvas-size').forEach(function(b){b.classList.remove('active');});btn.classList.add('active');_draw.size=parseInt(btn.dataset.size);});});
+  document.querySelectorAll('.canvas-color').forEach(function(btn){btn.addEventListener('click',function(){document.querySelectorAll('.canvas-color').forEach(function(b){b.classList.remove('active');});btn.classList.add('active');_draw.color=btn.dataset.color;});});
+  const ccb=document.getElementById('canvas-clear-btn');
+  if(ccb)ccb.addEventListener('click',function(){_draw.history.push(cv.toDataURL());_clearCanvas();});
+}
+
+function _getPos(e,cv){const r=cv.getBoundingClientRect(),sx=cv.width/r.width,sy=cv.height/r.height;return{x:(e.clientX-r.left)*sx,y:(e.clientY-r.top)*sy};}
+function _onPD(e){e.preventDefault();if(!_draw.ctx)return;_draw.isDrawing=true;_draw.history.push(_draw.canvas.toDataURL());if(_draw.history.length>30)_draw.history.shift();const p=_getPos(e,_draw.canvas);_draw.lastX=p.x;_draw.lastY=p.y;_draw.ctx.beginPath();_draw.ctx.moveTo(p.x,p.y);}
+function _onPM(e){e.preventDefault();if(!_draw.isDrawing||!_draw.ctx)return;const p=_getPos(e,_draw.canvas),ctx=_draw.ctx;if(_draw.tool==='eraser'){ctx.globalCompositeOperation='destination-out';ctx.lineWidth=_draw.size*4;}else{ctx.globalCompositeOperation='source-over';ctx.strokeStyle=_draw.color;const pr=e.pointerType==='pen'?Math.max(0.1,e.pressure):1,bs=_draw.tool==='marker'?_draw.size*3:_draw.size;ctx.lineWidth=bs*pr;ctx.globalAlpha=_draw.tool==='marker'?0.5:1;}ctx.lineCap='round';ctx.lineJoin='round';ctx.lineTo(p.x,p.y);ctx.stroke();ctx.beginPath();ctx.moveTo(p.x,p.y);}
+function _onPU(){if(!_draw.ctx)return;_draw.isDrawing=false;_draw.ctx.globalAlpha=1;_draw.ctx.globalCompositeOperation='source-over';_draw.ctx.beginPath();}
+function _clearCanvas(){if(_draw.ctx&&_draw.canvas)_draw.ctx.clearRect(0,0,_draw.canvas.width,_draw.canvas.height);}
+function _loadCanvasImage(dataUrl){if(!_draw.ctx||!_draw.canvas||!dataUrl)return;const img=new Image();img.onload=function(){_draw.ctx.drawImage(img,0,0,_draw.canvas.width,_draw.canvas.height);};img.src=dataUrl;}
+// NOTES_MODULE_END
+
 // ═══════════════════════════════════════════════════════
 //  NOTIFICATIONS & REMINDERS
 // ═══════════════════════════════════════════════════════
@@ -4012,7 +4272,8 @@ async function loadAll(){
     toast('⚠ Could not connect to API — check URL in Settings', 'error', 8000);
   }
   loadCalendars();
-  loadInbox(); // non-blocking, refreshes inbox cache for Quick Capture history
+  loadInbox();
+  loadNotes(); // non-blocking, refreshes inbox cache for Quick Capture history
 }
 
 // Apply theme immediately before page renders to prevent flash
