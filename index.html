@@ -477,6 +477,26 @@ img{max-width:100%;display:block}
 .ocr-scanning{display:flex;align-items:center;gap:.5rem;font-size:.82rem;color:var(--text3);padding:.4rem}
 /* ── Payment method in tx list ───────────────── */
 .tx-pay-badge{font-size:.65rem;padding:.1rem .35rem;border-radius:10px;background:var(--surface2);color:var(--text3);margin-left:.3rem}
+/* ── Dashboard Widgets ──────────────────────────────── */
+.widget-customize-btn{display:flex;align-items:center;gap:.4rem;font-size:.72rem;color:var(--text3);background:none;border:none;cursor:pointer;padding:.2rem .4rem;border-radius:var(--r-sm);transition:all var(--ease);margin-bottom:.5rem;float:right}
+.widget-customize-btn:hover{background:var(--surface2);color:var(--amber)}
+/* Widget modal */
+.widget-list{display:flex;flex-direction:column;gap:.4rem;max-height:400px;overflow-y:auto}
+.widget-row{display:flex;align-items:center;gap:.75rem;padding:.65rem .75rem;background:var(--surface);border:1px solid var(--border);border-radius:var(--r);cursor:grab;transition:all var(--ease);user-select:none}
+.widget-row:active{cursor:grabbing;opacity:.8;transform:scale(.98)}
+.widget-row.dragging{opacity:.5;border-color:var(--amber)}
+.widget-row.drag-over{border-color:var(--amber);background:var(--amber-l)}
+.widget-drag-handle{color:var(--text3);font-size:1rem;flex-shrink:0;cursor:grab}
+.widget-icon{font-size:1.2rem;flex-shrink:0}
+.widget-info{flex:1;min-width:0}
+.widget-name{font-size:.88rem;font-weight:500}
+.widget-desc{font-size:.72rem;color:var(--text3);margin-top:1px}
+.widget-toggle{width:42px;height:24px;border-radius:12px;border:none;cursor:pointer;transition:background var(--ease);flex-shrink:0;position:relative}
+.widget-toggle.on{background:var(--amber)}
+.widget-toggle.off{background:var(--border)}
+.widget-toggle::after{content:'';position:absolute;top:3px;width:18px;height:18px;border-radius:50%;background:#fff;transition:left var(--ease)}
+.widget-toggle.on::after{left:21px}
+.widget-toggle.off::after{left:3px}
 @keyframes spin{to{transform:rotate(360deg)}}
 #ev-time-row.hidden{display:none}
 @keyframes toastIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
@@ -834,6 +854,22 @@ img{max-width:100%;display:block}
   </div>
 </div>
 
+<!-- Widget Customization Modal -->
+<div class="overlay" id="widget-modal">
+  <div class="modal">
+    <div class="modal-hdr">
+      <h2 class="modal-ttl" id="widget-modal-ttl">Customize Home</h2>
+      <button class="modal-x" data-close="widget-modal">✕</button>
+    </div>
+    <p style="font-size:.8rem;color:var(--text3);margin-bottom:1rem" id="widget-modal-hint">Drag to reorder · Toggle to show/hide</p>
+    <div class="widget-list" id="widget-list"></div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" id="widget-reset-btn">Reset</button>
+      <button class="btn btn-primary" data-close="widget-modal" id="widget-done-btn">Done</button>
+    </div>
+  </div>
+</div>
+
 <!-- Calendar Import Modal -->
 <div class="overlay" id="cal-import-modal">
   <div class="modal">
@@ -1097,7 +1133,7 @@ const TRANSLATIONS = {
     preview:'Preview',
     home:'Home',
     goodMorning:'Good morning', goodAfternoon:'Good afternoon', goodEvening:'Good evening',
-    quickCapture:'Quick Capture', qcPlaceholder:'Type anything… "lunch 50k", "meeting tomorrow 10am", "feeling tired"', qcHintMoney:'💰 money', qcHintAgenda:'📅 event', qcHintDiary:'📓 diary', qcSaved:'Saved as', qcError:'Could not save',
+    quickCapture:'Quick Capture', widgetQuickActions:'Quick Actions', widgetDescCapture:'Type anything to capture quickly', widgetDescActions:'Shortcut buttons for each tab', widgetDescUpcoming:'Next events within 3 days', widgetDescDiary:'Last 2 diary entries', widgetDescPhotos:'Recent photo strip', widgetDescMoney:'Monthly income/expense/balance', qcPlaceholder:'Type anything… "lunch 50k", "meeting tomorrow 10am", "feeling tired"', qcHintMoney:'💰 money', qcHintAgenda:'📅 event', qcHintDiary:'📓 diary', qcSaved:'Saved as', qcError:'Could not save',
     quickAdd:'Quick Add', viewAll:'View all',
     recentDiary:'Recent Diary', upcomingAgenda:'Upcoming',
     recentPhotos:'Recent Photos', thisMonth:'This month',
@@ -1172,13 +1208,13 @@ const TRANSLATIONS = {
     preview:'Pratinjau',
     home:'Beranda',
     goodMorning:'Selamat pagi', goodAfternoon:'Selamat siang', goodEvening:'Selamat malam',
-    quickCapture:'Catat Cepat', qcPlaceholder:'Ketik apa saja… "makan 50rb", "meeting besok jam 10", "hari ini capek"', qcHintMoney:'💰 uang', qcHintAgenda:'📅 acara', qcHintDiary:'📓 diari', qcSaved:'Tersimpan sebagai', qcError:'Gagal menyimpan',
+    quickCapture:'Catat Cepat', widgetQuickActions:'Aksi Cepat', widgetDescCapture:'Ketik apa saja untuk mencatat', widgetDescActions:'Tombol pintasan ke setiap tab', widgetDescUpcoming:'Acara dalam 3 hari ke depan', widgetDescDiary:'2 catatan diari terbaru', widgetDescPhotos:'Strip foto terbaru', widgetDescMoney:'Pendapatan/pengeluaran/saldo bulan ini', qcPlaceholder:'Ketik apa saja… "makan 50rb", "meeting besok jam 10", "hari ini capek"', qcHintMoney:'💰 uang', qcHintAgenda:'📅 acara', qcHintDiary:'📓 diari', qcSaved:'Tersimpan sebagai', qcError:'Gagal menyimpan',
     quickAdd:'Tambah Cepat', viewAll:'Lihat semua',
     recentDiary:'Diari Terbaru', upcomingAgenda:'Mendatang',
     recentPhotos:'Foto Terbaru', thisMonth:'Bulan ini',
     noUpcoming:'Tidak ada acara mendatang', noRecentDiary:'Belum ada catatan',
     noRecentPhotos:'Belum ada foto', applySettings:'Terapkan Pengaturan',
-    saveReload:'Simpan & Muat Ulang', enterUrl:'Masukkan URL', loading:'Memuat…', allTime:'Semua waktu', noResults:'Tidak ada hasil', tryDifferent:'Coba kata kunci lain', moodLabel:'Suasana hati', allMoods:'Semua suasana', untitled:'Tanpa judul', theme:'Tema', themeLight:'☀️ Terang', themeDark:'🌙 Gelap', themeAuto:'⚙ Otomatis', refreshData:'↺ Perbarui semua data',
+    saveReload:'Simpan & Muat Ulang', enterUrl:'Masukkan URL', loading:'Memuat…', allTime:'Semua waktu', noResults:'Tidak ada hasil', tryDifferent:'Coba kata kunci lain', moodLabel:'Suasana hati', allMoods:'Semua suasana', untitled:'Tanpa judul', theme:'Tema', themeLight:'☀️ Terang', themeDark:'🌙 Gelap', themeAuto:'⚙ Otomatis', refreshData:'↺ Perbarui semua data', exportData:'⬇ Ekspor Data', customizeHome:'Kustomisasi Beranda', widgetHint:'Seret untuk mengurutkan · Matikan untuk menyembunyikan', done:'Selesai', reset:'Reset', monthlyReport:'Laporan Bulanan', generatedOn:'Dibuat', byCategory:'Per Kategori', transactions:'Transaksi',
     agenda:'Agenda', diary:'Diari', photos:'Foto', money:'Keuangan',
     newEvent:'+ Acara', newEntry:'+ Catatan', upload:'+ Unggah', addTx:'+ Tambah',
     budgets:'🎯 Anggaran',
@@ -1370,6 +1406,10 @@ function applyTranslations(){
   safeText('tt-inc',            tr.incomeBtn);
   safeText('budget-modal-ttl',   tr.monthlyBudgets);
   safeText('export-modal-ttl',   tr.exportData||'Export Data');
+  safeText('widget-modal-ttl',   tr.customizeHome||'Customize Home');
+  safeText('widget-modal-hint',  tr.widgetHint||'Drag to reorder · Toggle to show/hide');
+  safeText('widget-done-btn',    tr.done||'Done');
+  safeText('widget-reset-btn',   tr.reset||'Reset');
   safeText('export-csv-title',   '📄 CSV Export');
   safeText('export-pdf-title',   '🖨 ' + (tr.monthlyReport||'Monthly Report') + ' (Print / PDF)');
   safeText('exp-money-csv-lbl',  (tr.money||'Money') + ' (' + (tr.allTime||'All time') + ')');
@@ -2927,8 +2967,23 @@ function renderHome(){
     </div>
   </div>`;
 
-  // ── Assemble ───────────────────────────────────────────
-  el.innerHTML = greeting + quickCapture + qa + upcomingSection + diarySection + photoSection + moneySection;
+  // ── Assemble using widget order/visibility ─────────────
+  const _sectionMap = {
+    quickCapture: quickCapture,
+    quickActions:  qa,
+    upcoming:      upcomingSection,
+    diary:         diarySection,
+    photos:        photoSection,
+    money:         moneySection,
+  };
+  const _widgetOrder = getWidgetOrder();
+  const _sections = _widgetOrder
+    .filter(w => w.on && _sectionMap[w.id])
+    .map(w => _sectionMap[w.id])
+    .join('');
+
+  const customizeBtn = `<button class="widget-customize-btn" onclick="_openWidgetModal()">⚙ Customize</button><div style="clear:both"></div>`;
+  el.innerHTML = greeting + customizeBtn + _sections;
 
   // Wire up upcoming item clicks
   el.querySelectorAll('.home-upcoming-item').forEach(item=>{
@@ -3664,6 +3719,129 @@ function _parseInputFrontend(text){
   // Default: diary
   return { type:'diary', preview: text.slice(0,40) };
 }
+
+// ═══════════════════════════════════════════════════════
+//  DASHBOARD WIDGET SYSTEM
+// ═══════════════════════════════════════════════════════
+
+const LS_WIDGETS = 'lumina_widgets';
+
+// Widget definitions — id maps to section variable in renderHome
+const WIDGET_DEFAULTS = [
+  { id:'quickCapture', icon:'✦', name:()=>t().quickCapture||'Quick Capture',  desc:()=>t().widgetDescCapture||'Type anything to capture quickly',  on:true  },
+  { id:'quickActions',  icon:'⚡', name:()=>t().widgetQuickActions||'Quick Actions', desc:()=>t().widgetDescActions||'Shortcut buttons for each tab',      on:true  },
+  { id:'upcoming',      icon:'📅', name:()=>t().upcomingAgenda||'Upcoming',    desc:()=>t().widgetDescUpcoming||'Next events within 3 days',            on:true  },
+  { id:'diary',         icon:'📓', name:()=>t().recentDiary||'Recent Diary',   desc:()=>t().widgetDescDiary||'Last 2 diary entries',                    on:true  },
+  { id:'photos',        icon:'🖼', name:()=>t().recentPhotos||'Recent Photos', desc:()=>t().widgetDescPhotos||'Recent photo strip',                     on:true  },
+  { id:'money',         icon:'💰', name:()=>t().thisMonth||'This Month',       desc:()=>t().widgetDescMoney||'Monthly income/expense/balance',          on:true  },
+];
+
+function loadWidgets(){
+  try{
+    const saved = JSON.parse(localStorage.getItem(LS_WIDGETS)||'null');
+    if(saved && Array.isArray(saved)) return saved;
+  }catch(_){}
+  return WIDGET_DEFAULTS.map(w=>({id:w.id, on:w.on}));
+}
+
+function saveWidgets(widgets){
+  localStorage.setItem(LS_WIDGETS, JSON.stringify(widgets));
+}
+
+function getWidgetOrder(){
+  const saved = loadWidgets();
+  // Merge with defaults to handle new widgets added in updates
+  const allIds = WIDGET_DEFAULTS.map(w=>w.id);
+  const savedIds = saved.map(w=>w.id);
+  // Add any new widgets not in saved
+  const merged = [...saved];
+  allIds.forEach(id => { if(!savedIds.includes(id)) merged.push({id, on:true}); });
+  return merged;
+}
+
+// ── Widget modal ─────────────────────────────────────
+function openWidgetModal(){
+  renderWidgetList();
+  openModal('widget-modal');
+}
+
+function renderWidgetList(){
+  const el = document.getElementById('widget-list');
+  if(!el) return;
+  const widgets = getWidgetOrder();
+
+  el.innerHTML = widgets.map((w,i) => {
+    const def = WIDGET_DEFAULTS.find(d=>d.id===w.id);
+    if(!def) return '';
+    return `<div class="widget-row" draggable="true" data-id="${w.id}" data-idx="${i}">
+      <span class="widget-drag-handle">⠿</span>
+      <span class="widget-icon">${def.icon}</span>
+      <div class="widget-info">
+        <div class="widget-name">${def.name()}</div>
+        <div class="widget-desc">${def.desc()}</div>
+      </div>
+      <button class="widget-toggle ${w.on?'on':'off'}" data-id="${w.id}" aria-label="Toggle"></button>
+    </div>`;
+  }).join('');
+
+  // Toggle buttons
+  el.querySelectorAll('.widget-toggle').forEach(btn => {
+    btn.addEventListener('click', e => {
+      e.stopPropagation();
+      const widgets = getWidgetOrder();
+      const w = widgets.find(x=>x.id===btn.dataset.id);
+      if(w){ w.on = !w.on; saveWidgets(widgets); renderWidgetList(); renderHome(); }
+    });
+  });
+
+  // Drag-and-drop reorder
+  let dragSrc = null;
+  el.querySelectorAll('.widget-row').forEach(row => {
+    row.addEventListener('dragstart', e => {
+      dragSrc = row;
+      row.classList.add('dragging');
+      e.dataTransfer.effectAllowed = 'move';
+    });
+    row.addEventListener('dragend', () => {
+      row.classList.remove('dragging');
+      el.querySelectorAll('.widget-row').forEach(r=>r.classList.remove('drag-over'));
+    });
+    row.addEventListener('dragover', e => {
+      e.preventDefault();
+      if(dragSrc && dragSrc !== row){
+        el.querySelectorAll('.widget-row').forEach(r=>r.classList.remove('drag-over'));
+        row.classList.add('drag-over');
+      }
+    });
+    row.addEventListener('drop', e => {
+      e.preventDefault();
+      if(!dragSrc || dragSrc === row) return;
+      // Reorder
+      const widgets = getWidgetOrder();
+      const fromId  = dragSrc.dataset.id;
+      const toId    = row.dataset.id;
+      const fromIdx = widgets.findIndex(w=>w.id===fromId);
+      const toIdx   = widgets.findIndex(w=>w.id===toId);
+      if(fromIdx<0||toIdx<0) return;
+      const [moved] = widgets.splice(fromIdx,1);
+      widgets.splice(toIdx,0,moved);
+      saveWidgets(widgets);
+      renderWidgetList();
+      renderHome();
+    });
+  });
+}
+
+// Reset to defaults
+document.getElementById('widget-reset-btn')?.addEventListener('click', ()=>{
+  localStorage.removeItem(LS_WIDGETS);
+  renderWidgetList();
+  renderHome();
+  toast('Widgets reset to default','info');
+});
+
+// Customize button wiring (added dynamically in renderHome)
+function _openWidgetModal(){ openWidgetModal(); }
 
 // ═══════════════════════════════════════════════════════
 //  NOTIFICATIONS & REMINDERS
