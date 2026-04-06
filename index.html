@@ -497,6 +497,153 @@ img{max-width:100%;display:block}
 .widget-toggle::after{content:'';position:absolute;top:3px;width:18px;height:18px;border-radius:50%;background:#fff;transition:left var(--ease)}
 .widget-toggle.on::after{left:21px}
 .widget-toggle.off::after{left:3px}
+/* ══════════════════════════════════════════════════
+   NOTES TAB — Full redesign
+   ══════════════════════════════════════════════════ */
+
+/* Note card grid */
+.notes-grid{display:grid;grid-template-columns:1fr 1fr;gap:.65rem;align-items:start}
+.note-card{
+  border-radius:var(--r);padding:.9rem .85rem;cursor:pointer;
+  transition:transform .18s ease,box-shadow .18s ease;
+  box-shadow:0 1px 4px rgba(0,0,0,.08);
+  position:relative;overflow:hidden;min-height:80px;
+  border:1.5px solid rgba(0,0,0,.06);
+}
+.note-card:hover{transform:translateY(-3px);box-shadow:0 6px 20px rgba(0,0,0,.13)}
+.note-card.pinned::after{content:'📌';position:absolute;top:.55rem;right:.6rem;font-size:.8rem;line-height:1}
+.note-card-title{font-size:.88rem;font-weight:600;margin-bottom:.35rem;line-height:1.3;color:rgba(0,0,0,.85)}
+.note-card-preview{font-size:.76rem;color:rgba(0,0,0,.55);display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical;overflow:hidden;line-height:1.5}
+.note-card-canvas-thumb{width:100%;border-radius:6px;margin-top:.35rem;display:block;border:1px solid rgba(0,0,0,.06)}
+.note-card-footer{display:flex;align-items:center;justify-content:space-between;margin-top:.6rem;gap:.4rem}
+.note-card-date{font-size:.65rem;color:rgba(0,0,0,.4);font-weight:400}
+.note-card-tags{display:flex;gap:.25rem;flex-wrap:wrap}
+.note-tag{font-size:.62rem;padding:.1rem .4rem;border-radius:10px;background:rgba(0,0,0,.08);color:rgba(0,0,0,.55)}
+[data-theme="dark"] .note-card{border-color:rgba(255,255,255,.06)}
+[data-theme="dark"] .note-card-title{color:rgba(255,255,255,.9)}
+[data-theme="dark"] .note-card-preview{color:rgba(255,255,255,.5)}
+[data-theme="dark"] .note-card-date{color:rgba(255,255,255,.35)}
+[data-theme="dark"] .note-tag{background:rgba(255,255,255,.1);color:rgba(255,255,255,.5)}
+
+/* Note modal shell */
+.note-modal-inner{
+  max-width:620px;width:100%;max-height:94vh;
+  overflow-y:auto;border-radius:var(--r);
+  background:var(--surface);
+}
+/* Note color applied ONLY to top header bar */
+.note-header-band{
+  border-radius:var(--r) var(--r) 0 0;
+  padding:.75rem 1rem;
+  display:flex;align-items:center;justify-content:space-between;
+  margin:-1.1rem -1.1rem .75rem -1.1rem;
+  transition:background .2s ease;
+}
+.note-header-band h2{font-size:1rem;font-weight:600;opacity:.8;margin:0}
+.note-header-actions{display:flex;gap:.35rem;align-items:center}
+.note-icon-btn{
+  width:34px;height:34px;border-radius:8px;border:none;cursor:pointer;
+  font-size:1.05rem;display:flex;align-items:center;justify-content:center;
+  background:rgba(0,0,0,.07);transition:background .15s ease;flex-shrink:0;
+}
+.note-icon-btn:hover{background:rgba(0,0,0,.14)}
+
+/* Title input */
+.note-title-input{
+  font-family:var(--font-s);font-size:1.15rem;font-weight:600;
+  border:none;border-bottom:2px solid var(--border);border-radius:0;
+  padding:.3rem 0 .5rem;margin-bottom:.8rem;width:100%;
+  background:transparent;color:var(--text);
+  transition:border-color .2s ease;
+}
+.note-title-input:focus{outline:none;border-bottom-color:var(--amber)}
+.note-title-input::placeholder{color:var(--text3)}
+
+/* Mode toggle — pill style */
+.note-mode-toggle{
+  display:inline-flex;background:var(--surface2);
+  border-radius:20px;padding:3px;gap:2px;margin-bottom:.85rem;
+}
+.note-mode-btn{
+  padding:.3rem .85rem;border-radius:17px;font-size:.8rem;
+  font-weight:500;border:none;background:transparent;
+  color:var(--text2);cursor:pointer;transition:all .18s ease;
+}
+.note-mode-btn.active{
+  background:var(--surface);color:var(--text);
+  box-shadow:0 1px 4px rgba(0,0,0,.12);
+}
+
+/* Drawing canvas area */
+.canvas-toolbar{
+  display:flex;align-items:center;gap:.5rem;
+  padding:.5rem .6rem;
+  background:var(--surface2);border-radius:var(--r-sm);
+  margin-bottom:.5rem;flex-wrap:wrap;
+}
+.canvas-tool-group{display:flex;gap:.25rem;align-items:center}
+.canvas-divider{width:1px;height:22px;background:var(--border);flex-shrink:0}
+.canvas-tool{
+  width:34px;height:34px;border-radius:8px;border:1.5px solid transparent;
+  background:var(--surface);cursor:pointer;font-size:1rem;
+  display:flex;align-items:center;justify-content:center;
+  transition:all .15s ease;flex-shrink:0;color:var(--text2);
+}
+.canvas-tool:hover{background:var(--bg);border-color:var(--border)}
+.canvas-tool.active{
+  background:var(--amber);color:#fff;border-color:var(--amber);
+  box-shadow:0 2px 6px rgba(217,119,6,.3);
+}
+.canvas-sizes{display:flex;gap:.3rem;align-items:center}
+.canvas-size{
+  width:28px;height:28px;border-radius:50%;border:1.5px solid var(--border);
+  background:var(--surface);cursor:pointer;display:flex;align-items:center;
+  justify-content:center;transition:all .15s ease;
+}
+.canvas-size:hover{border-color:var(--amber)}
+.canvas-size.active{border-color:var(--amber);background:var(--amber-l)}
+.canvas-colors{display:flex;gap:.3rem;align-items:center}
+.canvas-color{
+  width:22px;height:22px;border-radius:50%;border:2.5px solid transparent;
+  cursor:pointer;transition:transform .15s ease,box-shadow .15s ease;flex-shrink:0;
+}
+.canvas-color:hover{transform:scale(1.15)}
+.canvas-color.active{
+  border-color:var(--text);transform:scale(1.15);
+  box-shadow:0 0 0 2px var(--bg),0 0 0 4px var(--text);
+}
+.canvas-wrap{
+  border-radius:var(--r-sm);overflow:hidden;
+  background:#fff;cursor:crosshair;touch-action:none;
+  box-shadow:0 2px 8px rgba(0,0,0,.1);
+  border:1.5px solid var(--border);
+}
+[data-theme="dark"] .canvas-wrap{background:#1e1d19}
+.canvas-wrap canvas{display:block;width:100%;height:260px}
+
+/* Color picker popup */
+.note-color-picker-inner{
+  display:grid;grid-template-columns:repeat(5,32px);gap:5px;padding:.65rem;
+}
+.note-color-swatch{
+  width:32px;height:32px;border-radius:8px;cursor:pointer;
+  transition:transform .15s ease,box-shadow .15s ease;
+  border:1.5px solid rgba(0,0,0,.08);
+}
+.note-color-swatch:hover{transform:scale(1.15);box-shadow:0 2px 8px rgba(0,0,0,.15)}
+.note-color-swatch.selected{box-shadow:0 0 0 2.5px var(--amber)}
+
+/* Tags input */
+.note-tags-input{
+  font-size:.8rem;margin-top:.65rem;
+  border-radius:var(--r-sm);background:var(--surface2);
+  border-color:transparent;
+}
+.note-tags-input:focus{background:var(--surface)}
+
+/* Note card empty state */
+.notes-empty{text-align:center;padding:3rem 1rem}
+
 @keyframes spin{to{transform:rotate(360deg)}}
 #ev-time-row.hidden{display:none}
 @keyframes toastIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
@@ -876,71 +1023,103 @@ img{max-width:100%;display:block}
 
 <!-- Note Editor Modal -->
 <div class="overlay" id="note-modal">
-  <div class="modal note-modal-inner">
-    <div class="modal-hdr">
-      <h2 class="modal-ttl" id="note-modal-ttl">New Note</h2>
-      <div style="display:flex;gap:.4rem;align-items:center">
-        <button class="note-color-btn" id="note-color-btn" title="Color">&#127912;</button>
-        <button class="note-pin-btn" id="note-pin-btn" title="Pin">&#128204;</button>
-        <button class="modal-x" data-close="note-modal">&#x2715;</button>
-      </div>
-    </div>
+  <div class="modal note-modal-inner" style="padding:0;overflow:hidden">
     <input type="hidden" id="note-id">
     <input type="hidden" id="note-pinned" value="false">
     <input type="hidden" id="note-color-val" value="#ffffff">
-    <input class="fi note-title-input" id="note-title" placeholder="Title..." autocomplete="off">
-    <div class="note-mode-toggle">
-      <button class="note-mode-btn active" id="note-mode-text" data-mode="text">&#9000; Text</button>
-      <button class="note-mode-btn" id="note-mode-draw" data-mode="draw">&#9998; Draw</button>
-    </div>
-    <div id="note-text-area">
-      <div id="note-editor-container" style="min-height:200px"></div>
-    </div>
-    <div id="note-draw-area" style="display:none">
-      <div class="canvas-toolbar">
-        <div class="canvas-tools">
-          <button class="canvas-tool active" id="tool-pen"    data-tool="pen"    title="Pen">&#9998;</button>
-          <button class="canvas-tool"         id="tool-marker" data-tool="marker" title="Marker">&#128394;</button>
-          <button class="canvas-tool"         id="tool-eraser" data-tool="eraser" title="Eraser">&#9633;</button>
-        </div>
-        <div class="canvas-sizes">
-          <button class="canvas-size"        data-size="2"  title="Fine">&#183;</button>
-          <button class="canvas-size active" data-size="4"  title="Medium">&#8226;</button>
-          <button class="canvas-size"        data-size="8"  title="Thick">&#9679;</button>
-          <button class="canvas-size"        data-size="16" title="Bold">&#11044;</button>
-        </div>
-        <div class="canvas-colors" id="canvas-color-row">
-          <button class="canvas-color active" data-color="#1c1710" style="background:#1c1710"></button>
-          <button class="canvas-color" data-color="#d97706" style="background:#d97706"></button>
-          <button class="canvas-color" data-color="#dc2626" style="background:#dc2626"></button>
-          <button class="canvas-color" data-color="#16a34a" style="background:#16a34a"></button>
-          <button class="canvas-color" data-color="#3b82f6" style="background:#3b82f6"></button>
-          <button class="canvas-color" data-color="#8b5cf6" style="background:#8b5cf6"></button>
-        </div>
-        <button class="btn btn-ghost btn-sm" id="canvas-clear-btn">Clear</button>
+
+    <!-- Color band header — changes color, canvas stays white -->
+    <div class="note-header-band" id="note-header-band" style="background:#f8f8f8">
+      <h2 id="note-modal-ttl" style="font-size:.95rem;font-weight:600;margin:0;opacity:.7">New Note</h2>
+      <div class="note-header-actions">
+        <button class="note-icon-btn" id="note-color-btn" title="Note color">&#127912;</button>
+        <button class="note-icon-btn" id="note-pin-btn" title="Pin note" style="font-size:.95rem">&#128204;</button>
+        <button class="note-icon-btn" data-close="note-modal" style="font-weight:600">&#x2715;</button>
       </div>
-      <div class="canvas-wrap"><canvas id="note-canvas"></canvas></div>
     </div>
-    <input class="fi note-tags-input" id="note-tags" placeholder="Tags (comma separated)..." style="margin-top:.6rem;font-size:.82rem">
-    <div class="modal-actions">
-      <button class="btn btn-danger btn-sm" id="note-del" style="display:none;margin-right:auto" data-i18n="deleteBtn">&#128465; Delete</button>
-      <button class="btn btn-ghost" data-close="note-modal" data-i18n="cancel">Cancel</button>
-      <button class="btn btn-primary" id="note-save">Save</button>
+
+    <!-- Body with padding -->
+    <div style="padding:0 1.1rem 1.1rem">
+
+      <!-- Title -->
+      <input class="note-title-input" id="note-title" placeholder="Title..." autocomplete="off">
+
+      <!-- Mode toggle -->
+      <div class="note-mode-toggle">
+        <button class="note-mode-btn active" id="note-mode-text" data-mode="text">&#9000;&#xFE0E; Text</button>
+        <button class="note-mode-btn" id="note-mode-draw" data-mode="draw">&#9998;&#xFE0E; Draw</button>
+      </div>
+
+      <!-- Text editor -->
+      <div id="note-text-area">
+        <div id="note-editor-container" style="min-height:220px;border-radius:var(--r-sm);overflow:hidden"></div>
+      </div>
+
+      <!-- Drawing canvas — always white background -->
+      <div id="note-draw-area" style="display:none">
+        <!-- Toolbar row 1: Tools + sizes -->
+        <div class="canvas-toolbar">
+          <div class="canvas-tool-group">
+            <button class="canvas-tool active" id="tool-pen"    data-tool="pen"    title="Pen">&#9998;&#xFE0E;</button>
+            <button class="canvas-tool"        id="tool-marker" data-tool="marker" title="Highlighter">&#9646;</button>
+            <button class="canvas-tool"        id="tool-eraser" data-tool="eraser" title="Eraser">&#11034;&#xFE0E;</button>
+          </div>
+          <div class="canvas-divider"></div>
+          <div class="canvas-sizes">
+            <button class="canvas-size"        data-size="2"  title="Fine" style="font-size:.55rem">&#9679;</button>
+            <button class="canvas-size active" data-size="4"  title="Medium" style="font-size:.75rem">&#9679;</button>
+            <button class="canvas-size"        data-size="8"  title="Thick" style="font-size:.95rem">&#9679;</button>
+            <button class="canvas-size"        data-size="16" title="Bold" style="font-size:1.1rem">&#9679;</button>
+          </div>
+          <div class="canvas-divider"></div>
+          <!-- Ink colors -->
+          <div class="canvas-colors" id="canvas-color-row">
+            <button class="canvas-color active" data-color="#111111" style="background:#111111" title="Black"></button>
+            <button class="canvas-color" data-color="#d97706" style="background:#d97706" title="Amber"></button>
+            <button class="canvas-color" data-color="#dc2626" style="background:#dc2626" title="Red"></button>
+            <button class="canvas-color" data-color="#16a34a" style="background:#16a34a" title="Green"></button>
+            <button class="canvas-color" data-color="#2563eb" style="background:#2563eb" title="Blue"></button>
+            <button class="canvas-color" data-color="#7c3aed" style="background:#7c3aed" title="Purple"></button>
+          </div>
+          <div class="canvas-divider"></div>
+          <button class="canvas-tool" id="canvas-clear-btn" title="Clear canvas" style="font-size:.8rem;width:auto;padding:0 .6rem;color:var(--red)">Clear</button>
+        </div>
+
+        <!-- Canvas — always white so drawing is visible regardless of note color -->
+        <div class="canvas-wrap">
+          <canvas id="note-canvas"></canvas>
+        </div>
+        <div style="font-size:.7rem;color:var(--text3);margin-top:.4rem;text-align:center">
+          Stylus / touch supported · Use eraser or Clear to undo
+        </div>
+      </div>
+
+      <!-- Tags -->
+      <input class="fi note-tags-input" id="note-tags" placeholder="Tags (comma separated)...">
+
+      <!-- Actions -->
+      <div class="modal-actions" style="margin-top:.9rem">
+        <button class="btn btn-danger btn-sm" id="note-del" style="display:none;margin-right:auto">&#128465; Delete</button>
+        <button class="btn btn-ghost" data-close="note-modal">Cancel</button>
+        <button class="btn btn-primary" id="note-save">Save</button>
+      </div>
     </div>
   </div>
 </div>
-<div id="note-color-picker" style="display:none;position:fixed;z-index:1100;background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:.6rem;box-shadow:var(--shadow-lg)">
-  <div style="display:grid;grid-template-columns:repeat(5,28px);gap:4px">
-    <div class="note-color-swatch" data-color="#ffffff" style="background:#ffffff;border:1px solid var(--border)"></div>
-    <div class="note-color-swatch" data-color="#fef3c7" style="background:#fef3c7"></div>
-    <div class="note-color-swatch" data-color="#dcfce7" style="background:#dcfce7"></div>
-    <div class="note-color-swatch" data-color="#dbeafe" style="background:#dbeafe"></div>
-    <div class="note-color-swatch" data-color="#f3e8ff" style="background:#f3e8ff"></div>
-    <div class="note-color-swatch" data-color="#ffe4e6" style="background:#ffe4e6"></div>
-    <div class="note-color-swatch" data-color="#fce7f3" style="background:#fce7f3"></div>
-    <div class="note-color-swatch" data-color="#f1f5f9" style="background:#f1f5f9"></div>
-    <div class="note-color-swatch" data-color="#1c1710" style="background:#1c1710"></div>
-    <div class="note-color-swatch" data-color="#1e3a5f" style="background:#1e3a5f"></div>
+
+<!-- Note color picker popup -->
+<div id="note-color-picker" style="display:none;position:fixed;z-index:1100;background:var(--surface);border:1px solid var(--border);border-radius:var(--r);box-shadow:var(--shadow-lg)">
+  <div class="note-color-picker-inner">
+    <div class="note-color-swatch" data-color="#f8f8f8" style="background:#f8f8f8" title="Default"></div>
+    <div class="note-color-swatch" data-color="#fef9c3" style="background:#fef9c3" title="Yellow"></div>
+    <div class="note-color-swatch" data-color="#dcfce7" style="background:#dcfce7" title="Green"></div>
+    <div class="note-color-swatch" data-color="#dbeafe" style="background:#dbeafe" title="Blue"></div>
+    <div class="note-color-swatch" data-color="#f3e8ff" style="background:#f3e8ff" title="Purple"></div>
+    <div class="note-color-swatch" data-color="#ffe4e6" style="background:#ffe4e6" title="Pink"></div>
+    <div class="note-color-swatch" data-color="#fff7ed" style="background:#fff7ed" title="Peach"></div>
+    <div class="note-color-swatch" data-color="#f0fdf4" style="background:#f0fdf4" title="Mint"></div>
+    <div class="note-color-swatch" data-color="#1e293b" style="background:#1e293b" title="Dark"></div>
+    <div class="note-color-swatch" data-color="#1e3a5f" style="background:#1e3a5f" title="Navy"></div>
   </div>
 </div>
 
@@ -3985,8 +4164,8 @@ function openNoteModal(note){
   document.getElementById('note-tags').value=note&&note.tags||'';
   document.getElementById('note-pinned').value=note&&note.pinned?'true':'false';
   document.getElementById('note-del').style.display=isNew?'none':'';
-  const color=note&&note.color||'#ffffff';
-  document.getElementById('note-color-val').value=color;
+  const color=note&&note.color||'#f8f8f8';
+  document.getElementById('note-color-val').value=color||'#f8f8f8';
   _setNoteCardColor(color);
   document.getElementById('note-pin-btn').classList.toggle('pinned',!!(note&&note.pinned));
   const startInDraw=!!(note&&note.canvas_data&&!note.content_html);
@@ -3999,8 +4178,14 @@ function openNoteModal(note){
 }
 
 function _setNoteCardColor(color){
-  const m=document.querySelector('.note-modal-inner');
-  if(m)m.style.background=(color&&color!=='#ffffff')?color:'';
+  const band=document.getElementById('note-header-band');
+  const isDefault = !color || color==='#ffffff' || color==='#f8f8f8';
+  if(band){
+    band.style.background = isDefault ? 'var(--surface2)' : color;
+    // Auto-set text contrast
+    const isDark = !isDefault && ['#1e293b','#1e3a5f','#111111'].includes(color);
+    band.style.color = isDark ? 'rgba(255,255,255,.8)' : '';
+  }
 }
 function _switchNoteMode(mode){
   document.getElementById('note-text-area').style.display=mode==='text'?'':'none';
@@ -4021,7 +4206,7 @@ document.getElementById('note-color-btn')&&document.getElementById('note-color-b
   const r=e.target.getBoundingClientRect();
   picker.style.cssText='display:block;position:fixed;top:'+(r.bottom+4)+'px;left:'+r.left+'px;z-index:1100;background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:.6rem;box-shadow:var(--shadow-lg)';
   picker.querySelectorAll('.note-color-swatch').forEach(function(sw){
-    sw.onclick=function(){document.getElementById('note-color-val').value=sw.dataset.color;_setNoteCardColor(sw.dataset.color);picker.style.display='none';};
+    sw.onclick=function(){const col=sw.dataset.color;document.getElementById('note-color-val').value=col;_setNoteCardColor(col);document.querySelectorAll('.note-color-swatch').forEach(function(s){s.classList.toggle('selected',s.dataset.color===col);});picker.style.display='none';};
   });
   setTimeout(function(){document.addEventListener('click',function hide(ev){if(!picker.contains(ev.target)){picker.style.display='none';document.removeEventListener('click',hide);}});},10);
 });
@@ -4033,7 +4218,7 @@ document.getElementById('note-save')&&document.getElementById('note-save').addEv
     const id=document.getElementById('note-id').value;
     const title=document.getElementById('note-title').value.trim();
     const tags=document.getElementById('note-tags').value.trim();
-    const color=document.getElementById('note-color-val').value||'#ffffff';
+    const color=document.getElementById('note-color-val').value||'#f8f8f8';
     const pinned=document.getElementById('note-pinned').value;
     let content_html='',canvas_data='';
     if(!_draw.active){
