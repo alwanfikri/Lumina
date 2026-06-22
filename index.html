@@ -59,10 +59,28 @@ img{max-width:100%;display:block}
 .logo{font-family:var(--font-s);font-size:1.3rem;font-weight:600;letter-spacing:-.02em}
 .logo span{color:var(--amber)}
 .header-r{display:flex;align-items:center;gap:.4rem}
-.status-dot{width:8px;height:8px;border-radius:50%;background:var(--green);box-shadow:0 0 0 2px var(--green-l)}
-.status-dot.off{background:var(--text3);box-shadow:0 0 0 2px var(--border)}
 .icon-btn{width:36px;height:36px;border-radius:var(--r-sm);display:flex;align-items:center;justify-content:center;color:var(--text2);font-size:1.1rem;transition:background var(--ease)}
 .icon-btn:hover{background:var(--surface2)}
+/* Global Search */
+#search-overlay{position:fixed;inset:0;z-index:9999;display:flex;flex-direction:column;align-items:center;padding-top:4rem}
+#search-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.45);backdrop-filter:blur(2px)}
+#search-box{position:relative;width:min(560px,calc(100vw - 2rem));background:var(--surface);border-radius:var(--r);box-shadow:0 8px 32px rgba(0,0,0,.25);overflow:hidden;animation:toastIn .15s ease}
+#search-input-wrap{display:flex;align-items:center;gap:.5rem;padding:.7rem 1rem;border-bottom:1px solid var(--border)}
+#search-icon-inner{font-size:1rem;flex-shrink:0;color:var(--text3)}
+#search-input{flex:1;border:none;background:transparent;outline:none;font-size:1rem;color:var(--text);font-family:var(--font-u)}
+#search-input::placeholder{color:var(--text3)}
+#search-close{background:none;border:none;cursor:pointer;color:var(--text3);font-size:1rem;padding:.2rem .4rem;border-radius:var(--r-sm);transition:color var(--ease)}
+#search-close:hover{color:var(--text)}
+#search-results{max-height:60vh;overflow-y:auto;padding:.4rem 0}
+.sr-group{padding:.4rem 1rem .2rem;font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--text3)}
+.sr-item{display:flex;align-items:center;gap:.75rem;padding:.55rem 1rem;cursor:pointer;transition:background var(--ease)}
+.sr-item:hover{background:var(--surface2)}
+.sr-item-icon{font-size:1rem;flex-shrink:0;width:1.4rem;text-align:center}
+.sr-item-body{flex:1;min-width:0}
+.sr-item-title{font-size:.88rem;font-weight:500;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.sr-item-meta{font-size:.75rem;color:var(--text3);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-top:.1rem}
+.sr-item-date{font-size:.72rem;color:var(--text3);flex-shrink:0}
+.sr-empty{padding:2rem 1rem;text-align:center;color:var(--text3);font-size:.88rem}
 
 .tab-bar{background:var(--surface);border-top:1px solid var(--border);display:flex;position:fixed;bottom:0;left:0;right:0;z-index:50;padding-bottom:env(safe-area-inset-bottom)}
 .tab-btn{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;padding:9px 0;color:var(--text3);font-size:.63rem;font-weight:500;text-transform:uppercase;letter-spacing:.04em;transition:color var(--ease)}
@@ -432,27 +450,6 @@ img{max-width:100%;display:block}
 .mood-stat-chip .ms-emoji{font-size:1rem}
 .mood-stat-chip .ms-count{font-weight:600;color:var(--text)}
 /* ── Quick Capture ─────────────────────────────────── */
-.qc-wrap{margin-bottom:1.3rem}
-.qc-form{display:flex;align-items:center;gap:.5rem;background:var(--surface);border:1.5px solid var(--border);border-radius:var(--r);padding:.55rem .75rem;box-shadow:var(--shadow);transition:border-color var(--ease),box-shadow var(--ease)}
-.qc-form:focus-within{border-color:var(--amber);box-shadow:0 0 0 3px var(--amber-l)}
-.qc-icon{font-size:1.1rem;flex-shrink:0}
-.qc-input{flex:1;border:none;background:transparent;outline:none;font-size:.9rem;color:var(--text);font-family:var(--font-u)}
-.qc-input::placeholder{color:var(--text3)}
-.qc-send{width:30px;height:30px;border-radius:var(--r-sm);background:var(--amber);color:#fff;font-size:1rem;display:flex;align-items:center;justify-content:center;cursor:pointer;border:none;flex-shrink:0;opacity:0;transition:opacity var(--ease),transform var(--ease)}
-.qc-send.visible{opacity:1}
-.qc-send:hover{background:var(--amber-d);transform:scale(1.08)}
-.qc-send:disabled{opacity:.4;pointer-events:none}
-.qc-hint{font-size:.72rem;color:var(--text3);margin-top:.4rem;padding-left:2px}
-.qc-result{display:flex;align-items:center;gap:.5rem;padding:.5rem .75rem;border-radius:var(--r-sm);font-size:.8rem;margin-top:.4rem;animation:toastIn .2s ease}
-.qc-result.money{background:var(--green-l);color:#15803d}
-.qc-result.agenda{background:var(--amber-l);color:var(--amber-d)}
-.qc-result.diary{background:var(--surface2);color:var(--text2)}
-.qc-result.error{background:var(--red-l);color:var(--red)}
-.inbox-recent{margin-top:.5rem}
-.inbox-item{display:flex;align-items:center;gap:.5rem;padding:.35rem .4rem;border-radius:var(--r-sm);font-size:.76rem;color:var(--text2)}
-.inbox-item-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
-.inbox-item-raw{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.inbox-item-type{font-size:.65rem;font-weight:600;padding:.1rem .4rem;border-radius:10px;flex-shrink:0;text-transform:uppercase;letter-spacing:.05em}
 .type-money{background:var(--green-l);color:#15803d}
 .type-agenda{background:var(--amber-l);color:var(--amber-d)}
 .type-diary{background:var(--surface2);color:var(--text3)}
@@ -657,10 +654,23 @@ img{max-width:100%;display:block}
 <header class="header">
   <div class="logo">Lumin<span>a</span></div>
   <div class="header-r">
-    <div class="status-dot" id="dot"></div>
+    <button class="icon-btn" id="search-btn" title="Search">🔍</button>
     <button class="icon-btn" id="settings-btn">⚙</button>
   </div>
 </header>
+
+<!-- Global Search Overlay -->
+<div id="search-overlay" style="display:none">
+  <div id="search-backdrop"></div>
+  <div id="search-box">
+    <div id="search-input-wrap">
+      <span id="search-icon-inner">🔍</span>
+      <input id="search-input" type="text" autocomplete="off" autocorrect="off" spellcheck="false">
+      <button id="search-close">✕</button>
+    </div>
+    <div id="search-results"></div>
+  </div>
+</div>
 
 <main class="main">
 
@@ -719,7 +729,10 @@ img{max-width:100%;display:block}
   <div class="panel" id="panel-diary">
     <div class="sec-hdr">
       <h1 class="sec-title">Diary</h1>
-      <button class="btn btn-primary btn-sm" id="new-diary-btn">+ Entry</button>
+      <div style="display:flex;gap:.4rem">
+        <button class="btn btn-ghost btn-sm" id="diary-insights-btn" title="AI Insights" style="display:none">✦ Analyze</button>
+        <button class="btn btn-primary btn-sm" id="new-diary-btn">+ Entry</button>
+      </div>
     </div>
     <div class="search-bar-wrap">
       <div class="search-bar">
@@ -811,6 +824,9 @@ img{max-width:100%;display:block}
 
     <!-- Budget progress bars -->
     <div id="budget-bars"></div>
+
+    <!-- Spending Forecast -->
+    <div id="forecast-card" style="display:none;margin:.8rem 0;padding:.75rem 1rem;background:var(--surface);border:1px solid var(--border);border-radius:var(--r);font-size:.83rem"></div>
 
     <!-- Transactions -->
     <div id="tx-list"><div class="loading"><div class="spinner"></div><span class="loading-txt">Loading…</span></div></div>
@@ -982,7 +998,9 @@ img{max-width:100%;display:block}
       <div class="fg"><label class="flabel">Date</label><input class="fi" id="tx-date" type="date"></div>
       <div class="fg"><label class="flabel">Amount (Rp)</label><input class="fi" id="tx-amount" type="number" min="0" step="1000" placeholder="0"></div>
     </div>
-    <div class="fg"><label class="flabel">Category</label><select class="fi" id="tx-cat"></select></div>
+    <div class="fg"><label class="flabel">Category</label><select class="fi" id="tx-cat"></select>
+      <div id="cat-suggestion" style="display:none;margin-top:.3rem;font-size:.76rem;color:var(--text3)"></div>
+    </div>
     <div class="frow">
       <div class="fg"><label class="flabel" id="tx-lbl-pay">Payment Method</label>
         <select class="fi" id="tx-payment">
@@ -1019,7 +1037,7 @@ img{max-width:100%;display:block}
     <div id="budget-inputs"></div>
     <div class="modal-actions">
       <button class="btn btn-ghost" data-close="budget-modal" data-i18n="cancel">Cancel</button>
-      <button class="btn btn-primary" id="budget-save-btn">t().saveBudgets</button>
+      <button class="btn btn-primary" id="budget-save-btn"></button>
     </div>
   </div>
 </div>
@@ -1206,6 +1224,20 @@ img{max-width:100%;display:block}
 </div>
 
 <!-- Export Modal -->
+<!-- AI Diary Insights Modal -->
+<div class="overlay" id="insights-modal">
+  <div class="modal">
+    <div class="modal-hdr">
+      <h2 class="modal-ttl">✦ Diary Insights</h2>
+      <button class="modal-x" data-close="insights-modal">✕</button>
+    </div>
+    <div id="insights-content" style="padding:.5rem 0;min-height:120px"></div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" data-close="insights-modal">Close</button>
+    </div>
+  </div>
+</div>
+
 <div class="overlay" id="export-modal">
   <div class="modal">
     <div class="modal-hdr">
@@ -1813,7 +1845,7 @@ let API_URL = localStorage.getItem(LS_KEY) || DEFAULT_API;
 // ═══════════════════════════════════════════════════════
 let _agenda=[], _diary=[], _photos=[], _money=[];
 let _gcalEvents=[];
-let _inbox=[];          // recent inbox items          // imported GCal events (not in sheet)
+// imported GCal events (not in sheet)
 let _calendars=[];           // user's calendar list from GCal
 let _enabledCals=new Set();  // calendar IDs currently shown
 const LS_ENABLED_CALS='lumina_enabled_cals';
@@ -1875,8 +1907,6 @@ document.querySelectorAll('.tab-btn').forEach(btn=>btn.addEventListener('click',
 }));
 
 // Online status
-const updateStatus=()=>{const d=document.getElementById('dot');d.className='status-dot'+(navigator.onLine?'':' off')};
-window.addEventListener('online',updateStatus);window.addEventListener('offline',updateStatus);updateStatus();
 
 // Settings
 document.getElementById('settings-btn').addEventListener('click',()=>{
@@ -2001,6 +2031,7 @@ document.getElementById('ocr-key-save')?.addEventListener('click',()=>{
   if(!key){ toast('Enter an API key','error'); return; }
   localStorage.setItem('lumina_ocr_key', key);
   localStorage.setItem('lumina_ocr_provider', prov);
+  _updateInsightsBtn();
   const status = document.getElementById('ocr-key-status');
   status.textContent = '✅ Key saved';
   status.style.color = 'var(--green)';
@@ -2911,6 +2942,7 @@ function renderMoney(){
   renderDonutChart(fil);
   renderBarChart();
   renderBudgetBars(fil);
+  renderForecast(fil);
 
   const el=document.getElementById('tx-list');
   if(!fil.length){el.innerHTML=`<div class="empty"><div class="empty-ico">💰</div><p class="empty-ttl">${t().noTx}</p><p class="empty-sub">${t().tapAdd}</p></div>`;return;}
@@ -2923,6 +2955,50 @@ function renderMoney(){
     }</div>`;
   }).join('');
   el.querySelectorAll('.tx-item').forEach(c=>c.addEventListener('click',()=>openTxModal(_money.find(t=>t.id===c.dataset.id))));
+}
+
+// ── Spending Forecast ─────────────────────────────────────
+function renderForecast(fil){
+  const card = document.getElementById('forecast-card');
+  if(!card) return;
+
+  // Only show for current month
+  const now = new Date();
+  const curMonth = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
+  if(_month !== curMonth){ card.style.display='none'; return; }
+
+  const dayOfMonth = now.getDate();
+  const daysInMonth = new Date(now.getFullYear(), now.getMonth()+1, 0).getDate();
+  const exp = fil.filter(tx=>tx.type==='expense').reduce((s,tx)=>s+tx.amount, 0);
+  if(!exp || dayOfMonth < 3){ card.style.display='none'; return; }
+
+  const dailyAvg = exp / dayOfMonth;
+  const forecast = Math.round(dailyAvg * daysInMonth);
+
+  // Compare against total budget if set
+  const budgets = JSON.parse(localStorage.getItem('lumina_budgets')||'{}');
+  const totalBudget = Object.values(budgets[curMonth]||{}).reduce((s,v)=>s+(+v||0),0);
+
+  let statusColor = 'var(--text2)';
+  let statusIcon = '📊';
+  if(totalBudget > 0){
+    const pct = forecast / totalBudget;
+    if(pct > 1){      statusColor='var(--red)';    statusIcon='🔴'; }
+    else if(pct>.8){  statusColor='var(--amber)';  statusIcon='🟡'; }
+    else {            statusColor='var(--green)';   statusIcon='🟢'; }
+  }
+
+  const budgetLine = totalBudget > 0
+    ? ` <span style="color:var(--text3)">/ ${idr(totalBudget)} budget</span>`
+    : '';
+
+  card.style.display = '';
+  card.innerHTML = `<div style="display:flex;align-items:center;gap:.5rem">
+    <span>${statusIcon}</span>
+    <span style="color:var(--text2)">${t().forecastLabel||'Projected this month'}:</span>
+    <strong style="color:${statusColor}">${idr(forecast)}</strong>${budgetLine}
+    <span style="color:var(--text3);font-size:.75rem;margin-left:auto">${t().basedOn||'Based on'} ${dayOfMonth}/${daysInMonth} ${t().days||'days'}</span>
+  </div>`;
 }
 
 // ── Donut chart: spending by category ────────────────────
@@ -3110,30 +3186,6 @@ function renderHome(){
     <div class="home-greeting-text">${getGreeting()}, <span>Lumina ✦</span></div>
   </div>`;
 
-  // ── Quick Capture ──────────────────────────────────────
-  const qcHints = [tr.qcHintMoney||'💰 money', tr.qcHintAgenda||'📅 event', tr.qcHintDiary||'📓 diary'];
-  const recentInbox = _inbox.slice(0,3);
-  const typeColors = {money:'#16a34a',agenda:'#d97706',diary:'#a8967e',error:'#dc2626'};
-  const inboxRecentHtml = recentInbox.length ? `<div class="inbox-recent">${
-    recentInbox.map(item=>`<div class="inbox-item">
-      <div class="inbox-item-dot" style="background:${typeColors[item.detected_type]||'var(--text3)'}"></div>
-      <span class="inbox-item-raw">${esc(item.raw_input)}</span>
-      <span class="inbox-item-type type-${item.detected_type||'diary'}">${item.detected_type||'…'}</span>
-    </div>`).join('')
-  }</div>` : '';
-
-  const quickCapture=`<div class="qc-wrap">
-    <div class="qc-form">
-      <span class="qc-icon">✦</span>
-      <input class="qc-input" id="qc-input" type="text"
-        placeholder="${esc(tr.qcPlaceholder||'Type anything…')}"
-        autocomplete="off" autocorrect="off">
-      <button class="qc-send" id="qc-send" disabled>↑</button>
-    </div>
-    <div class="qc-hint">${qcHints.join(' · ')}</div>
-    <div id="qc-result"></div>
-    ${inboxRecentHtml}
-  </div>`;
 
   // ── Quick Actions ──────────────────────────────────────
   const qa=`<div class="quick-actions">
@@ -3242,7 +3294,6 @@ function renderHome(){
 
   // ── Assemble using widget order/visibility ─────────────
   const _sectionMap = {
-    quickCapture: quickCapture,
     quickActions:  qa,
     upcoming:      upcomingSection,
     diary:         diarySection,
@@ -3835,163 +3886,240 @@ document.getElementById('exp-pdf-btn')?.addEventListener('click',()=>{
 //  UNIVERSAL INBOX / QUICK CAPTURE
 // ═══════════════════════════════════════════════════════
 
-// Type display config
-const INBOX_TYPE_CONFIG = {
-  money:  { icon:'💰', label: ()=>t().money||'Money',  tab:'money'  },
-  agenda: { icon:'📅', label: ()=>t().agenda||'Agenda', tab:'agenda' },
-  diary:  { icon:'📓', label: ()=>t().diary||'Diary',   tab:'diary'  },
-};
 
-// Load recent inbox items
-async function loadInbox(){
-  try{
-    const d = await api('getInbox', { limit: 10 });
-    _inbox = d.items || [];
-  }catch(e){
-    // Non-fatal — inbox may not exist yet
-    console.warn('[Inbox] getInbox failed:', e.message);
-    _inbox = [];
-  }
+// ═══════════════════════════════════════════════════════
+//  GLOBAL SEARCH
+// ═══════════════════════════════════════════════════════
+
+function _openSearch(){
+  const ov = document.getElementById('search-overlay');
+  const inp = document.getElementById('search-input');
+  ov.style.display = 'flex';
+  inp.value = '';
+  document.getElementById('search-results').innerHTML = '';
+  setTimeout(()=>inp.focus(), 60);
 }
 
-// Submit one raw input through addInbox → processInbox
-async function submitQuickCapture(raw){
-  if(!raw || !raw.trim()) return null;
+function _closeSearch(){
+  document.getElementById('search-overlay').style.display = 'none';
+}
 
-  // 1. Add to Inbox
-  const added = await api('addInbox', { raw_input: raw.trim() });
+function _globalSearch(query){
+  const q = query.trim().toLowerCase();
+  const res = document.getElementById('search-results');
+  if(!q){ res.innerHTML = ''; return; }
 
-  // 2. Process immediately
-  const processed = await api('processInbox', { id: added.id });
+  const hits = { diary:[], agenda:[], money:[], notes:[] };
 
-  // 3. Update local inbox cache
-  const result = processed.results && processed.results[0];
-  if(result){
-    _inbox.unshift({
-      id:           added.id,
-      raw_input:    raw.trim(),
-      detected_type:result.type,
-      status:       result.status,
-      timestamp:    new Date().toISOString()
+  _diary.forEach(e=>{
+    const text = ((e.title||'') + ' ' + stripHtml(e.content_html||'')).toLowerCase();
+    if(text.includes(q)) hits.diary.push(e);
+  });
+  _agenda.forEach(e=>{
+    const text = ((e.title||'') + ' ' + (e.description||'')).toLowerCase();
+    if(text.includes(q)) hits.agenda.push(e);
+  });
+  _money.forEach(e=>{
+    const text = ((e.notes||'') + ' ' + (e.category||'') + ' ' + String(e.amount||'')).toLowerCase();
+    if(text.includes(q)) hits.money.push(e);
+  });
+  (_notes||[]).forEach(n=>{
+    const text = ((n.title||'') + ' ' + (n.content||'')).toLowerCase();
+    if(text.includes(q)) hits.notes.push(n);
+  });
+
+  const total = hits.diary.length + hits.agenda.length + hits.money.length + hits.notes.length;
+  if(!total){ res.innerHTML = `<div class="sr-empty">${t().noResults||'No results found'}</div>`; return; }
+
+  let html = '';
+  const addGroup = (label, icon, items, onClick) => {
+    if(!items.length) return;
+    html += `<div class="sr-group">${label}</div>`;
+    items.slice(0,5).forEach(item => { html += onClick(item, icon); });
+  };
+
+  addGroup(t().diary||'Diary', '📓', hits.diary, (e,icon)=>`
+    <div class="sr-item" onclick="_closeSearch();switchTab('diary');setTimeout(()=>openDiaryView('${e.id}'),200)">
+      <div class="sr-item-icon">${icon}</div>
+      <div class="sr-item-body">
+        <div class="sr-item-title">${esc(e.title||t().untitled||'Untitled')}</div>
+        <div class="sr-item-meta">${esc(stripHtml(e.content_html||'').slice(0,60))}</div>
+      </div>
+      <div class="sr-item-date">${fmtDate(e.date)}</div>
+    </div>`);
+
+  addGroup(t().agenda||'Agenda', '📅', hits.agenda, (e,icon)=>`
+    <div class="sr-item" onclick="_closeSearch();switchTab('agenda')">
+      <div class="sr-item-icon">${icon}</div>
+      <div class="sr-item-body">
+        <div class="sr-item-title">${esc(e.title)}</div>
+        <div class="sr-item-meta">${esc(e.description||'')}</div>
+      </div>
+      <div class="sr-item-date">${fmtDate(e.date)}</div>
+    </div>`);
+
+  addGroup(t().money||'Money', '💰', hits.money, (e,icon)=>`
+    <div class="sr-item" onclick="_closeSearch();switchTab('money')">
+      <div class="sr-item-icon">${icon}</div>
+      <div class="sr-item-body">
+        <div class="sr-item-title">${esc(e.notes||e.category||'Transaction')}</div>
+        <div class="sr-item-meta">${esc(e.category)} · ${idr(e.amount)}</div>
+      </div>
+      <div class="sr-item-date">${fmtDate(e.date)}</div>
+    </div>`);
+
+  addGroup(t().notes||'Notes', '📝', hits.notes, (e,icon)=>`
+    <div class="sr-item" onclick="_closeSearch();switchTab('notes')">
+      <div class="sr-item-icon">${icon}</div>
+      <div class="sr-item-body">
+        <div class="sr-item-title">${esc(e.title||t().untitled||'Untitled')}</div>
+        <div class="sr-item-meta">${esc((e.content||'').slice(0,60))}</div>
+      </div>
+      <div class="sr-item-date">${fmtDate(e.updatedAt||e.createdAt||'')}</div>
+    </div>`);
+
+  res.innerHTML = html;
+}
+
+(function _initSearch(){
+  document.getElementById('search-btn').addEventListener('click', _openSearch);
+  document.getElementById('search-close').addEventListener('click', _closeSearch);
+  document.getElementById('search-backdrop').addEventListener('click', _closeSearch);
+  let _st; document.getElementById('search-input').addEventListener('input', e=>{
+    clearTimeout(_st); _st = setTimeout(()=>_globalSearch(e.target.value), 200);
+  });
+  document.addEventListener('keydown', e=>{
+    if(e.key==='Escape') _closeSearch();
+    if((e.metaKey||e.ctrlKey) && e.key==='k'){ e.preventDefault(); _openSearch(); }
+  });
+})();
+
+// ═══════════════════════════════════════════════════════
+//  AI DIARY INSIGHTS
+// ═══════════════════════════════════════════════════════
+
+function _updateInsightsBtn(){
+  const btn = document.getElementById('diary-insights-btn');
+  if(!btn) return;
+  const key  = localStorage.getItem('lumina_ocr_key')||'';
+  const prov = localStorage.getItem('lumina_ocr_provider')||'gemini';
+  btn.style.display = (key && prov === 'anthropic') ? '' : 'none';
+}
+
+document.getElementById('diary-insights-btn')?.addEventListener('click', _runDiaryInsights);
+
+async function _runDiaryInsights(){
+  const key = localStorage.getItem('lumina_ocr_key')||'';
+  if(!key){ toast('Add an Anthropic API key in Settings → AI / OCR', 'warning', 5000); return; }
+
+  const entries = _diary.slice(0, 30);
+  if(!entries.length){ toast('No diary entries to analyze.', 'info'); return; }
+
+  const contentEl = document.getElementById('insights-content');
+  contentEl.innerHTML = '<div style="text-align:center;padding:2rem;color:var(--text3)">✦ Analyzing your diary…</div>';
+  openModal('insights-modal');
+
+  const entriesText = entries.map(e=>`[${e.date}] ${e.title||'Untitled'}\nMood: ${e.mood||'—'}\n${stripHtml(e.content_html||'').slice(0,300)}`).join('\n\n---\n\n');
+
+  try{
+    const resp = await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',
+      headers:{
+        'Content-Type':'application/json',
+        'x-api-key': key,
+        'anthropic-version':'2023-06-01',
+        'anthropic-dangerous-direct-browser-access':'true'
+      },
+      body: JSON.stringify({
+        model: 'claude-haiku-4-5-20251001',
+        max_tokens: 600,
+        messages:[{
+          role:'user',
+          content:`Analyze these diary entries and give insights in 3 sections:\n1. **Mood Trend** (1-2 sentences about emotional patterns)\n2. **Key Themes** (3-5 bullet points of recurring topics)\n3. **Reflection** (1 encouraging sentence)\n\nBe warm, personal, and concise. Reply in the same language as the entries.\n\n${entriesText}`
+        }]
+      })
     });
-    if(_inbox.length > 20) _inbox.pop();
-  }
+    if(!resp.ok) throw new Error(`API error ${resp.status}`);
+    const data = await resp.json();
+    const text = data.content?.[0]?.text || '';
 
-  return result;
-}
+    // Render markdown-ish output
+    const html = text
+      .replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>')
+      .replace(/^(\d+\.\s)/gm,'<br><strong>$1</strong>')
+      .replace(/^[-•]\s(.+)$/gm,'<li>$1</li>')
+      .replace(/(<li>.*<\/li>)/gs, '<ul style="margin:.4rem 0 .4rem 1.2rem;line-height:1.6">$1</ul>')
+      .replace(/\n/g,'<br>');
 
-// Init Quick Capture input on home panel
-function _initQuickCapture(){
-  const input = document.getElementById('qc-input');
-  const send  = document.getElementById('qc-send');
-  const result= document.getElementById('qc-result');
-  if(!input || !send) return;
-
-  // Show/hide send button based on content
-  input.addEventListener('input', ()=>{
-    const hasText = input.value.trim().length > 0;
-    send.classList.toggle('visible', hasText);
-    send.disabled = !hasText;
-    if(result) result.innerHTML = '';
-  });
-
-  // Submit on Enter
-  input.addEventListener('keydown', e=>{
-    if(e.key === 'Enter' && !e.shiftKey){
-      e.preventDefault();
-      _handleQuickCapture(input, send, result);
-    }
-  });
-
-  // Submit on button click
-  send.addEventListener('click', ()=>{
-    _handleQuickCapture(input, send, result);
-  });
-}
-
-async function _handleQuickCapture(input, send, resultEl){
-  const raw = input.value.trim();
-  if(!raw) return;
-
-  // Optimistic UI — disable and show loading
-  input.disabled = true;
-  send.disabled  = true;
-  send.textContent = '…';
-
-  try{
-    const res = _parseInputFrontend(raw); // quick local preview
-    const typeConf = INBOX_TYPE_CONFIG[res.type] || INBOX_TYPE_CONFIG.diary;
-
-    // Show optimistic result immediately
-    if(resultEl){
-      resultEl.innerHTML = `<div class="qc-result ${res.type}">
-        ${typeConf.icon} <strong>${t().qcSaved||'Saved as'} ${typeConf.label()}</strong>
-        ${res.preview ? '— ' + esc(res.preview) : ''}
-      </div>`;
-    }
-
-    // Actually submit
-    const serverResult = await submitQuickCapture(raw);
-
-    // Clear input
-    input.value = '';
-    send.classList.remove('visible');
-    send.disabled = true;
-
-    // Refresh relevant tab data silently
-    if(serverResult){
-      const tab = (INBOX_TYPE_CONFIG[serverResult.type]||{}).tab || 'diary';
-      if(tab==='money')  loadMoney();
-      else if(tab==='agenda') loadAgenda();
-      else if(tab==='diary')  loadDiary();
-      // Re-render home to update inbox recent + relevant section
-      setTimeout(renderHome, 400);
-    }
-
+    contentEl.innerHTML = `<div style="font-size:.88rem;line-height:1.7;color:var(--text);padding:0 .25rem">${html}</div>
+      <div style="font-size:.72rem;color:var(--text3);margin-top:1rem;padding-top:.6rem;border-top:1px solid var(--border)">Based on ${entries.length} entries · ${new Date().toLocaleDateString()}</div>`;
   }catch(e){
-    if(resultEl){
-      resultEl.innerHTML = `<div class="qc-result error">⚠ ${esc(t().qcError||'Could not save')}: ${esc(e.message)}</div>`;
-    }
-  }finally{
-    input.disabled = false;
-    send.textContent = '↑';
-    input.focus();
+    contentEl.innerHTML = `<div style="color:var(--red);padding:1rem;font-size:.85rem">⚠ ${esc(e.message)}</div>`;
   }
 }
 
-// ── Lightweight frontend parser for instant feedback ──
-// Mirrors the GAS NLP logic — purely for optimistic UI
-function _parseInputFrontend(text){
-  const lower = text.toLowerCase();
+// ═══════════════════════════════════════════════════════
+//  AI SMART CATEGORIZATION
+// ═══════════════════════════════════════════════════════
 
-  // Money
-  const moneyRe = /(\d[\d.,]*)\s*(rb|ribu|k|jt|juta|000)?/i;
-  const expenseKw = /beli|bayar|makan|minum|spend|paid|pay|jajan|bensin|kopi|coffee|lunch|dinner|transport|ojek|belanja/i;
-  const incomeKw  = /gaji|salary|bonus|income|pemasukan|dapat|terima|freelance/i;
-  if(moneyRe.test(text) && (expenseKw.test(text) || incomeKw.test(text))){
-    const m = text.match(moneyRe);
-    let amt = 0;
-    if(m){
-      const num = parseFloat(String(m[1]).replace(/[.,]/g,''));
-      const u = (m[2]||'').toLowerCase();
-      if(u==='rb'||u==='ribu'||u==='k') amt = num*1000;
-      else if(u==='jt'||u==='juta') amt = num*1000000;
-      else amt = num;
-    }
-    return { type:'money', preview: idr(amt) };
+(function _initCatSuggest(){
+  let _catTimer;
+  const notesEl = document.getElementById('tx-notes');
+  const suggEl  = document.getElementById('cat-suggestion');
+  const catEl   = document.getElementById('tx-cat');
+  if(!notesEl || !suggEl || !catEl) return;
+
+  notesEl.addEventListener('input', ()=>{
+    clearTimeout(_catTimer);
+    const text = notesEl.value.trim();
+    if(text.length < 3){ suggEl.style.display='none'; return; }
+    _catTimer = setTimeout(()=>_suggestCategory(text), 500);
+  });
+
+  async function _suggestCategory(text){
+    const key  = localStorage.getItem('lumina_ocr_key')||'';
+    const prov = localStorage.getItem('lumina_ocr_provider')||'gemini';
+    if(!key || prov !== 'anthropic') return;
+
+    const cats = Array.from(catEl.options).map(o=>o.value).filter(Boolean);
+    if(!cats.length) return;
+
+    try{
+      const resp = await fetch('https://api.anthropic.com/v1/messages',{
+        method:'POST',
+        headers:{
+          'Content-Type':'application/json',
+          'x-api-key': key,
+          'anthropic-version':'2023-06-01',
+          'anthropic-dangerous-direct-browser-access':'true'
+        },
+        body: JSON.stringify({
+          model: 'claude-haiku-4-5-20251001',
+          max_tokens: 20,
+          messages:[{
+            role:'user',
+            content:`Pick the single best category from this list for: "${text}"\nCategories: ${cats.join(', ')}\nReply with only the category name, nothing else.`
+          }]
+        })
+      });
+      if(!resp.ok) return;
+      const data = await resp.json();
+      const suggested = (data.content?.[0]?.text||'').trim();
+      if(!cats.includes(suggested)) return;
+
+      // Only show if different from current selection
+      if(suggested === catEl.value){ suggEl.style.display='none'; return; }
+
+      suggEl.style.display = '';
+      suggEl.innerHTML = `✦ Suggested: <a href="#" style="color:var(--amber);text-decoration:none;font-weight:500">${esc(suggested)}</a>`;
+      suggEl.querySelector('a').addEventListener('click', e=>{
+        e.preventDefault();
+        catEl.value = suggested;
+        suggEl.style.display = 'none';
+      });
+    }catch(_){}
   }
-
-  // Agenda
-  const timeRe = /jam\s*\d|pukul|\d{1,2}[.:]\d{2}|at\s+\d|\d\s*(am|pm)/i;
-  const dateKw  = /besok|tomorrow|lusa|minggu depan|senin|selasa|rabu|kamis|jumat|sabtu|meeting|rapat|event/i;
-  if(timeRe.test(text) || dateKw.test(text)){
-    const title = text.replace(/jam\s*\d{1,2}(?:[.:]\d{2})?/gi,'').replace(/besok|tomorrow|lusa/gi,'').trim();
-    return { type:'agenda', preview: title.slice(0,40) };
-  }
-
-  // Default: diary
-  return { type:'diary', preview: text.slice(0,40) };
-}
+})();
 
 // ═══════════════════════════════════════════════════════
 //  DASHBOARD WIDGET SYSTEM
@@ -4001,7 +4129,6 @@ const LS_WIDGETS = 'lumina_widgets';
 
 // Widget definitions — id maps to section variable in renderHome
 const WIDGET_DEFAULTS = [
-  { id:'quickCapture', icon:'✦', name:()=>t().quickCapture||'Quick Capture',  desc:()=>t().widgetDescCapture||'Type anything to capture quickly',  on:true  },
   { id:'quickActions',  icon:'⚡', name:()=>t().widgetQuickActions||'Quick Actions', desc:()=>t().widgetDescActions||'Shortcut buttons for each tab',      on:true  },
   { id:'upcoming',      icon:'📅', name:()=>t().upcomingAgenda||'Upcoming',    desc:()=>t().widgetDescUpcoming||'Next events within 3 days',            on:true  },
   { id:'diary',         icon:'📓', name:()=>t().recentDiary||'Recent Diary',   desc:()=>t().widgetDescDiary||'Last 2 diary entries',                    on:true  },
@@ -4464,8 +4591,7 @@ async function loadAll(){
     toast('⚠ Could not connect to API — check URL in Settings', 'error', 8000);
   }
   loadCalendars();
-  loadInbox();
-  loadNotes(); // non-blocking, refreshes inbox cache for Quick Capture history
+  loadNotes();
 }
 
 // Apply theme immediately before page renders to prevent flash
@@ -4501,6 +4627,7 @@ initCalendar();
 applyTranslations();
 applyTheme(_locale.theme||'auto');
 renderHome();
+_updateInsightsBtn();
 
 // Start loading — DOM is ready since script is at end of body
 loadAll();

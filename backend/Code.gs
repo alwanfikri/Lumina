@@ -28,6 +28,20 @@ var PC = {id:1,name:2,drive_id:3,thumb_url:4,drive_url:5,entry_id:6,createdAt:7}
 var MC = {id:1,date:2,type:3,category:4,amount:5,notes:6,updatedAt:7};
 
 function makeResp(obj){return ContentService.createTextOutput(JSON.stringify(obj)).setMimeType(ContentService.MimeType.JSON);}
+
+// ── Cache helpers (TTL 5 min via CacheService) ───────────────
+var _cache = CacheService.getScriptCache();
+var CACHE_TTL = 300; // seconds
+
+function cacheGet(key){
+  try{ var v=_cache.get(key); return v?JSON.parse(v):null; }catch(e){ return null; }
+}
+function cachePut(key,val){
+  try{ _cache.put(key, JSON.stringify(val), CACHE_TTL); }catch(e){}
+}
+function cacheInvalidate(){
+  try{ _cache.removeAll(['lumina_diaries','lumina_agendas','lumina_moneys']); }catch(e){}
+}
 function ok(data){return makeResp({ok:true,data:data});}
 function fail(msg,code){return makeResp({ok:false,error:msg,code:code||'ERROR'});}
 function isoNow(){return new Date().toISOString();}
@@ -172,18 +186,21 @@ function saveDiary(p){
   var row=sheetFindById(sh,DC.id,id);
   var data=[id,v(p.date)||now.slice(0,10),v(p.title),v(p.content_html),v(p.photo_urls),v(p.mood),now];
   if(row===-1)sh.appendRow(data);else sh.getRange(row,1,1,data.length).setValues([data]);
+  cacheInvalidate();
   return ok({id:id,updatedAt:now});
 }
 function getDiaries(){
+  var cached=cacheGet('lumina_diaries');if(cached)return ok(cached);
   var rows=sheetGetAll('Diary',DIARY_HEADERS);
   var out=rows.filter(function(r){return r[0];}).map(function(r){
     return{id:v(r[0]),date:fmtDate(r[1]),title:v(r[2]),content_html:v(r[3]),photo_urls:v(r[4]),mood:v(r[5]),updatedAt:v(r[6])};
   }).sort(function(a,b){return b.date.localeCompare(a.date);});
+  cachePut('lumina_diaries',{entries:out});
   return ok({entries:out});
 }
 function deleteDiary(p){
   var sh=getSheet('Diary',DIARY_HEADERS);var row=sheetFindById(sh,DC.id,p.id);
-  if(row!==-1)sh.deleteRow(row);return ok({deleted:true});
+  if(row!==-1)sh.deleteRow(row);cacheInvalidate();return ok({deleted:true});
 }
 
 // ── AGENDA (with Google Calendar sync) ─────────────────────
@@ -221,40 +238,42 @@ function saveAgenda(p){
       }catch(eErr){gcalId='';}
     }
     if(!gcalId){
-      // Add popup reminder to Google Calendar event
-      if(p.reminder&&parseInt(p.reminder)>0){
-        try{
-          var reminderMins=parseInt(p.reminder);
-          if(gcalId){
-            var evToUpdate=cal.getEventById(gcalId);
-            if(evToUpdate){evToUpdate.removeAllReminders();evToUpdate.addPopupReminder(reminderMins);}
-          }
-        }catch(remErr){Logger.log('Reminder set error (non-fatal): '+remErr.message);}
-      }
       var newEv;
       if(p.all_day){
         var endAllDay=new Date((p.end_date||p.date)+'T12:00:00');
-        newEv=cal.createAllDayEventSeries?
-          (recurrence?cal.createAllDayEventSeries(v(p.title),new Date(p.date),CalendarApp.newRecurrence().addDailyExclusion(),opts):cal.createAllDayEvent(v(p.title),new Date(p.date),endAllDay,opts)):
-          cal.createAllDayEvent(v(p.title),new Date(p.date),opts);
+        newEv=cal.createAllDayEvent(v(p.title),new Date(p.date),endAllDay,opts);
       }else{
         newEv=cal.createEvent(v(p.title),startDt,endDt,opts);
       }
       gcalId=newEv.getId();
     }
+    // Set popup reminder after event is created/updated
+    if(p.reminder&&parseInt(p.reminder)>0){
+      try{
+        var reminderMins=parseInt(p.reminder);
+        var evToUpdate=cal.getEventById(gcalId);
+        if(evToUpdate){evToUpdate.removeAllReminders();evToUpdate.addPopupReminder(reminderMins);}
+      }catch(remErr){Logger.log('Reminder set error (non-fatal): '+remErr.message);}
+    }
   }catch(calErr){Logger.log('Calendar sync error (non-fatal): '+calErr.message);}
 
   var data=[id,gcalId,v(p.date),v(p.end_date)||v(p.date),v(p.start_time),v(p.end_time),v(p.all_day)||'false',v(p.title),v(p.description),v(p.color)||'#f59e0b',v(p.recur),v(p.recur_end),v(p.reminder),now];
   if(row===-1)sh.appendRow(data);else sh.getRange(row,1,1,data.length).setValues([data]);
+  cacheInvalidate();
   return ok({id:id,gcal_id:gcalId,updatedAt:now});
 }
 
 function getAgendas(p){
-  var rows=sheetGetAll('Agenda',AGENDA_HEADERS);
-  var out=rows.filter(function(r){return r[0];}).map(function(r){
-    return{id:v(r[0]),gcal_id:v(r[1]),date:fmtDate(r[2]),end_date:fmtDate(r[3]),start_time:fmtDateTime(r[4]),end_time:fmtDateTime(r[5]),
-           all_day:v(r[6])==='true',title:v(r[7]),description:v(r[8]),color:v(r[9])||'#f59e0b',recur:v(r[10]),recur_end:fmtDate(r[11]),reminder:v(r[12]),updatedAt:v(r[13])};
-  }).sort(function(a,b){return a.date.localeCompare(b.date);});
+  var cached=cacheGet('lumina_agendas');
+  var out=cached?cached.events:null;
+  if(!out){
+    var rows=sheetGetAll('Agenda',AGENDA_HEADERS);
+    out=rows.filter(function(r){return r[0];}).map(function(r){
+      return{id:v(r[0]),gcal_id:v(r[1]),date:fmtDate(r[2]),end_date:fmtDate(r[3]),start_time:fmtDateTime(r[4]),end_time:fmtDateTime(r[5]),
+             all_day:v(r[6])==='true',title:v(r[7]),description:v(r[8]),color:v(r[9])||'#f59e0b',recur:v(r[10]),recur_end:fmtDate(r[11]),reminder:v(r[12]),updatedAt:v(r[13])};
+    }).sort(function(a,b){return a.date.localeCompare(b.date);});
+    cachePut('lumina_agendas',{events:out});
+  }
   if(p&&p.month)out=out.filter(function(r){return r.date.slice(0,7)===p.month;});
   return ok({events:out});
 }
@@ -263,9 +282,10 @@ function deleteAgenda(p){
   var sh=getSheet('Agenda',AGENDA_HEADERS);var row=sheetFindById(sh,AC.id,p.id);
   if(row!==-1){
     // Also delete from Google Calendar
-    if(p.gcal_id){try{var ev=CalendarApp.getDefaultCalendar().getEventById(p.gcal_id);if(ev)ev.deleteEvent();}catch(e){}}
+    if(p.gcal_id){try{var ev=getLuminaCalendar().getEventById(p.gcal_id);if(ev)ev.deleteEvent();}catch(e){}}
     sh.deleteRow(row);
   }
+  cacheInvalidate();
   return ok({deleted:true});
 }
 
@@ -317,19 +337,25 @@ function saveMoney(p){
   var row=sheetFindById(sh,MC.id,id);
   var data=[id,v(p.date)||now.slice(0,10),v(p.type)||'expense',v(p.category),parseFloat(p.amount)||0,v(p.notes),now];
   if(row===-1)sh.appendRow(data);else sh.getRange(row,1,1,data.length).setValues([data]);
+  cacheInvalidate();
   return ok({id:id,updatedAt:now});
 }
 function getMoneys(p){
-  var rows=sheetGetAll('Money',MONEY_HEADERS);
-  var out=rows.filter(function(r){return r[0];}).map(function(r){
-    return{id:v(r[0]),date:fmtDate(r[1]),type:v(r[2]),category:v(r[3]),amount:parseFloat(r[4])||0,notes:v(r[5]),updatedAt:v(r[6])};
-  }).sort(function(a,b){return b.date.localeCompare(a.date);});
+  var cached=cacheGet('lumina_moneys');
+  var out=cached?cached.transactions:null;
+  if(!out){
+    var rows=sheetGetAll('Money',MONEY_HEADERS);
+    out=rows.filter(function(r){return r[0];}).map(function(r){
+      return{id:v(r[0]),date:fmtDate(r[1]),type:v(r[2]),category:v(r[3]),amount:parseFloat(r[4])||0,notes:v(r[5]),updatedAt:v(r[6])};
+    }).sort(function(a,b){return b.date.localeCompare(a.date);});
+    cachePut('lumina_moneys',{transactions:out});
+  }
   if(p&&p.month)out=out.filter(function(r){return r.date.slice(0,7)===p.month;});
   return ok({transactions:out});
 }
 function deleteMoney(p){
   var sh=getSheet('Money',MONEY_HEADERS);var row=sheetFindById(sh,MC.id,p.id);
-  if(row!==-1)sh.deleteRow(row);return ok({deleted:true});
+  if(row!==-1)sh.deleteRow(row);cacheInvalidate();return ok({deleted:true});
 }
 
 function debugSetup(){
