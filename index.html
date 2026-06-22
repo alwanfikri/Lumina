@@ -3334,9 +3334,6 @@ function renderHome(){
     });
   });
 
-  // Wire up Quick Capture
-  _initQuickCapture();
-
   }catch(err){
     console.error('[renderHome] Error:', err);
     el.innerHTML=`<div style="padding:1rem;color:var(--red);font-size:.85rem">⚠ Dashboard error: ${esc(err.message)}</div>`;
