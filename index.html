@@ -554,11 +554,14 @@ img{max-width:100%;display:block}
 .note-header-band h2{font-size:1rem;font-weight:600;opacity:.8;margin:0}
 .note-header-actions{display:flex;gap:.35rem;align-items:center}
 .note-icon-btn{
-  width:34px;height:34px;border-radius:8px;border:none;cursor:pointer;
+  width:36px;height:36px;border-radius:8px;border:none;cursor:pointer;
   font-size:1.05rem;display:flex;align-items:center;justify-content:center;
-  background:rgba(0,0,0,.07);transition:background .15s ease;flex-shrink:0;
+  background:rgba(0,0,0,.07);transition:background .15s ease;flex-shrink:0;color:inherit;
 }
 .note-icon-btn:hover{background:rgba(0,0,0,.14)}
+[data-theme="dark"] .note-header-band{border-bottom:1px solid rgba(255,255,255,.07)}
+[data-theme="dark"] .note-icon-btn{background:rgba(255,255,255,.1);color:var(--text2)}
+[data-theme="dark"] .note-icon-btn:hover{background:rgba(255,255,255,.2)}
 
 /* Title input */
 .note-title-input{
@@ -1066,7 +1069,7 @@ img{max-width:100%;display:block}
 
     <!-- Color band header — changes color, canvas stays white -->
     <div class="note-header-band" id="note-header-band" style="background:#f8f8f8">
-      <h2 id="note-modal-ttl" style="font-size:.95rem;font-weight:600;margin:0;opacity:.7">New Note</h2>
+      <h2 id="note-modal-ttl" style="font-size:.95rem;font-weight:600;margin:0;opacity:.9">New Note</h2>
       <div class="note-header-actions">
         <button class="note-icon-btn" id="note-color-btn" title="Note color">&#127912;</button>
         <button class="note-icon-btn" id="note-pin-btn" title="Pin note" style="font-size:.95rem">&#128204;</button>
@@ -4355,11 +4358,24 @@ function openNoteModal(note){
 function _setNoteCardColor(color){
   const band=document.getElementById('note-header-band');
   const isDefault = !color || color==='#ffffff';
-  if(band){
-    band.style.background = isDefault ? 'var(--surface2)' : color;
-    // Auto-set text contrast
-    const isDark = !isDefault && ['#1e293b','#1e3a5f','#111111'].includes(color);
-    band.style.color = isDark ? 'rgba(255,255,255,.8)' : '';
+  if(!band) return;
+  band.style.background = isDefault ? 'var(--surface2)' : color;
+  const buttons = band.querySelectorAll('.note-icon-btn');
+  if(isDefault){
+    // Default: theme CSS handles colors
+    band.style.color = '';
+    buttons.forEach(b=>{b.style.background='';b.style.color='';});
+  } else {
+    const isDarkColor = ['#1e293b','#1e3a5f','#111111'].includes(color);
+    if(isDarkColor){
+      // Dark background → light text/icons
+      band.style.color = 'rgba(255,255,255,.9)';
+      buttons.forEach(b=>{b.style.background='rgba(255,255,255,.12)';b.style.color='rgba(255,255,255,.8)';});
+    } else {
+      // Light pastel → always dark text regardless of theme
+      band.style.color = '#1c1710';
+      buttons.forEach(b=>{b.style.background='rgba(0,0,0,.08)';b.style.color='#1c1710';});
+    }
   }
 }
 function _switchNoteMode(mode){
