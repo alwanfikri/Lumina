@@ -59,7 +59,7 @@ img{max-width:100%;display:block}
 .logo{font-family:var(--font-s);font-size:1.3rem;font-weight:600;letter-spacing:-.02em}
 .logo span{color:var(--amber)}
 .header-r{display:flex;align-items:center;gap:.4rem}
-.icon-btn{width:36px;height:36px;border-radius:var(--r-sm);display:flex;align-items:center;justify-content:center;color:var(--text2);font-size:1.1rem;transition:background var(--ease)}
+.icon-btn{width:44px;height:44px;border-radius:var(--r-sm);display:flex;align-items:center;justify-content:center;color:var(--text2);font-size:1.1rem;transition:background var(--ease)}
 .icon-btn:hover{background:var(--surface2)}
 /* Global Search */
 #search-overlay{position:fixed;inset:0;z-index:9999;display:flex;flex-direction:column;align-items:center;padding-top:4rem}
@@ -83,7 +83,7 @@ img{max-width:100%;display:block}
 .sr-empty{padding:2rem 1rem;text-align:center;color:var(--text3);font-size:.88rem}
 
 .tab-bar{background:var(--surface);border-top:1px solid var(--border);display:flex;position:fixed;bottom:0;left:0;right:0;z-index:50;padding-bottom:env(safe-area-inset-bottom)}
-.tab-btn{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;padding:9px 0;color:var(--text3);font-size:.63rem;font-weight:500;text-transform:uppercase;letter-spacing:.04em;transition:color var(--ease)}
+.tab-btn{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;padding:9px 0;color:var(--text3);font-size:.75rem;font-weight:500;text-transform:uppercase;letter-spacing:.04em;transition:color var(--ease);min-height:44px}
 .tab-btn .ti{font-size:1.2rem;line-height:1}
 .tab-btn.active{color:var(--amber)}
 
@@ -206,7 +206,7 @@ img{max-width:100%;display:block}
 /* MONEY */
 .money-summary{display:grid;grid-template-columns:repeat(3,1fr);gap:.6rem;margin-bottom:1rem}
 .mc{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:.8rem .7rem;box-shadow:var(--shadow);text-align:center}
-.mc-lbl{font-size:.67rem;text-transform:uppercase;letter-spacing:.07em;color:var(--text3);font-weight:500;margin-bottom:.25rem}
+.mc-lbl{font-size:.75rem;text-transform:uppercase;letter-spacing:.07em;color:var(--text3);font-weight:500;margin-bottom:.25rem}
 .mc-val{font-family:var(--font-s);font-size:.96rem;font-weight:600}
 .total-bal-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:.75rem 1rem;box-shadow:var(--shadow);margin-bottom:1rem;display:flex;align-items:center;justify-content:space-between}
 .total-bal-lbl{font-size:.72rem;text-transform:uppercase;letter-spacing:.07em;color:var(--text3);font-weight:500}
@@ -214,7 +214,7 @@ img{max-width:100%;display:block}
 .mc-val.inc{color:var(--green)}.mc-val.exp{color:var(--red)}
 .mc-val.pos{color:var(--green)}.mc-val.neg{color:var(--red)}
 .month-nav{display:flex;align-items:center;gap:.4rem;margin-bottom:1rem}
-.month-nav button{width:30px;height:30px;border-radius:var(--r-sm);background:var(--surface);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:1rem;color:var(--text2);cursor:pointer;transition:background var(--ease)}
+.month-nav button{width:40px;height:40px;border-radius:var(--r-sm);background:var(--surface);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:1rem;color:var(--text2);cursor:pointer;transition:background var(--ease)}
 .month-nav button:hover{background:var(--surface2)}
 .month-lbl{font-size:.85rem;font-weight:500;min-width:100px;text-align:center}
 .tx-group{margin-bottom:1.2rem}
@@ -288,7 +288,7 @@ img{max-width:100%;display:block}
 .overlay.open .modal{transform:translateY(0) scale(1)}
 .modal-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:1.1rem}
 .modal-ttl{font-family:var(--font-s);font-size:1.15rem;font-weight:600}
-.modal-x{width:30px;height:30px;border-radius:50%;background:var(--surface2);color:var(--text2);font-size:.95rem;display:flex;align-items:center;justify-content:center;transition:background var(--ease)}
+.modal-x{width:36px;height:36px;border-radius:50%;background:var(--surface2);color:var(--text2);font-size:.95rem;display:flex;align-items:center;justify-content:center;transition:background var(--ease)}
 .modal-x:hover{background:var(--border)}
 .fg{margin-bottom:.9rem}
 .flabel{display:block;font-size:.73rem;font-weight:500;color:var(--text2);margin-bottom:.35rem;text-transform:uppercase;letter-spacing:.05em}
@@ -334,8 +334,11 @@ img{max-width:100%;display:block}
 .lang-btn.active{background:var(--amber);color:#fff;border-color:var(--amber)}
 
 /* TOAST */
-#toasts{position:fixed;bottom:calc(68px + env(safe-area-inset-bottom) + 10px);left:50%;transform:translateX(-50%);z-index:300;display:flex;flex-direction:column;gap:7px;align-items:center;pointer-events:none;width:min(340px,90vw)}
-.toast{background:var(--text);color:#fff;padding:.6rem 1rem;border-radius:var(--r-sm);font-size:.83rem;box-shadow:var(--shadow-lg);animation:toastIn .2s ease;width:100%;text-align:center}
+#toasts{position:fixed;bottom:calc(80px + env(safe-area-inset-bottom));left:50%;transform:translateX(-50%);z-index:300;display:flex;flex-direction:column;gap:7px;align-items:center;pointer-events:none;width:min(340px,90vw)}
+.toast{background:var(--text);color:#fff;padding:.55rem .75rem .55rem 1rem;border-radius:var(--r-sm);font-size:.83rem;box-shadow:var(--shadow-lg);animation:toastIn .2s ease;width:100%;display:flex;align-items:center;gap:.5rem;pointer-events:all}
+.toast-msg{flex:1;text-align:center}
+.toast-x{background:none;border:none;color:inherit;opacity:.65;cursor:pointer;font-size:.8rem;flex-shrink:0;padding:.15rem .3rem;line-height:1;border-radius:4px;transition:opacity .15s}
+.toast-x:hover{opacity:1}
 .toast.success{background:var(--green)}.toast.error{background:var(--red)}.toast.warning{background:var(--amber-d)}
 
 /* Notification banner */
@@ -500,6 +503,8 @@ img{max-width:100%;display:block}
 
 /* Note card grid */
 .notes-grid{display:grid;grid-template-columns:1fr 1fr;gap:.65rem;align-items:start}
+@media(max-width:340px){.notes-grid{grid-template-columns:1fr}}
+@media(min-width:600px){.notes-grid{grid-template-columns:repeat(3,1fr)}}
 .note-card{
   border-radius:var(--r);padding:.9rem .85rem;cursor:pointer;
   transition:transform .18s ease,box-shadow .18s ease;
@@ -509,10 +514,17 @@ img{max-width:100%;display:block}
   /* Text always dark on colored cards */
   color:#1c1710;
 }
-/* Dark mode: uncolored cards use CSS vars, colored cards keep dark text */
-[data-theme="dark"] .note-card:not([style*="background"]):not([style*="background:#f8f8f8"]){
+/* Dark mode: uncolored cards and white/near-white cards use CSS vars */
+[data-theme="dark"] .note-card:not([style*="background"]),
+[data-theme="dark"] .note-card[style*="background:#f8f8f8"],
+[data-theme="dark"] .note-card[style*="background: #f8f8f8"]{
   color:var(--text);
-  background:var(--surface);
+  background:var(--surface) !important;
+  border-color:rgba(255,255,255,.08);
+}
+/* Colored note cards in dark mode: desaturate slightly so pastels don't glow */
+[data-theme="dark"] .note-card[style*="background"]:not([style*="#f8f8f8"]){
+  filter:brightness(.82) saturate(.9);
 }
 .note-card:hover{transform:translateY(-3px);box-shadow:0 6px 20px rgba(0,0,0,.13)}
 .note-card.pinned::after{content:'📌';position:absolute;top:.55rem;right:.6rem;font-size:.8rem;line-height:1}
@@ -522,7 +534,7 @@ img{max-width:100%;display:block}
 .note-card-footer{display:flex;align-items:center;justify-content:space-between;margin-top:.6rem;gap:.4rem}
 .note-card-date{font-size:.65rem;color:inherit;opacity:.45;font-weight:400}
 .note-card-tags{display:flex;gap:.25rem;flex-wrap:wrap}
-.note-tag{font-size:.62rem;padding:.1rem .4rem;border-radius:10px;background:rgba(0,0,0,.1);color:inherit;opacity:.65}
+.note-tag{font-size:.75rem;padding:.1rem .4rem;border-radius:10px;background:rgba(0,0,0,.1);color:inherit;opacity:.65}
 [data-theme="dark"] .note-card{border-color:rgba(255,255,255,.08)}
 
 /* Note modal shell */
@@ -644,6 +656,9 @@ img{max-width:100%;display:block}
 /* Note card empty state */
 .notes-empty{text-align:center;padding:3rem 1rem}
 
+/* Form inline validation */
+.field-error .fi,.field-error .fta,.field-error select{border-color:var(--red)!important;box-shadow:0 0 0 3px var(--red-l)!important}
+.field-error-msg{font-size:.72rem;color:var(--red);margin-top:.25rem}
 @keyframes spin{to{transform:rotate(360deg)}}
 #ev-time-row.hidden{display:none}
 @keyframes toastIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
@@ -654,8 +669,8 @@ img{max-width:100%;display:block}
 <header class="header">
   <div class="logo">Lumin<span>a</span></div>
   <div class="header-r">
-    <button class="icon-btn" id="search-btn" title="Search">🔍</button>
-    <button class="icon-btn" id="settings-btn">⚙</button>
+    <button class="icon-btn" id="search-btn" title="Search (Ctrl+K)" aria-label="Search">🔍</button>
+    <button class="icon-btn" id="settings-btn" title="Settings" aria-label="Settings">⚙</button>
   </div>
 </header>
 
@@ -730,7 +745,7 @@ img{max-width:100%;display:block}
     <div class="sec-hdr">
       <h1 class="sec-title">Diary</h1>
       <div style="display:flex;gap:.4rem">
-        <button class="btn btn-ghost btn-sm" id="diary-insights-btn" title="AI Insights" style="display:none">✦ Analyze</button>
+        <button class="btn btn-ghost btn-sm" id="diary-insights-btn" title="Analyze mood &amp; themes with AI">✦ Analyze</button>
         <button class="btn btn-primary btn-sm" id="new-diary-btn">+ Entry</button>
       </div>
     </div>
@@ -1875,10 +1890,35 @@ async function api(action,params={}){
 // ═══════════════════════════════════════════════════════
 //  HELPERS
 // ═══════════════════════════════════════════════════════
-const toast=(msg,type='info',ms=3200)=>{const el=document.createElement('div');el.className=`toast ${type}`;el.textContent=msg;document.getElementById('toasts').appendChild(el);setTimeout(()=>el.remove(),ms)};
+let _toastQueue=[];let _toastActive=false;
+function toast(msg,type='info',ms=3200){_toastQueue.push({msg,type,ms});_flushToast();}
+function _flushToast(){
+  if(_toastActive||!_toastQueue.length)return;
+  _toastActive=true;
+  const{msg,type,ms}=_toastQueue.shift();
+  const el=document.createElement('div');el.className=`toast ${type}`;
+  el.innerHTML=`<span class="toast-msg">${msg}</span><button class="toast-x" aria-label="Dismiss">✕</button>`;
+  const container=document.getElementById('toasts');container.appendChild(el);
+  const done=()=>{el.remove();_toastActive=false;_flushToast();};
+  const timer=setTimeout(done,ms);
+  el.querySelector('.toast-x').addEventListener('click',()=>{clearTimeout(timer);done();});
+}
 const openModal=id=>{document.getElementById(id).classList.add('open');document.body.style.overflow='hidden'};
 const closeModal=id=>{document.getElementById(id).classList.remove('open');document.body.style.overflow=''};
+// Backdrop click closes modal
+document.querySelectorAll('.overlay').forEach(ol=>{ol.addEventListener('click',e=>{if(e.target===ol)closeModal(ol.id);});});
 const esc=s=>(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+const _ERR_MAP={'Failed to fetch':'Cannot connect — check internet','abort':'Request timed out — try again','INTERNAL_ERROR':'Server error — please retry','NetworkError':'No network connection'};
+const friendlyError=msg=>{for(const[k,v] of Object.entries(_ERR_MAP)){if((msg||'').includes(k))return v;}return msg||'Something went wrong';};
+function showFieldError(inputId,msg){
+  const el=document.getElementById(inputId);if(!el)return;
+  el.closest('.fg')?.classList.add('field-error');
+  let errEl=el.closest('.fg')?.querySelector('.field-error-msg');
+  if(!errEl){errEl=document.createElement('div');errEl.className='field-error-msg';el.closest('.fg')?.appendChild(errEl);}
+  errEl.textContent=msg;
+  el.addEventListener('input',()=>{el.closest('.fg')?.classList.remove('field-error');errEl.textContent='';},{once:true});
+}
+function clearFieldErrors(modalId){document.getElementById(modalId)?.querySelectorAll('.field-error').forEach(el=>{el.classList.remove('field-error');el.querySelector('.field-error-msg')?.remove();});}
 const stripHtml=h=>{const d=document.createElement('div');d.innerHTML=h;return d.textContent||''};
 const today=()=>new Date().toISOString().slice(0,10);
 // Extract Drive file ID and build thumbnail URL
@@ -2375,13 +2415,14 @@ async function loadAgenda(){
     scheduleAllReminders();
     renderHome();
   }catch(e){
-    const msg=e.message.includes('abort')?'Request timed out — check API URL in Settings':e.message;
+    const msg=friendlyError(e.message);
     toast('Agenda: '+msg,'error',6000);
     if(_cal)_cal.removeAllEvents();
   }
 }
 
 function openEvModal(ev=null,dateStr=null){
+  clearFieldErrors('ev-modal');
   const n=!ev;
   document.getElementById('ev-ttl').textContent=n?t().newEventTitle:t().editEventTitle;
   document.getElementById('ev-id').value=ev?.id||'';
@@ -2424,7 +2465,7 @@ document.getElementById('ev-date').addEventListener('change',e=>{
 
 document.getElementById('ev-save').addEventListener('click',async()=>{
   const title=document.getElementById('ev-title').value.trim();
-  if(!title){toast(t().enterTitle,'error');return;}
+  if(!title){showFieldError('ev-title',t().enterTitle||'Title is required');return;}
   const btn=document.getElementById('ev-save');btn.disabled=true;btn.textContent=t().saving;
   const date=document.getElementById('ev-date').value;
   const endDate=document.getElementById('ev-end-date').value||date;
@@ -2448,7 +2489,7 @@ document.getElementById('ev-save').addEventListener('click',async()=>{
       color:document.querySelector('#ev-colors .swatch.sel')?.dataset.c||'#f59e0b'
     });
     closeModal('ev-modal');toast(t().savedGcal,'success');await loadAgenda();
-  }catch(e){toast(e.message,'error');}
+  }catch(e){toast(friendlyError(e.message),'error');}
   finally{btn.disabled=false;btn.textContent=t().save;}
 });
 
@@ -2457,7 +2498,7 @@ document.getElementById('ev-del').addEventListener('click',async()=>{
   const gcal_id=document.getElementById('ev-gcal-id').value;
   if(!id||!confirm('Delete this event?'))return;
   try{await api('deleteAgenda',{id,gcal_id});closeModal('ev-modal');toast(t().deleted,'info');loadAgenda();}
-  catch(e){toast(e.message,'error');}
+  catch(e){toast(friendlyError(e.message),'error');}
 });
 
 // ═══════════════════════════════════════════════════════
@@ -2581,7 +2622,7 @@ async function loadDiary(){
   try{
     const d=await api('getDiaries');_diary=d.entries||[];renderDiary();renderHome();
   }catch(e){
-    const msg=e.message.includes('abort')?'Request timed out — check API URL in Settings':e.message;
+    const msg=friendlyError(e.message);
     document.getElementById('diary-list').innerHTML=`<div class="empty"><div class="empty-ico">⚠️</div><p class="empty-ttl">Could not load diary</p><p class="empty-sub">${esc(msg)}</p></div>`;
     toast('Diary: '+msg,'error',6000);
   }
@@ -2676,6 +2717,7 @@ function initQuill(){
 }
 
 function openDiaryModal(entry=null){
+  clearFieldErrors('diary-modal');
   const n=!entry;
   document.getElementById('diary-modal-ttl').textContent=n?t().newEntry2:t().editEntry;
   document.getElementById('diary-id').value=entry?.id||'';
@@ -2769,7 +2811,7 @@ async function uploadAttachedPhotos(entryId){
 document.getElementById('diary-save').addEventListener('click',async()=>{
   const title=document.getElementById('diary-title').value.trim();
   const content=_quill?_quill.root.innerHTML.trim():'';
-  if(!title&&!content){toast(t().addTitleOrContent,'error');return;}
+  if(!title&&!content){showFieldError('diary-title',t().addTitleOrContent||'Add a title or content');return;}
   const btn=document.getElementById('diary-save');btn.disabled=true;btn.textContent=t().saving;
   try{
     const id=document.getElementById('diary-id').value||undefined;
@@ -2781,14 +2823,14 @@ document.getElementById('diary-save').addEventListener('click',async()=>{
     const mood=document.getElementById('diary-mood').value||'';
     await api('saveDiary',{id,date:document.getElementById('diary-date').value,title,content_html:content,photo_urls:photoUrls.join(','),mood});
     closeModal('diary-modal');toast(t().saved,'success');loadDiary();loadPhotos();
-  }catch(e){toast(e.message,'error');}
+  }catch(e){toast(friendlyError(e.message),'error');}
   finally{btn.disabled=false;btn.textContent=t().save;}
 });
 
 document.getElementById('diary-del').addEventListener('click',async()=>{
   const id=document.getElementById('diary-id').value;
   if(!id||!confirm('Delete this entry?'))return;
-  try{await api('deleteDiary',{id});closeModal('diary-modal');toast('Deleted','info');loadDiary();}catch(e){toast(e.message,'error');}
+  try{await api('deleteDiary',{id});closeModal('diary-modal');toast('Deleted','info');loadDiary();}catch(e){toast(friendlyError(e.message),'error');}
 });
 
 // ═══════════════════════════════════════════════════════
@@ -2876,14 +2918,23 @@ let _tx0=0;
 document.getElementById('carousel').addEventListener('touchstart',e=>{_tx0=e.touches[0].clientX;},{passive:true});
 document.getElementById('carousel').addEventListener('touchend',e=>{const d=_tx0-e.changedTouches[0].clientX;if(Math.abs(d)>46)navCarousel(d>0?1:-1);});
 document.addEventListener('keydown',e=>{
+  if(e.key==='Escape'){
+    if(document.getElementById('carousel').classList.contains('open')){closeCarousel();return;}
+    const settings=document.getElementById('settings-ol');
+    if(settings?.classList.contains('open')){settings.classList.remove('open');document.body.style.overflow='';return;}
+    const search=document.getElementById('search-overlay');
+    if(search?.style.display!=='none'){closeSearch();return;}
+    const openOverlays=[...document.querySelectorAll('.overlay.open')];
+    if(openOverlays.length)closeModal(openOverlays[openOverlays.length-1].id);
+    return;
+  }
   if(!document.getElementById('carousel').classList.contains('open'))return;
-  if(e.key==='Escape')closeCarousel();
   if(e.key==='ArrowLeft')navCarousel(-1);if(e.key==='ArrowRight')navCarousel(1);
 });
 document.getElementById('c-del').addEventListener('click',async()=>{
   const p=_photos[_carIdx];if(!p||!confirm(`Delete "${p.name}"?`))return;
   try{await api('deletePhoto',{id:p.id,driveId:p.driveId});toast('Deleted','info');closeCarousel();loadPhotos();}
-  catch(e){toast(e.message,'error');}
+  catch(e){toast(friendlyError(e.message),'error');}
 });
 
 // ═══════════════════════════════════════════════════════
@@ -3107,6 +3158,7 @@ function setTxType(type){
   populateCatSelect(sel, cats);
 }
 function openTxModal(tx=null){
+  clearFieldErrors('tx-modal');
   const n=!tx;
   document.getElementById('tx-ttl').textContent=n?t().newTx:t().editTx;
   document.getElementById('tx-id').value=tx?.id||'';
@@ -3131,18 +3183,18 @@ document.getElementById('tt-inc').addEventListener('click',()=>setTxType('income
 document.getElementById('new-tx-btn').addEventListener('click',()=>openTxModal());
 document.getElementById('tx-save').addEventListener('click',async()=>{
   const amount=parseFloat(document.getElementById('tx-amount').value);
-  if(!amount||amount<=0){toast(t().enterAmount,'error');return;}
+  if(!amount||amount<=0){showFieldError('tx-amount',t().enterAmount||'Enter a valid amount');return;}
   const btn=document.getElementById('tx-save');btn.disabled=true;btn.textContent=t().saving;
   try{
     await api('saveMoney',{id:document.getElementById('tx-id').value||undefined,date:document.getElementById('tx-date').value,type:_txType,category:document.getElementById('tx-cat').value,amount,notes:document.getElementById('tx-notes').value.trim(),payment_method:document.getElementById('tx-payment')?.value||'cash'});
     closeModal('tx-modal');toast('Saved','success');loadMoney();
-  }catch(e){toast(e.message,'error');}
+  }catch(e){toast(friendlyError(e.message),'error');}
   finally{btn.disabled=false;btn.textContent=t().save;}
 });
 document.getElementById('tx-del').addEventListener('click',async()=>{
   const id=document.getElementById('tx-id').value;
   if(!id||!confirm('Delete this transaction?'))return;
-  try{await api('deleteMoney',{id});closeModal('tx-modal');toast('Deleted','info');loadMoney();}catch(e){toast(e.message,'error');}
+  try{await api('deleteMoney',{id});closeModal('tx-modal');toast('Deleted','info');loadMoney();}catch(e){toast(friendlyError(e.message),'error');}
 });
 
 // ═══════════════════════════════════════════════════════
@@ -3996,11 +4048,7 @@ function _globalSearch(query){
 // ═══════════════════════════════════════════════════════
 
 function _updateInsightsBtn(){
-  const btn = document.getElementById('diary-insights-btn');
-  if(!btn) return;
-  const key  = localStorage.getItem('lumina_ocr_key')||'';
-  const prov = localStorage.getItem('lumina_ocr_provider')||'gemini';
-  btn.style.display = (key && prov === 'anthropic') ? '' : 'none';
+  // Button is always visible — clicking without API key shows a helpful message
 }
 
 document.getElementById('diary-insights-btn')?.addEventListener('click', _runDiaryInsights);
@@ -4358,13 +4406,13 @@ document.getElementById('note-save')&&document.getElementById('note-save').addEv
     if(!title&&!content_html&&!canvas_data){toast(t().noteCantBeEmpty||'Note needs a title or content','error');return;}
     await api('saveNote',{id:id||undefined,title,content_html,canvas_data,color,pinned,tags});
     closeModal('note-modal');toast(t().saved||'Saved','success');loadNotes();
-  }catch(e){toast(e.message,'error');}
+  }catch(e){toast(friendlyError(e.message),'error');}
   finally{btn.disabled=false;btn.textContent=t().save||'Save';}
 });
 document.getElementById('note-del')&&document.getElementById('note-del').addEventListener('click',async function(){
   const id=document.getElementById('note-id').value;if(!id)return;
   try{await api('deleteNote',{id});closeModal('note-modal');toast(t().deleted||'Deleted','info');loadNotes();}
-  catch(e){toast(e.message,'error');}
+  catch(e){toast(friendlyError(e.message),'error');}
 });
 document.getElementById('new-note-btn')&&document.getElementById('new-note-btn').addEventListener('click',function(){openNoteModal(null);});
 document.getElementById('notes-search-btn')&&document.getElementById('notes-search-btn').addEventListener('click',function(){
