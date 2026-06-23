@@ -280,7 +280,7 @@ img{max-width:100%;display:block}
 .c-btn.del:hover{background:rgba(220,38,38,.18)}
 
 /* MODALS */
-.overlay{position:fixed;inset:0;z-index:100;background:rgba(0,0,0,.42);backdrop-filter:blur(4px);display:flex;align-items:flex-end;justify-content:center;opacity:0;pointer-events:none;transition:opacity .2s}
+.overlay{position:fixed;inset:0;z-index:100;background:rgba(0,0,0,.42);backdrop-filter:blur(4px);display:flex;align-items:flex-end;justify-content:center;opacity:0;pointer-events:none;transition:opacity .2s;will-change:opacity;transform:translateZ(0)}
 @media(min-width:500px){.overlay{align-items:center}}
 .overlay.open{opacity:1;pointer-events:all}
 .modal{background:var(--surface);border-radius:var(--r) var(--r) 0 0;width:100%;max-width:640px;max-height:94dvh;overflow-y:auto;padding:1.4rem 1.2rem;transform:translateY(20px);transition:transform .24s ease;box-shadow:var(--shadow-lg)}
@@ -1907,7 +1907,8 @@ function _flushToast(){
   el.querySelector('.toast-x').addEventListener('click',()=>{clearTimeout(timer);done();});
 }
 const openModal=id=>{document.getElementById(id).classList.add('open');document.body.style.overflow='hidden'};
-const closeModal=id=>{document.getElementById(id).classList.remove('open');document.body.style.overflow=''};
+const closeModal=id=>{document.getElementById(id).classList.remove('open');document.body.style.overflow='';const cp=document.getElementById('note-color-picker');if(cp)cp.style.display='none';};
+function switchTabThen(tab,cb){switchTab(tab);requestAnimationFrame(()=>requestAnimationFrame(cb));}
 // Backdrop click closes modal
 document.querySelectorAll('.overlay').forEach(ol=>{ol.addEventListener('click',e=>{if(e.target===ol)closeModal(ol.id);});});
 const esc=s=>(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
@@ -2012,12 +2013,13 @@ document.getElementById('lang-id').addEventListener('click',()=>{
   });
 });
 
-// Live preview on change
+// Live preview on change — also auto-save so changes persist without clicking Apply
 ['setting-currency','setting-dateformat','setting-numformat'].forEach(id=>{
   document.getElementById(id).addEventListener('change',()=>{
     _locale.currency   = document.getElementById('setting-currency').value;
     _locale.dateFormat = document.getElementById('setting-dateformat').value;
     _locale.numFormat  = document.getElementById('setting-numformat').value;
+    localStorage.setItem(LS_LOCALE, JSON.stringify(_locale));
     updateFormatPreview();
   });
 });
@@ -2469,14 +2471,15 @@ document.getElementById('ev-date').addEventListener('change',e=>{
 document.getElementById('ev-save').addEventListener('click',async()=>{
   const title=document.getElementById('ev-title').value.trim();
   if(!title){showFieldError('ev-title',t().enterTitle||'Title is required');return;}
-  const btn=document.getElementById('ev-save');btn.disabled=true;btn.textContent=t().saving;
   const date=document.getElementById('ev-date').value;
+  const recur=document.getElementById('ev-recur').value;
+  const recurEnd=document.getElementById('ev-recur-end').value;
+  if(recur&&recurEnd&&recurEnd<date){showFieldError('ev-recur-end','End date must be after start date');return;}
+  const btn=document.getElementById('ev-save');btn.disabled=true;btn.textContent=t().saving;
   const endDate=document.getElementById('ev-end-date').value||date;
   const time=document.getElementById('ev-time').value;
   const endTime=document.getElementById('ev-end-time').value;
   const allDay=document.getElementById('ev-allday').checked;
-  const recur=document.getElementById('ev-recur').value;
-  const recurEnd=document.getElementById('ev-recur-end').value;
   try{
     await api('saveAgenda',{
       id:document.getElementById('ev-id').value||undefined,
@@ -2623,7 +2626,10 @@ function applyAgendaSearch(){
 async function loadDiary(){
   document.getElementById('diary-list').innerHTML=`<div class="loading"><div class="spinner"></div>${t().loading||'Loading…'}</div>`;
   try{
-    const d=await api('getDiaries');_diary=d.entries||[];renderDiary();renderHome();
+    const d=await api('getDiaries');_diary=d.entries||[];
+    // Pre-cache thumbnail URLs to avoid recomputing on every render
+    _diary.forEach(e=>{e._thumbs=(e.photo_urls||'').split(',').filter(Boolean).map(u=>driveThumb(u,'w80'));});
+    renderDiary();renderHome();
   }catch(e){
     const msg=friendlyError(e.message);
     document.getElementById('diary-list').innerHTML=`<div class="empty"><div class="empty-ico">⚠️</div><p class="empty-ttl">Could not load diary</p><p class="empty-sub">${esc(msg)}</p></div>`;
@@ -2656,15 +2662,16 @@ function renderDiary(){
   }
 
   el.innerHTML=entries.map(e=>{
-    const photoUrls=e.photo_urls?(e.photo_urls.split(',').filter(Boolean)):[]; 
-    const thumbHtml=photoUrls.slice(0,4).map(u=>`<img src="${esc(driveThumb(u,'w80'))}" class="dc-photo-thumb" onerror="this.style.display='none'">`).join('');
+    const thumbs=e._thumbs||(e.photo_urls||'').split(',').filter(Boolean).map(u=>driveThumb(u,'w80'));
+    const thumbHtml=thumbs.slice(0,4).map(u=>`<img src="${esc(u)}" class="dc-photo-thumb" onerror="this.style.display='none'">`).join('');
     const preview = stripHtml(e.content_html||'');
+    const titleText=e.title||t().untitled||'Untitled';
     return`<div class="diary-card" data-id="${e.id}">
       <div class="dc-header">
         <div class="dc-date">${fmtDate(e.date)}</div>
         ${e.mood?`<span class="dc-mood">${e.mood}</span>`:''}
       </div>
-      <div class="dc-title">${highlight(e.title||t().untitled||'Untitled',_diaryQuery)}</div>
+      <div class="dc-title" title="${esc(titleText)}">${highlight(titleText,_diaryQuery)}</div>
       <div class="dc-preview">${highlight(preview,_diaryQuery)}</div>
       ${thumbHtml?`<div class="dc-photos">${thumbHtml}</div>`:''}
     </div>`;
@@ -2796,8 +2803,11 @@ document.getElementById('diary-photo-input').addEventListener('change',async e=>
   }
 });
 
-async function uploadAttachedPhotos(entryId){
+async function uploadAttachedPhotos(entryId, onProgress){
   const uploaded=[];
+  const newPhotos=_attachedPhotos.filter(p=>p.file);
+  const total=newPhotos.length;
+  let done=0;
   for(const p of _attachedPhotos){
     if(p.existing){uploaded.push(p.driveUrl);continue;}
     if(!p.file)continue;
@@ -2806,6 +2816,7 @@ async function uploadAttachedPhotos(entryId){
       const res=await api('uploadPhoto',{base64:b64,name:p.file.name,type:'image/jpeg',entry_id:entryId});
       uploaded.push(res.driveUrl);
       if(p.tempUrl)URL.revokeObjectURL(p.tempUrl);
+      done++;if(onProgress)onProgress(done,total);
     }catch(err){toast(`Photo failed: ${p.file.name}`,'error');}
   }
   return uploaded;
@@ -2814,15 +2825,15 @@ async function uploadAttachedPhotos(entryId){
 document.getElementById('diary-save').addEventListener('click',async()=>{
   const title=document.getElementById('diary-title').value.trim();
   const content=_quill?_quill.root.innerHTML.trim():'';
-  if(!title&&!content){showFieldError('diary-title',t().addTitleOrContent||'Add a title or content');return;}
+  const realContent=content.replace(/<[^>]*>/g,'').trim();
+  if(!title&&!realContent){showFieldError('diary-title',t().addTitleOrContent||'Add a title or content');return;}
   const btn=document.getElementById('diary-save');btn.disabled=true;btn.textContent=t().saving;
   try{
     const id=document.getElementById('diary-id').value||undefined;
     // Upload any new photos first
-    if(_attachedPhotos.some(p=>p.file)){
-      btn.textContent=t().uploading;
-    }
-    const photoUrls=await uploadAttachedPhotos(id||'');
+    const newPhotoCount=_attachedPhotos.filter(p=>p.file).length;
+    if(newPhotoCount>0) btn.textContent=`Uploading 0/${newPhotoCount}…`;
+    const photoUrls=await uploadAttachedPhotos(id||'',(done,total)=>{btn.textContent=`Uploading ${done}/${total}…`;});
     const mood=document.getElementById('diary-mood').value||'';
     await api('saveDiary',{id,date:document.getElementById('diary-date').value,title,content_html:content,photo_urls:photoUrls.join(','),mood});
     closeModal('diary-modal');toast(t().saved,'success');loadDiary();loadPhotos();
@@ -3244,16 +3255,16 @@ function renderHome(){
 
   // ── Quick Actions ──────────────────────────────────────
   const qa=`<div class="quick-actions">
-    <div class="qa-btn" onclick="switchTab('agenda');setTimeout(()=>document.getElementById('new-ev-btn').click(),150)">
+    <div class="qa-btn" onclick="switchTabThen('agenda',()=>document.getElementById('new-ev-btn').click())">
       <div class="qa-icon">📅</div><div class="qa-label">${tr.newEvent||'Event'}</div>
     </div>
-    <div class="qa-btn" onclick="switchTab('diary');setTimeout(()=>document.getElementById('new-diary-btn').click(),150)">
+    <div class="qa-btn" onclick="switchTabThen('diary',()=>document.getElementById('new-diary-btn').click())">
       <div class="qa-icon">📓</div><div class="qa-label">${tr.newEntry||'Diary'}</div>
     </div>
     <div class="qa-btn" onclick="switchTab('photos');document.getElementById('photo-input').click()">
       <div class="qa-icon">📷</div><div class="qa-label">${tr.upload||'Photo'}</div>
     </div>
-    <div class="qa-btn" onclick="switchTab('money');setTimeout(()=>document.getElementById('new-tx-btn').click(),150)">
+    <div class="qa-btn" onclick="switchTabThen('money',()=>document.getElementById('new-tx-btn').click())">
       <div class="qa-icon">💰</div><div class="qa-label">${tr.addTx||'Money'}</div>
     </div>
   </div>`;
@@ -3435,16 +3446,17 @@ function getPaymentMethods(){
 }
 function saveCats(expense, income){
   localStorage.setItem(LS_CUSTOM_CATS, JSON.stringify({expense, income}));
+  _rebuildCatMap();
 }
 function savePaymentMethods(methods){
   localStorage.setItem(LS_PAYMENT_METHODS, JSON.stringify(methods));
 }
 
-// Override catInfo to use custom cats
-const _catInfo = id => {
-  const all = [...getExpenseCats(), ...getIncomeCats()];
-  return all.find(c=>c.id===id) || {label:id, cls:'co', color:'#d97706'};
-};
+// Override catInfo — cached map rebuilt when cats change
+let _catMap = {};
+function _rebuildCatMap(){ _catMap={}; [...getExpenseCats(),...getIncomeCats()].forEach(c=>{_catMap[c.id]=c;}); }
+_rebuildCatMap();
+const _catInfo = id => _catMap[id] || {label:id, cls:'co', color:'#d97706'};
 
 // ── Categories modal ───────────────────────────────────
 let _catsTab = 'expense';
@@ -3972,6 +3984,7 @@ function _globalSearch(query){
     if(text.includes(q)) hits.agenda.push(e);
   });
   _money.forEach(e=>{
+    if(hits.money.length>=5)return;
     const text = ((e.notes||'') + ' ' + (e.category||'') + ' ' + String(e.amount||'')).toLowerCase();
     if(text.includes(q)) hits.money.push(e);
   });
@@ -3986,16 +3999,18 @@ function _globalSearch(query){
   let html = '';
   const addGroup = (label, icon, items, onClick) => {
     if(!items.length) return;
-    html += `<div class="sr-group">${label}</div>`;
-    items.slice(0,5).forEach(item => { html += onClick(item, icon); });
+    const shown = items.slice(0,5);
+    const extra = items.length > 5 ? ` <span style="font-weight:400;opacity:.7">(${items.length})</span>` : '';
+    html += `<div class="sr-group">${label}${extra}</div>`;
+    shown.forEach(item => { html += onClick(item, icon); });
   };
 
   addGroup(t().diary||'Diary', '📓', hits.diary, (e,icon)=>`
-    <div class="sr-item" onclick="_closeSearch();switchTab('diary');setTimeout(()=>openDiaryView('${e.id}'),200)">
+    <div class="sr-item" onclick="_closeSearch();switchTab('diary');setTimeout(()=>openDiaryView(_diary.find(x=>x.id==='${e.id}')),200)">
       <div class="sr-item-icon">${icon}</div>
       <div class="sr-item-body">
-        <div class="sr-item-title">${esc(e.title||t().untitled||'Untitled')}</div>
-        <div class="sr-item-meta">${esc(stripHtml(e.content_html||'').slice(0,60))}</div>
+        <div class="sr-item-title">${highlight(e.title||t().untitled||'Untitled',q)}</div>
+        <div class="sr-item-meta">${highlight(stripHtml(e.content_html||'').slice(0,60),q)}</div>
       </div>
       <div class="sr-item-date">${fmtDate(e.date)}</div>
     </div>`);
@@ -4004,8 +4019,8 @@ function _globalSearch(query){
     <div class="sr-item" onclick="_closeSearch();switchTab('agenda')">
       <div class="sr-item-icon">${icon}</div>
       <div class="sr-item-body">
-        <div class="sr-item-title">${esc(e.title)}</div>
-        <div class="sr-item-meta">${esc(e.description||'')}</div>
+        <div class="sr-item-title">${highlight(e.title||'',q)}</div>
+        <div class="sr-item-meta">${highlight(e.description||'',q)}</div>
       </div>
       <div class="sr-item-date">${fmtDate(e.date)}</div>
     </div>`);
@@ -4014,7 +4029,7 @@ function _globalSearch(query){
     <div class="sr-item" onclick="_closeSearch();switchTab('money')">
       <div class="sr-item-icon">${icon}</div>
       <div class="sr-item-body">
-        <div class="sr-item-title">${esc(e.notes||e.category||'Transaction')}</div>
+        <div class="sr-item-title">${highlight(e.notes||e.category||'Transaction',q)}</div>
         <div class="sr-item-meta">${esc(e.category)} · ${idr(e.amount)}</div>
       </div>
       <div class="sr-item-date">${fmtDate(e.date)}</div>
@@ -4024,8 +4039,8 @@ function _globalSearch(query){
     <div class="sr-item" onclick="_closeSearch();switchTab('notes')">
       <div class="sr-item-icon">${icon}</div>
       <div class="sr-item-body">
-        <div class="sr-item-title">${esc(e.title||t().untitled||'Untitled')}</div>
-        <div class="sr-item-meta">${esc((e.content||'').slice(0,60))}</div>
+        <div class="sr-item-title">${highlight(e.title||t().untitled||'Untitled',q)}</div>
+        <div class="sr-item-meta">${highlight((e.content||'').slice(0,60),q)}</div>
       </div>
       <div class="sr-item-date">${fmtDate(e.updatedAt||e.createdAt||'')}</div>
     </div>`);
@@ -4232,12 +4247,14 @@ function renderWidgetList(){
     </div>`;
   }).join('');
 
-  // Toggle buttons
+  // Toggle buttons — must keep at least 1 widget enabled
   el.querySelectorAll('.widget-toggle').forEach(btn => {
     btn.addEventListener('click', e => {
       e.stopPropagation();
       const widgets = getWidgetOrder();
       const w = widgets.find(x=>x.id===btn.dataset.id);
+      const enabledCount = widgets.filter(x=>x.on).length;
+      if(w && w.on && enabledCount<=1){ toast('Keep at least one widget enabled','warning'); return; }
       if(w){ w.on = !w.on; saveWidgets(widgets); renderWidgetList(); renderHome(); }
     });
   });
@@ -4313,7 +4330,7 @@ function renderNotes(){
   if(!el)return;
   const tr=t();
   const q=_notesQuery.toLowerCase();
-  let notes=[..._notes];
+  let notes=[..._notes].sort((a,b)=>(b.pinned?1:0)-(a.pinned?1:0));
   if(q) notes=notes.filter(n=>(n.title||'').toLowerCase().includes(q)||(n.content_html||'').replace(/<[^>]*>/g,'').toLowerCase().includes(q)||(n.tags||'').toLowerCase().includes(q));
   if(!notes.length){
     el.innerHTML='<div class="empty"><div class="empty-ico">&#128221;</div><p class="empty-ttl">'+(q?(tr.noResults||'No results'):(tr.noNotes||'No notes yet'))+'</p><p class="empty-sub">'+(q?(tr.tryDifferent||'Try a different search'):(tr.tapNote||'Tap + Note to start writing'))+'</p></div>';
@@ -4378,7 +4395,10 @@ function _setNoteCardColor(color){
     }
   }
 }
-function _switchNoteMode(mode){
+function _switchNoteMode(mode,force){
+  if(!force && mode==='draw' && _noteQuill && _noteQuill.getText().trim().length>0){
+    if(!confirm('Switching to Draw will hide text content. Switch anyway?')) return;
+  }
   document.getElementById('note-text-area').style.display=mode==='text'?'':'none';
   document.getElementById('note-draw-area').style.display=mode==='draw'?'':'none';
   document.querySelectorAll('.note-mode-btn').forEach(function(b){b.classList.toggle('active',b.dataset.mode===mode);});
@@ -4420,7 +4440,8 @@ document.getElementById('note-save')&&document.getElementById('note-save').addEv
       if(cv)canvas_data=cv.toDataURL('image/png');
     }
     if(!title&&!content_html&&!canvas_data){toast(t().noteCantBeEmpty||'Note needs a title or content','error');return;}
-    await api('saveNote',{id:id||undefined,title,content_html,canvas_data,color,pinned,tags});
+    const cleanTags=tags.split(',').map(s=>s.trim()).filter(Boolean).join(',');
+    await api('saveNote',{id:id||undefined,title,content_html,canvas_data,color,pinned,tags:cleanTags});
     closeModal('note-modal');toast(t().saved||'Saved','success');loadNotes();
   }catch(e){toast(friendlyError(e.message),'error');}
   finally{btn.disabled=false;btn.textContent=t().save||'Save';}
