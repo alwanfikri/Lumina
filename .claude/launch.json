@@ -3,8 +3,8 @@
   "configurations": [
     {
       "name": "Lumina",
-      "runtimeExecutable": "python3",
-      "runtimeArgs": ["-m", "http.server", "8080"],
+      "runtimeExecutable": "C:\\Program Files\\nodejs\\node.exe",
+      "runtimeArgs": [".claude\\static-server.js"],
       "port": 8080
     }
   ]

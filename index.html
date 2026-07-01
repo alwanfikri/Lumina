@@ -397,6 +397,36 @@ img{max-width:100%;display:block}
 .home-total-bal-lbl{font-size:.72rem;color:var(--text3);font-weight:500}
 .home-total-bal-val{font-family:var(--font-s);font-size:1.1rem;font-weight:700}
 
+/* ── Account / Kantong balances (Money tab) ─────────────── */
+.acc-balances-row{display:flex;gap:.6rem;overflow-x:auto;padding:.15rem .1rem .6rem;margin-bottom:.3rem;-webkit-overflow-scrolling:touch}
+.acc-balances-row::-webkit-scrollbar{height:4px}
+.acc-balance-card{flex-shrink:0;min-width:118px;background:var(--surface);border:1px solid var(--border);border-left:4px solid var(--acc-color,var(--amber));border-radius:var(--r-sm);padding:.55rem .7rem;box-shadow:var(--shadow)}
+.acc-balance-emoji{font-size:1rem;margin-bottom:.2rem}
+.acc-balance-lbl{font-size:.68rem;color:var(--text3);font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:.15rem}
+.acc-balance-val{font-family:var(--font-s);font-size:.88rem;font-weight:700;white-space:nowrap}
+
+/* Account row in settings modal: color swatch + starting balance */
+.acc-row{display:flex;align-items:center;gap:.5rem;padding:.5rem .4rem;border-bottom:1px solid var(--border)}
+.acc-row:last-child{border-bottom:none}
+.acc-row-color-btn{width:24px;height:24px;border-radius:50%;border:2px solid var(--border);cursor:pointer;flex-shrink:0;background:var(--acc-color,#ccc)}
+.acc-row-emoji{width:24px;text-align:center;font-size:1rem;flex-shrink:0}
+.acc-row-label{flex:1;font-size:.85rem;color:var(--text);min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.acc-row-balance{width:100px;flex-shrink:0}
+.acc-row-balance-input{width:100%;font-size:.78rem;padding:.3rem .4rem;border:1px solid var(--border);border-radius:6px;background:var(--bg);color:var(--text);text-align:right}
+.acc-color-popup{position:fixed;z-index:1100;background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:.6rem;box-shadow:var(--shadow-lg);display:grid;grid-template-columns:repeat(5,26px);gap:6px}
+.acc-color-swatch{width:26px;height:26px;border-radius:50%;cursor:pointer;border:2px solid transparent;transition:transform .12s}
+.acc-color-swatch:hover,.acc-color-swatch.sel{transform:scale(1.2);border-color:var(--text)}
+
+/* Admin fee toggle in tx modal */
+.admin-fee-toggle{display:flex;align-items:center;gap:.4rem;font-size:.82rem;color:var(--text2);cursor:pointer;margin-top:.3rem;user-select:none}
+.admin-fee-toggle input{width:15px;height:15px;accent-color:var(--amber);cursor:pointer}
+.admin-fee-chips{display:flex;gap:.4rem;flex-wrap:wrap;margin-top:.5rem}
+.admin-fee-chip{padding:.32rem .65rem;border-radius:20px;border:1.5px solid var(--border);background:var(--surface);font-size:.78rem;color:var(--text2);cursor:pointer;transition:all .15s}
+.admin-fee-chip:hover{border-color:var(--amber)}
+.admin-fee-chip.active{background:var(--amber);border-color:var(--amber);color:#fff;font-weight:500}
+.admin-fee-manual{width:100px;font-size:.78rem;padding:.3rem .5rem;border:1.5px solid var(--border);border-radius:20px;background:var(--surface);color:var(--text);display:none}
+.tx-admin-note{font-size:.7rem;color:var(--text3);margin-top:.15rem}
+
 /* Recent diary */
 .home-diary-item{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:.8rem 1rem;box-shadow:var(--shadow);cursor:pointer;transition:all var(--ease)}
 .home-diary-item:hover{box-shadow:0 2px 10px rgba(0,0,0,.09);transform:translateY(-1px)}
@@ -887,6 +917,9 @@ img{max-width:100%;display:block}
       <div class="total-bal-val" id="sum-total-bal">—</div>
     </div>
 
+    <!-- Per-account (kantong) balances -->
+    <div class="acc-balances-row" id="acc-balances-row"></div>
+
     <!-- Month nav -->
     <div class="month-nav">
       <button id="month-prev">‹</button>
@@ -1089,14 +1122,9 @@ img{max-width:100%;display:block}
       <div id="cat-suggestion" style="display:none;margin-top:.3rem;font-size:.76rem;color:var(--text3)"></div>
     </div>
     <div class="frow">
-      <div class="fg"><label class="flabel" id="tx-lbl-pay">Payment Method</label>
+      <div class="fg"><label class="flabel" id="tx-lbl-pay">Kantong / Akun</label>
         <select class="fi" id="tx-payment">
           <option value="cash">💵 Cash</option>
-          <option value="debit">💳 Debit</option>
-          <option value="credit">💳 Credit</option>
-          <option value="transfer">🏦 Transfer</option>
-          <option value="ewallet">📱 E-Wallet</option>
-          <option value="other">📦 Other</option>
         </select>
       </div>
       <div class="fg"><label class="flabel" id="tx-lbl-notes">Notes</label>
@@ -1108,6 +1136,23 @@ img{max-width:100%;display:block}
     </div>
     <div id="ocr-preview" style="display:none;margin-top:.4rem"></div>
     <input type="file" id="ocr-file-input" accept="image/*" style="display:none"><input type="file" id="ocr-camera-input" accept="image/*" capture="environment" style="display:none">
+    <div class="fg">
+      <label class="admin-fee-toggle" for="tx-admin-fee-toggle">
+        <input type="checkbox" id="tx-admin-fee-toggle">
+        🏦 Ada biaya admin transfer?
+      </label>
+      <div id="tx-admin-fee-body" style="display:none">
+        <div class="admin-fee-chips">
+          <span class="admin-fee-chip" data-fee="1000">Rp 1.000</span>
+          <span class="admin-fee-chip" data-fee="2500">Rp 2.500</span>
+          <span class="admin-fee-chip" data-fee="6500">Rp 6.500</span>
+          <span class="admin-fee-chip" data-fee="manual">Manual</span>
+          <input type="number" min="0" step="500" class="admin-fee-manual" id="tx-admin-fee-manual" placeholder="Rp…">
+        </div>
+        <div class="tx-admin-note">Biaya admin akan ditambahkan ke jumlah yang dikurangi dari saldo kantong.</div>
+      </div>
+      <input type="hidden" id="tx-admin-fee" value="0">
+    </div>
     <div class="modal-actions">
       <button class="btn btn-danger btn-sm" id="tx-del" style="display:none;margin-right:auto" data-i18n="deleteBtn">🗑 Delete</button>
       <button class="btn btn-ghost" data-close="tx-modal" data-i18n="cancel">Cancel</button>
@@ -1295,13 +1340,14 @@ img{max-width:100%;display:block}
 <div class="overlay" id="payment-modal">
   <div class="modal">
     <div class="modal-hdr">
-      <h2 class="modal-ttl">Payment Methods</h2>
+      <h2 class="modal-ttl">💰 Akun / Kantong</h2>
       <button class="modal-x" data-close="payment-modal">✕</button>
     </div>
+    <p style="font-size:.8rem;color:var(--text2);margin-bottom:.8rem">Cash & rekening bank kamu — saldo dihitung otomatis dari transaksi + saldo awal.</p>
     <div id="payment-list" class="cats-list"></div>
     <div class="cats-add-row">
       <input class="fi" id="pay-new-emoji" placeholder="💳" style="width:3rem;text-align:center;flex-shrink:0">
-      <input class="fi" id="pay-new-label" placeholder="Method name" style="flex:1">
+      <input class="fi" id="pay-new-label" placeholder="Nama kantong (mis. BCA)" style="flex:1">
       <button class="btn btn-primary btn-sm" id="pay-add-btn">+ Add</button>
     </div>
     <div class="modal-actions">
@@ -1507,7 +1553,7 @@ img{max-width:100%;display:block}
     <div style="margin-bottom:.75rem">
       <div class="s-lbl">Money Settings</div>
       <button class="btn btn-ghost" style="width:100%;margin-bottom:.5rem;margin-top:6px" id="edit-cats-btn">🏷 Edit Categories</button>
-      <button class="btn btn-ghost" style="width:100%;margin-bottom:.5rem" id="edit-payment-btn">💳 Edit Payment Methods</button>
+      <button class="btn btn-ghost" style="width:100%;margin-bottom:.5rem" id="edit-payment-btn">💰 Akun / Kantong (Cash & Bank)</button>
     </div>
 
     <button class="btn btn-ghost" style="width:100%;margin-bottom:.5rem" id="export-btn">⬇ Export Data</button>
@@ -3296,6 +3342,7 @@ function renderMoney(){
     tb.style.color=totalBal>=0?'var(--green)':'var(--red)';
   }
 
+  renderAccountBalances();
   renderDonutChart(fil);
   renderBarChart();
   renderBudgetBars(fil);
@@ -3309,7 +3356,7 @@ function renderMoney(){
     const dt=g[date].reduce((s,t)=>s+(t.type==='income'?t.amount:-t.amount),0);
     return`<div class="tx-group"><div class="tx-dlbl"><span>${fmtDateLbl(date)}</span><span style="color:${dt>=0?'var(--green)':'var(--red)'};">${dt>=0?'+':'-'}${idr(dt)}</span></div>${
       g[date].map(t=>{const ci=catInfo(t.category);const payMethods=getPaymentMethods();const pm=payMethods.find(m=>m.id===t.payment_method);
-    return`<div class="tx-item" data-id="${t.id}"><div class="tx-dot ${ci.cls}"></div><div class="tx-body"><div class="tx-cat">${ci.label}${pm?`<span class="tx-pay-badge">${pm.emoji} ${pm.label}</span>`:''}</div>${t.notes?`<div class="tx-note">${esc(t.notes)}</div>`:''}</div><div style="display:flex;align-items:center;gap:.35rem">${profileBadge(t.createdBy)}<div class="tx-amt ${t.type}">${t.type==='income'?'+':'-'}${idr(t.amount)}</div></div></div>`;}).join('')
+    return`<div class="tx-item" data-id="${t.id}"><div class="tx-dot ${ci.cls}"></div><div class="tx-body"><div class="tx-cat">${ci.label}${pm?`<span class="tx-pay-badge">${pm.emoji} ${pm.label}</span>`:''}</div>${t.notes?`<div class="tx-note">${esc(t.notes)}</div>`:''}${t.admin_fee>0?`<div class="tx-note" style="color:var(--text3)">+ admin ${idr(t.admin_fee)}</div>`:''}</div><div style="display:flex;align-items:center;gap:.35rem">${profileBadge(t.createdBy)}<div class="tx-amt ${t.type}">${t.type==='income'?'+':'-'}${idr(t.amount)}</div></div></div>`;}).join('')
     }</div>`;
   }).join('');
   el.querySelectorAll('.tx-item').forEach(c=>c.addEventListener('click',()=>openTxModal(_money.find(t=>t.id===c.dataset.id))));
@@ -3475,6 +3522,19 @@ function openTxModal(tx=null){
   document.getElementById('tx-payment').value=tx?.payment_method||'cash';
   document.getElementById('ocr-preview').style.display='none';
   document.getElementById('ocr-preview').innerHTML='';
+  // Admin fee reset / prefill
+  const hasFee = !!(tx?.admin_fee>0);
+  document.getElementById('tx-admin-fee-toggle').checked = hasFee;
+  document.getElementById('tx-admin-fee-body').style.display = hasFee ? '' : 'none';
+  document.getElementById('tx-admin-fee').value = tx?.admin_fee || 0;
+  document.getElementById('tx-admin-fee-manual').value = '';
+  document.getElementById('tx-admin-fee-manual').style.display = 'none';
+  document.querySelectorAll('.admin-fee-chip').forEach(c=>c.classList.toggle('active', hasFee && String(tx.admin_fee)===c.dataset.fee));
+  if(hasFee && ![1000,2500,6500].includes(tx.admin_fee)){
+    document.getElementById('tx-admin-fee-manual').style.display='';
+    document.getElementById('tx-admin-fee-manual').value=tx.admin_fee;
+    document.querySelector('.admin-fee-chip[data-fee="manual"]')?.classList.add('active');
+  }
   _refreshPaymentSelect();
   initOCR();
   document.getElementById('tx-del').style.display=n?'none':'';
@@ -3488,6 +3548,35 @@ function openTxModal(tx=null){
 document.getElementById('tt-exp').addEventListener('click',()=>setTxType('expense'));
 document.getElementById('tt-inc').addEventListener('click',()=>setTxType('income'));
 document.getElementById('new-tx-btn').addEventListener('click',()=>openTxModal());
+
+// Admin fee toggle + presets
+document.getElementById('tx-admin-fee-toggle')?.addEventListener('change', (e)=>{
+  document.getElementById('tx-admin-fee-body').style.display = e.target.checked ? '' : 'none';
+  if(!e.target.checked){
+    document.getElementById('tx-admin-fee').value = 0;
+    document.querySelectorAll('.admin-fee-chip').forEach(c=>c.classList.remove('active'));
+    document.getElementById('tx-admin-fee-manual').style.display='none';
+    document.getElementById('tx-admin-fee-manual').value='';
+  }
+});
+document.querySelectorAll('.admin-fee-chip').forEach(chip=>{
+  chip.addEventListener('click', ()=>{
+    document.querySelectorAll('.admin-fee-chip').forEach(c=>c.classList.remove('active'));
+    chip.classList.add('active');
+    const manualInput = document.getElementById('tx-admin-fee-manual');
+    if(chip.dataset.fee === 'manual'){
+      manualInput.style.display = '';
+      manualInput.focus();
+      document.getElementById('tx-admin-fee').value = parseFloat(manualInput.value)||0;
+    } else {
+      manualInput.style.display = 'none';
+      document.getElementById('tx-admin-fee').value = chip.dataset.fee;
+    }
+  });
+});
+document.getElementById('tx-admin-fee-manual')?.addEventListener('input', (e)=>{
+  document.getElementById('tx-admin-fee').value = parseFloat(e.target.value)||0;
+});
 document.getElementById('tx-save').addEventListener('click',async()=>{
   const amount=parseFloat(document.getElementById('tx-amount').value);
   if(!amount||amount<=0){showFieldError('tx-amount',t().enterAmount||'Enter a valid amount');return;}
@@ -3495,7 +3584,8 @@ document.getElementById('tx-save').addEventListener('click',async()=>{
   try{
     const _txId=document.getElementById('tx-id').value||undefined;
     const _txcp=getActiveProfile();
-    await api('saveMoney',{id:_txId,date:document.getElementById('tx-date').value,type:_txType,category:document.getElementById('tx-cat').value,amount,notes:document.getElementById('tx-notes').value.trim(),payment_method:document.getElementById('tx-payment')?.value||'cash',...(!_txId&&_txcp?{createdBy:_txcp.id}:{})});
+    const adminFee = document.getElementById('tx-admin-fee-toggle').checked ? (parseFloat(document.getElementById('tx-admin-fee').value)||0) : 0;
+    await api('saveMoney',{id:_txId,date:document.getElementById('tx-date').value,type:_txType,category:document.getElementById('tx-cat').value,amount,notes:document.getElementById('tx-notes').value.trim(),payment_method:document.getElementById('tx-payment')?.value||'cash',admin_fee:adminFee,...(!_txId&&_txcp?{createdBy:_txcp.id}:{})});
     closeModal('tx-modal');toast('Saved','success');loadMoney();
   }catch(e){toast(friendlyError(e.message),'error');}
   finally{btn.disabled=false;btn.textContent=t().save;}
@@ -3718,12 +3808,13 @@ const LS_PAYMENT_METHODS= 'lumina_payment_methods';
 
 // Default payment methods
 const DEFAULT_PAYMENT_METHODS = [
-  {id:'cash',    emoji:'💵', label:'Cash'},
-  {id:'debit',   emoji:'💳', label:'Debit'},
-  {id:'credit',  emoji:'💳', label:'Credit'},
-  {id:'transfer',emoji:'🏦', label:'Transfer'},
-  {id:'ewallet', emoji:'📱', label:'E-Wallet'},
+  {id:'cash',    emoji:'💵', label:'Cash',    color:'#16a34a', startingBalance:0},
+  {id:'bca',     emoji:'🏦', label:'BCA',     color:'#2563eb', startingBalance:0},
+  {id:'mandiri', emoji:'🏦', label:'Mandiri', color:'#f59e0b', startingBalance:0},
+  {id:'bri',     emoji:'🏦', label:'BRI',     color:'#0891b2', startingBalance:0},
+  {id:'gopay',   emoji:'📱', label:'GoPay',   color:'#00aa5b', startingBalance:0},
 ];
+const ACCOUNT_COLORS = ['#16a34a','#2563eb','#f59e0b','#0891b2','#dc2626','#8b5cf6','#ec4899','#f97316'];
 
 // Load custom cats (merges defaults with user additions/deletions)
 function getExpenseCats(){
@@ -3743,7 +3834,10 @@ function getIncomeCats(){
 function getPaymentMethods(){
   try{
     const saved = JSON.parse(localStorage.getItem(LS_PAYMENT_METHODS)||'null');
-    if(saved && Array.isArray(saved)) return saved;
+    if(saved && Array.isArray(saved)){
+      // Backfill color/startingBalance for methods saved before this feature existed
+      return saved.map((m,i)=>({color:ACCOUNT_COLORS[i%ACCOUNT_COLORS.length],startingBalance:0,...m}));
+    }
   }catch(_){}
   return DEFAULT_PAYMENT_METHODS.map(m=>({...m}));
 }
@@ -3850,21 +3944,62 @@ function openPaymentModal(){
 
 function renderPaymentList(){
   const methods = getPaymentMethods();
-  const defaultIds = new Set(DEFAULT_PAYMENT_METHODS.map(m=>m.id));
   document.getElementById('payment-list').innerHTML = methods.map(m=>`
-    <div class="cats-item">
-      <span class="cats-item-emoji">${m.emoji||'💳'}</span>
-      <span class="cats-item-label">${esc(m.label)}</span>
-      ${defaultIds.has(m.id) ? '<span class="cats-item-default">default</span>' : ''}
-      <button class="cats-item-del" data-pay-id="${esc(m.id)}" title="Delete">✕</button>
+    <div class="acc-row" data-acc-id="${esc(m.id)}">
+      <button class="acc-row-color-btn" style="--acc-color:${m.color||'#ccc'}" data-pay-id="${esc(m.id)}" data-role="color" title="Ganti warna"></button>
+      <span class="acc-row-emoji">${m.emoji||'💳'}</span>
+      <span class="acc-row-label" title="${esc(m.label)}">${esc(m.label)}</span>
+      <div class="acc-row-balance">
+        <input type="number" class="acc-row-balance-input" data-pay-id="${esc(m.id)}" data-role="balance" value="${m.startingBalance||0}" placeholder="Saldo awal" title="Saldo awal (Rp)">
+      </div>
+      <button class="cats-item-del" data-pay-id="${esc(m.id)}" data-role="delete" title="Hapus">✕</button>
     </div>`).join('');
 
-  document.querySelectorAll('[data-pay-id]').forEach(btn=>{
+  // Delete
+  document.querySelectorAll('[data-role="delete"]').forEach(btn=>{
     btn.addEventListener('click', ()=>{
       const methods = getPaymentMethods().filter(m=>m.id!==btn.dataset.payId);
       savePaymentMethods(methods);
       renderPaymentList();
       _refreshPaymentSelect();
+      renderAccountBalances();
+    });
+  });
+
+  // Starting balance edit
+  document.querySelectorAll('[data-role="balance"]').forEach(inp=>{
+    inp.addEventListener('change', ()=>{
+      const methods = getPaymentMethods();
+      const m = methods.find(x=>x.id===inp.dataset.payId);
+      if(m){ m.startingBalance = parseFloat(inp.value)||0; savePaymentMethods(methods); renderAccountBalances(); }
+    });
+  });
+
+  // Color swatch popup
+  document.querySelectorAll('[data-role="color"]').forEach(btn=>{
+    btn.addEventListener('click', (e)=>{
+      document.querySelectorAll('.acc-color-popup').forEach(p=>p.remove());
+      const popup = document.createElement('div');
+      popup.className='acc-color-popup';
+      const r = btn.getBoundingClientRect();
+      popup.style.top = (r.bottom+6)+'px';
+      popup.style.left = r.left+'px';
+      popup.innerHTML = ACCOUNT_COLORS.map(c=>`<span class="acc-color-swatch" data-color="${c}" style="background:${c}"></span>`).join('');
+      document.body.appendChild(popup);
+      popup.querySelectorAll('.acc-color-swatch').forEach(sw=>{
+        sw.addEventListener('click', ()=>{
+          const methods = getPaymentMethods();
+          const m = methods.find(x=>x.id===btn.dataset.payId);
+          if(m){ m.color = sw.dataset.color; savePaymentMethods(methods); renderPaymentList(); renderAccountBalances(); }
+          popup.remove();
+        });
+      });
+      setTimeout(()=>{
+        document.addEventListener('click', function hide(ev){
+          if(!popup.contains(ev.target) && ev.target!==btn){ popup.remove(); document.removeEventListener('click',hide); }
+        });
+      },10);
+      e.stopPropagation();
     });
   });
 }
@@ -3874,11 +4009,14 @@ document.getElementById('pay-add-btn')?.addEventListener('click', ()=>{
   const label = document.getElementById('pay-new-label').value.trim();
   if(!label){ toast('Enter a method name','error'); return; }
   const id = 'pay_' + label.toLowerCase().replace(/\s+/g,'_') + '_' + Date.now().toString(36);
-  savePaymentMethods([...getPaymentMethods(), {id, emoji, label}]);
+  const existing = getPaymentMethods();
+  const color = ACCOUNT_COLORS[existing.length % ACCOUNT_COLORS.length];
+  savePaymentMethods([...existing, {id, emoji, label, color, startingBalance:0}]);
   document.getElementById('pay-new-emoji').value='';
   document.getElementById('pay-new-label').value='';
   renderPaymentList();
   _refreshPaymentSelect();
+  renderAccountBalances();
 });
 
 document.getElementById('edit-payment-btn')?.addEventListener('click', ()=>{
@@ -3904,12 +4042,38 @@ function populateCatSelect(sel, cats){
   if(cats.find(c=>c.id===current)) sel.value=current;
 }
 
+// ── Account (kantong) balances ─────────────────────────
+function getAccountBalance(accountId){
+  const acc = getPaymentMethods().find(a=>a.id===accountId);
+  let bal = acc?.startingBalance || 0;
+  _money.forEach(t=>{
+    if((t.payment_method||'cash') !== accountId) return;
+    bal += (t.type==='income' ? t.amount : -t.amount);
+    bal -= (t.admin_fee||0);
+  });
+  return bal;
+}
+
+function renderAccountBalances(){
+  const el = document.getElementById('acc-balances-row');
+  if(!el) return;
+  const accounts = getPaymentMethods();
+  el.innerHTML = accounts.map(acc=>{
+    const bal = getAccountBalance(acc.id);
+    return `<div class="acc-balance-card" style="--acc-color:${acc.color||'#ccc'}">
+      <div class="acc-balance-emoji">${acc.emoji||'💳'}</div>
+      <div class="acc-balance-lbl">${esc(acc.label)}</div>
+      <div class="acc-balance-val" style="color:${bal>=0?'var(--green)':'var(--red)'}">${idr(bal)}</div>
+    </div>`;
+  }).join('');
+}
+
 // ═══════════════════════════════════════════════════════
 //  OCR — RECEIPT SCANNER (Claude Vision API)
 // ═══════════════════════════════════════════════════════
 
 const OCR_SYSTEM_PROMPT = `You are a receipt/bill parser. Extract information from the image and respond ONLY with valid JSON (no markdown, no explanation):
-{"amount": <number or null>, "category": "<food|transport|shopping|health|bills|entertain|other>", "notes": "<merchant or item name, max 40 chars>", "date": "<YYYY-MM-DD or null>", "payment_method": "<cash|debit|credit|transfer|ewallet|other or null>"}`;
+{"amount": <number or null>, "category": "<food|transport|shopping|health|bills|entertain|other>", "notes": "<merchant or item name, max 40 chars>", "date": "<YYYY-MM-DD or null>", "payment_method": "<cash if clearly paid with physical cash, otherwise null>"}`;
 
 async function scanReceiptOCR(imageBase64, mimeType){
   const apiKey  = localStorage.getItem('lumina_ocr_key')||'';
@@ -3953,7 +4117,7 @@ async function scanReceiptOCR(imageBase64, mimeType){
         'anthropic-dangerous-direct-browser-access': 'true'
       },
       body: JSON.stringify({
-        model: 'claude-sonnet-4-20250514',
+        model: 'claude-sonnet-5',
         max_tokens: 300,
         system: OCR_SYSTEM_PROMPT,
         messages:[{
