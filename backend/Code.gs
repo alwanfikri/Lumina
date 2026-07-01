@@ -22,6 +22,7 @@ var AGENDA_HEADERS = ['id','gcal_id','date','end_date','start_time','end_time','
 var PHOTOS_HEADERS = ['id','name','drive_id','thumb_url','drive_url','entry_id','createdAt'];
 var MONEY_HEADERS  = ['id','date','type','category','amount','notes','updatedAt','createdBy','payment_method','admin_fee'];
 var NOTES_HEADERS  = ['id','title','content_html','canvas_data','color','pinned','tags','updatedAt','createdBy'];
+var SETTINGS_HEADERS = ['key','value','updatedAt']; // shared settings synced across devices: profiles, categories, paymentMethods
 
 var DC = {id:1,date:2,title:3,content_html:4,photo_urls:5,mood:6,updatedAt:7,createdBy:8};
 var AC = {id:1,gcal_id:2,date:3,end_date:4,start_time:5,end_time:6,all_day:7,title:8,description:9,color:10,recur:11,recur_end:12,reminder:13,updatedAt:14,createdBy:15};
@@ -43,6 +44,9 @@ function cachePut(key,val){
 }
 function cacheInvalidate(){
   try{ _cache.removeAll(['lumina_diaries','lumina_agendas','lumina_moneys','lumina_notes']); }catch(e){}
+}
+function cacheInvalidateSettings(){
+  try{ _cache.remove('lumina_settings'); }catch(e){}
 }
 function ok(data){return makeResp({ok:true,data:data});}
 function fail(msg,code){return makeResp({ok:false,error:msg,code:code||'ERROR'});}
@@ -116,9 +120,10 @@ function migrateSheets(){
   ensureSheetColumns('Photos', PHOTOS_HEADERS);
   ensureSheetColumns('Money',  MONEY_HEADERS);
   ensureSheetColumns('Notes',  NOTES_HEADERS);
+  ensureSheetColumns('Settings', SETTINGS_HEADERS);
   // Show current headers for verification
   var ss=SpreadsheetApp.openById(CONFIG.SPREADSHEET_ID);
-  ['Diary','Agenda','Photos','Money','Notes'].forEach(function(name){
+  ['Diary','Agenda','Photos','Money','Notes','Settings'].forEach(function(name){
     var sh=ss.getSheetByName(name);
     if(!sh){Logger.log(name+': NOT FOUND');return;}
     var cols=sh.getLastColumn();
@@ -186,6 +191,8 @@ function doPost(e){
       case 'saveNote':     return saveNote(p);
       case 'getNotes':     return getNotes();
       case 'deleteNote':   return deleteNote(p);
+      case 'saveSetting':  return saveSetting(p);
+      case 'getSettings':  return getSettings();
       case 'getCalendars':    return getCalendars();
       case 'importFromGCal':  return importFromGCal(p);
       case 'ensureLuminaCal': return ok({id: getLuminaCalendar().getId(), name: LUMINA_CAL_NAME});
@@ -398,6 +405,32 @@ function getNotes(){
 function deleteNote(p){
   var sh=getSheet('Notes',NOTES_HEADERS);var row=sheetFindById(sh,NC.id,p.id);
   if(row!==-1)sh.deleteRow(row);cacheInvalidate();return ok({deleted:true});
+}
+
+// ── SETTINGS (shared across devices: profiles, categories, paymentMethods) ──
+function saveSetting(p){
+  if(!p.key) return fail('Missing key');
+  var sh=getSheet('Settings',SETTINGS_HEADERS);var now=isoNow();
+  var row=sheetFindById(sh,1,p.key);
+  var data=[p.key, JSON.stringify(p.value), now];
+  if(row===-1)sh.appendRow(data);else sh.getRange(row,1,1,data.length).setValues([data]);
+  cacheInvalidateSettings();
+  return ok({key:p.key,updatedAt:now});
+}
+function getSettings(){
+  var cached=cacheGet('lumina_settings');if(cached)return ok(cached);
+  var sh=getSheet('Settings',SETTINGS_HEADERS);
+  var last=sh.getLastRow();
+  var out={};
+  if(last>=2){
+    var rows=sh.getRange(2,1,last-1,2).getValues();
+    rows.forEach(function(r){
+      if(!r[0]) return;
+      try{ out[r[0]]=JSON.parse(r[1]); }catch(e){ out[r[0]]=null; }
+    });
+  }
+  cachePut('lumina_settings',out);
+  return ok(out);
 }
 
 function debugSetup(){

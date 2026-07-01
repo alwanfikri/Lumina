@@ -1610,6 +1610,7 @@ function _loadProfiles(){
 function _saveProfiles(profiles){
   localStorage.setItem(LS_PROFILES, JSON.stringify(profiles));
   _profilesCache = null;
+  api('saveSetting',{key:'profiles',value:profiles}).catch(e=>console.warn('[Sync] profiles save failed:',e.message));
 }
 function getProfiles(){
   if(_profilesCache) return _profilesCache;
@@ -3449,10 +3450,8 @@ function renderMoney(){
   document.getElementById('sum-exp').textContent=idr(exp);
   const be=document.getElementById('sum-bal');be.textContent=(bal<0?'−':'')+idr(bal);be.className=`mc-val ${bal>=0?'pos':'neg'}`;
 
-  // Total all-time balance (all months)
-  let totalInc=0,totalExp=0;
-  _money.forEach(t=>{if(t.type==='income')totalInc+=t.amount;else totalExp+=t.amount;});
-  const totalBal=totalInc-totalExp;
+  // Total all-time balance = sum of every account's balance (includes starting balances, not just transactions)
+  const totalBal=getPaymentMethods().reduce((s,acc)=>s+getAccountBalance(acc.id),0);
   const tb=document.getElementById('sum-total-bal');
   if(tb){
     tb.textContent=(totalBal<0?'−':'')+idr(totalBal);
@@ -3876,8 +3875,7 @@ function renderHome(){
   const fil=_money.filter(tx=>tx.date.slice(0,7)===_m);
   let inc=0,exp=0;fil.forEach(tx=>{if(tx.type==='income')inc+=tx.amount;else exp+=tx.amount;});
   const bal=inc-exp;
-  let totalInc=0,totalExp=0;_money.forEach(tx=>{if(tx.type==='income')totalInc+=tx.amount;else totalExp+=tx.amount;});
-  const totalBal=totalInc-totalExp;
+  const totalBal=getPaymentMethods().reduce((s,acc)=>s+getAccountBalance(acc.id),0);
   const moneySection=`<div class="home-section">
     <div class="home-section-hdr">
       <div class="home-section-title">${tr.thisMonth||'This month'} — ${fmtMonth(_m)}</div>
@@ -4012,10 +4010,12 @@ function saveCats(expense, income){
   localStorage.setItem(LS_CUSTOM_CATS, JSON.stringify({expense, income}));
   _catsRawCache = null;
   _rebuildCatMap();
+  api('saveSetting',{key:'categories',value:{expense,income}}).catch(e=>console.warn('[Sync] categories save failed:',e.message));
 }
 function savePaymentMethods(methods){
   localStorage.setItem(LS_PAYMENT_METHODS, JSON.stringify(methods));
   _pmCache = null;
+  api('saveSetting',{key:'paymentMethods',value:methods}).catch(e=>console.warn('[Sync] accounts save failed:',e.message));
 }
 
 // Override catInfo — cached map rebuilt when cats change
@@ -5401,11 +5401,57 @@ function renderUpcoming(){
 // ═══════════════════════════════════════════════════════
 //  INIT
 // ═══════════════════════════════════════════════════════
+// Pull profiles/categories/accounts from the backend so they're consistent across devices.
+// If the server has none yet (first device ever to sync), push this device's current
+// local values up instead, so the next device to open the app picks them up.
+async function _pullSettingsFromServer(){
+  try{
+    const settings = await api('getSettings');
+    let changed = false;
+
+    if(settings.profiles && Array.isArray(settings.profiles) && settings.profiles.length){
+      localStorage.setItem(LS_PROFILES, JSON.stringify(settings.profiles));
+      _profilesCache = null;
+      changed = true;
+    } else {
+      api('saveSetting',{key:'profiles',value:getProfiles()}).catch(()=>{});
+    }
+
+    if(settings.categories && (settings.categories.expense || settings.categories.income)){
+      localStorage.setItem(LS_CUSTOM_CATS, JSON.stringify(settings.categories));
+      _catsRawCache = null;
+      _rebuildCatMap();
+      changed = true;
+    } else {
+      api('saveSetting',{key:'categories',value:{expense:getExpenseCats(),income:getIncomeCats()}}).catch(()=>{});
+    }
+
+    if(settings.paymentMethods && Array.isArray(settings.paymentMethods) && settings.paymentMethods.length){
+      localStorage.setItem(LS_PAYMENT_METHODS, JSON.stringify(settings.paymentMethods));
+      _pmCache = null;
+      changed = true;
+    } else {
+      api('saveSetting',{key:'paymentMethods',value:getPaymentMethods()}).catch(()=>{});
+    }
+
+    if(changed){
+      _updateHeaderAvatar();
+      _renderProfileCards();
+      renderSettingsProfiles();
+      _refreshUserFilterChips();
+      _refreshCategorySelects();
+      _refreshPaymentSelect();
+      if(document.getElementById('panel-money')?.classList.contains('active')) renderMoney();
+      renderHome();
+    }
+  }catch(e){ console.warn('[Settings sync] pull failed:', e.message); }
+}
+
 async function loadAll(){
   loadEnabledCals();
   setTxType('expense');
   // Use allSettled so one failing load doesn't block others
-  const results = await Promise.allSettled([loadAgenda(),loadDiary(),loadPhotos(),loadMoney()]);
+  const results = await Promise.allSettled([loadAgenda(),loadDiary(),loadPhotos(),loadMoney(),_pullSettingsFromServer()]);
   // Check if all failed — likely API URL issue
   const allFailed = results.every(r=>r.status==='rejected');
   if(allFailed){
