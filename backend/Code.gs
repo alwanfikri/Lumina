@@ -42,12 +42,18 @@ function cachePut(key,val){
   try{ _cache.put(key, JSON.stringify(val), CACHE_TTL); }catch(e){}
 }
 function cacheInvalidate(){
-  try{ _cache.removeAll(['lumina_diaries','lumina_agendas','lumina_moneys']); }catch(e){}
+  try{ _cache.removeAll(['lumina_diaries','lumina_agendas','lumina_moneys','lumina_notes']); }catch(e){}
 }
 function ok(data){return makeResp({ok:true,data:data});}
 function fail(msg,code){return makeResp({ok:false,error:msg,code:code||'ERROR'});}
 function isoNow(){return new Date().toISOString();}
 function genId(){return Utilities.getUuid();}
+// Reads a cell's existing value on update, returns '' for new rows or on error.
+// Used to preserve fields (like createdBy) that should only be set once, at creation.
+function getExistingValue(sh,row,col){
+  if(row===-1) return '';
+  try{ return v(sh.getRange(row,col).getValue()); }catch(e){ return ''; }
+}
 function v(x){return x===null||x===undefined?'':String(x);}
 function fmtDate(x){
   if(!x)return '';
@@ -137,6 +143,9 @@ function sheetGetAll(name,headers){
     return r;
   });
 }
+// Known limitation: O(n) linear scan over the whole ID column on every save/delete.
+// Fine at household scale (thousands of rows); would need a real index if this ever
+// grows to tens of thousands of rows (multi-year daily use across many sheets).
 function sheetFindById(sh,col,id){
   var last=sh.getLastRow();if(last<2)return -1;
   var ids=sh.getRange(2,col,last-1,1).getValues();
@@ -191,9 +200,7 @@ function saveDiary(p){
   var sh=getSheet('Diary',DIARY_HEADERS);var now=isoNow();var id=p.id||genId();
   var row=sheetFindById(sh,DC.id,id);
   // Preserve existing createdBy on update; only set on new records
-  var existingCreatedBy='';
-  if(row!==-1){try{existingCreatedBy=v(sh.getRange(row,DC.createdBy).getValue());}catch(e){}}
-  var createdBy=row===-1?v(p.createdBy):existingCreatedBy;
+  var createdBy=row===-1?v(p.createdBy):getExistingValue(sh,row,DC.createdBy);
   var data=[id,v(p.date)||now.slice(0,10),v(p.title),v(p.content_html),v(p.photo_urls),v(p.mood),now,createdBy];
   if(row===-1)sh.appendRow(data);else sh.getRange(row,1,1,data.length).setValues([data]);
   cacheInvalidate();
@@ -237,39 +244,36 @@ function saveAgenda(p){
       recurrence=[rrule];
     }
 
+    var eventRef=null; // reused below for reminder — avoids a second getEventById round-trip
     if(gcalId){
       try{
-        var ev=cal.getEventById(gcalId);
-        if(ev){
-          ev.setTitle(v(p.title));
-          ev.setDescription(v(p.description));
-          if(!p.all_day){ev.setTime(startDt,endDt);}
+        eventRef=cal.getEventById(gcalId);
+        if(eventRef){
+          eventRef.setTitle(v(p.title));
+          eventRef.setDescription(v(p.description));
+          if(!p.all_day){eventRef.setTime(startDt,endDt);}
         }
-      }catch(eErr){gcalId='';}
+      }catch(eErr){gcalId='';eventRef=null;}
     }
     if(!gcalId){
-      var newEv;
       if(p.all_day){
         var endAllDay=new Date((p.end_date||p.date)+'T12:00:00');
-        newEv=cal.createAllDayEvent(v(p.title),new Date(p.date),endAllDay,opts);
+        eventRef=cal.createAllDayEvent(v(p.title),new Date(p.date),endAllDay,opts);
       }else{
-        newEv=cal.createEvent(v(p.title),startDt,endDt,opts);
+        eventRef=cal.createEvent(v(p.title),startDt,endDt,opts);
       }
-      gcalId=newEv.getId();
+      gcalId=eventRef.getId();
     }
-    // Set popup reminder after event is created/updated
+    // Set popup reminder after event is created/updated — reuse eventRef, no extra fetch
     if(p.reminder&&parseInt(p.reminder)>0){
       try{
         var reminderMins=parseInt(p.reminder);
-        var evToUpdate=cal.getEventById(gcalId);
-        if(evToUpdate){evToUpdate.removeAllReminders();evToUpdate.addPopupReminder(reminderMins);}
+        if(eventRef){eventRef.removeAllReminders();eventRef.addPopupReminder(reminderMins);}
       }catch(remErr){Logger.log('Reminder set error (non-fatal): '+remErr.message);}
     }
   }catch(calErr){Logger.log('Calendar sync error (non-fatal): '+calErr.message);}
 
-  var existingCreatedByA='';
-  if(row!==-1){try{existingCreatedByA=v(sh.getRange(row,AC.createdBy).getValue());}catch(e){}}
-  var createdByA=row===-1?v(p.createdBy):existingCreatedByA;
+  var createdByA=row===-1?v(p.createdBy):getExistingValue(sh,row,AC.createdBy);
   var data=[id,gcalId,v(p.date),v(p.end_date)||v(p.date),v(p.start_time),v(p.end_time),v(p.all_day)||'false',v(p.title),v(p.description),v(p.color)||'#f59e0b',v(p.recur),v(p.recur_end),v(p.reminder),now,createdByA];
   if(row===-1)sh.appendRow(data);else sh.getRange(row,1,1,data.length).setValues([data]);
   cacheInvalidate();
@@ -348,9 +352,7 @@ function saveMoney(p){
   if(!p.amount)return fail('Missing amount');
   var sh=getSheet('Money',MONEY_HEADERS);var now=isoNow();var id=p.id||genId();
   var row=sheetFindById(sh,MC.id,id);
-  var existingCreatedByM='';
-  if(row!==-1){try{existingCreatedByM=v(sh.getRange(row,MC.createdBy).getValue());}catch(e){}}
-  var createdByM=row===-1?v(p.createdBy):existingCreatedByM;
+  var createdByM=row===-1?v(p.createdBy):getExistingValue(sh,row,MC.createdBy);
   var data=[id,v(p.date)||now.slice(0,10),v(p.type)||'expense',v(p.category),parseFloat(p.amount)||0,v(p.notes),now,createdByM,v(p.payment_method)||'cash',parseFloat(p.admin_fee)||0];
   if(row===-1)sh.appendRow(data);else sh.getRange(row,1,1,data.length).setValues([data]);
   cacheInvalidate();
@@ -378,23 +380,24 @@ function deleteMoney(p){
 function saveNote(p){
   var sh=getSheet('Notes',NOTES_HEADERS);var now=isoNow();var id=p.id||genId();
   var row=sheetFindById(sh,NC.id,id);
-  var existingCreatedBy='';
-  if(row!==-1){try{existingCreatedBy=v(sh.getRange(row,NC.createdBy).getValue());}catch(e){}}
-  var createdBy=row===-1?v(p.createdBy):existingCreatedBy;
+  var createdBy=row===-1?v(p.createdBy):getExistingValue(sh,row,NC.createdBy);
   var data=[id,v(p.title),v(p.content_html),v(p.canvas_data),v(p.color)||'#ffffff',p.pinned?'true':'false',v(p.tags),now,createdBy];
   if(row===-1)sh.appendRow(data);else sh.getRange(row,1,1,data.length).setValues([data]);
+  cacheInvalidate();
   return ok({id:id,updatedAt:now});
 }
 function getNotes(){
+  var cached=cacheGet('lumina_notes');if(cached)return ok(cached);
   var rows=sheetGetAll('Notes',NOTES_HEADERS);
   var out=rows.filter(function(r){return r[0];}).map(function(r){
     return{id:v(r[0]),title:v(r[1]),content_html:v(r[2]),canvas_data:v(r[3]),color:v(r[4])||'#ffffff',pinned:v(r[5])==='true',tags:v(r[6]),updatedAt:v(r[7]),createdBy:v(r[8])};
   }).sort(function(a,b){return b.updatedAt.localeCompare(a.updatedAt);});
+  cachePut('lumina_notes',{notes:out});
   return ok({notes:out});
 }
 function deleteNote(p){
   var sh=getSheet('Notes',NOTES_HEADERS);var row=sheetFindById(sh,NC.id,p.id);
-  if(row!==-1)sh.deleteRow(row);return ok({deleted:true});
+  if(row!==-1)sh.deleteRow(row);cacheInvalidate();return ok({deleted:true});
 }
 
 function debugSetup(){

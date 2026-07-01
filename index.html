@@ -308,7 +308,7 @@ img{max-width:100%;display:block}
 .frow{display:flex;gap:.65rem}.frow .fg{flex:1}
 .modal-actions{display:flex;justify-content:flex-end;gap:.45rem;margin-top:1.1rem;padding-top:.9rem;border-top:1px solid var(--border)}
 .swatches{display:flex;gap:7px;flex-wrap:wrap}
-.swatch{width:26px;height:26px;border-radius:50%;border:2px solid transparent;cursor:pointer;transition:transform .15s,border-color .15s}
+.swatch{width:32px;height:32px;border-radius:50%;border:2px solid transparent;cursor:pointer;transition:transform .15s,border-color .15s}
 .swatch:hover{transform:scale(1.15)}.swatch.sel{border-color:var(--text);transform:scale(1.1)}
 
 /* SETTINGS */
@@ -323,6 +323,14 @@ img{max-width:100%;display:block}
 .theme-toggle{display:flex;gap:.5rem;margin-top:6px}
 .theme-btn{flex:1;padding:.5rem;border-radius:var(--r-sm);font-size:.84rem;font-weight:500;border:1px solid var(--border);background:var(--surface);color:var(--text2);cursor:pointer;transition:all var(--ease)}
 .theme-btn.active{background:var(--amber);color:#fff;border-color:var(--amber)}
+/* Settings groups — collapsible sections */
+.settings-group{border:1px solid var(--border);border-radius:var(--r);margin-bottom:.75rem;overflow:hidden}
+.settings-group-summary{list-style:none;display:flex;align-items:center;justify-content:space-between;padding:.75rem .9rem;cursor:pointer;font-size:.85rem;font-weight:600;color:var(--text);background:var(--surface2);user-select:none}
+.settings-group-summary::-webkit-details-marker{display:none}
+.settings-group-summary::after{content:'▾';color:var(--text3);font-size:.75rem;transition:transform .2s ease}
+.settings-group[open] .settings-group-summary::after{transform:rotate(180deg)}
+.settings-group-body{padding:1rem .9rem .2rem}
+.settings-group-body>*:last-child{margin-bottom:0!important}
 /* Dark mode specific tweaks */
 [data-theme="dark"] .ql-toolbar.ql-snow{background:var(--surface2)}
 [data-theme="dark"] .ql-container.ql-snow{background:var(--surface)}
@@ -409,7 +417,7 @@ img{max-width:100%;display:block}
 /* Account row in settings modal: color swatch + starting balance */
 .acc-row{display:flex;align-items:center;gap:.5rem;padding:.5rem .4rem;border-bottom:1px solid var(--border)}
 .acc-row:last-child{border-bottom:none}
-.acc-row-color-btn{width:24px;height:24px;border-radius:50%;border:2px solid var(--border);cursor:pointer;flex-shrink:0;background:var(--acc-color,#ccc)}
+.acc-row-color-btn{width:28px;height:28px;border-radius:50%;border:2px solid var(--border);cursor:pointer;flex-shrink:0;background:var(--acc-color,#ccc)}
 .acc-row-emoji{width:24px;text-align:center;font-size:1rem;flex-shrink:0}
 .acc-row-label{flex:1;font-size:.85rem;color:var(--text);min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .acc-row-emoji-input{width:24px;text-align:center;font-size:1rem;flex-shrink:0;background:transparent;border:none;outline:none;color:var(--text);font-family:inherit;padding:.15rem 0;border-radius:4px}
@@ -1194,9 +1202,9 @@ img{max-width:100%;display:block}
     <div class="note-header-band" id="note-header-band" style="background:#f8f8f8">
       <h2 id="note-modal-ttl" style="font-size:.95rem;font-weight:600;margin:0;opacity:.9">New Note</h2>
       <div class="note-header-actions">
-        <button class="note-icon-btn" id="note-color-btn" title="Note color">&#127912;</button>
-        <button class="note-icon-btn" id="note-pin-btn" title="Pin note" style="font-size:.95rem">&#128204;</button>
-        <button class="note-icon-btn" data-close="note-modal" style="font-weight:600">&#x2715;</button>
+        <button class="note-icon-btn" id="note-color-btn" title="Note color" aria-label="Note color">&#127912;</button>
+        <button class="note-icon-btn" id="note-pin-btn" title="Pin note" aria-label="Pin note" style="font-size:.95rem">&#128204;</button>
+        <button class="note-icon-btn" data-close="note-modal" aria-label="Close" style="font-weight:600">&#x2715;</button>
       </div>
     </div>
 
@@ -1222,29 +1230,29 @@ img{max-width:100%;display:block}
         <!-- Toolbar row 1: Tools + sizes -->
         <div class="canvas-toolbar">
           <div class="canvas-tool-group">
-            <button class="canvas-tool active" id="tool-pen"    data-tool="pen"    title="Pen">&#9998;&#xFE0E;</button>
-            <button class="canvas-tool"        id="tool-marker" data-tool="marker" title="Highlighter">&#9646;</button>
-            <button class="canvas-tool"        id="tool-eraser" data-tool="eraser" title="Eraser">&#11034;&#xFE0E;</button>
+            <button class="canvas-tool active" id="tool-pen"    data-tool="pen"    title="Pen" aria-label="Pen">&#9998;&#xFE0E;</button>
+            <button class="canvas-tool"        id="tool-marker" data-tool="marker" title="Highlighter" aria-label="Highlighter">&#9646;</button>
+            <button class="canvas-tool"        id="tool-eraser" data-tool="eraser" title="Eraser" aria-label="Eraser">&#11034;&#xFE0E;</button>
           </div>
           <div class="canvas-divider"></div>
           <div class="canvas-sizes">
-            <button class="canvas-size"        data-size="2"  title="Fine" style="font-size:.55rem">&#9679;</button>
-            <button class="canvas-size active" data-size="4"  title="Medium" style="font-size:.75rem">&#9679;</button>
-            <button class="canvas-size"        data-size="8"  title="Thick" style="font-size:.95rem">&#9679;</button>
-            <button class="canvas-size"        data-size="16" title="Bold" style="font-size:1.1rem">&#9679;</button>
+            <button class="canvas-size"        data-size="2"  title="Fine" aria-label="Fine" style="font-size:.55rem">&#9679;</button>
+            <button class="canvas-size active" data-size="4"  title="Medium" aria-label="Medium" style="font-size:.75rem">&#9679;</button>
+            <button class="canvas-size"        data-size="8"  title="Thick" aria-label="Thick" style="font-size:.95rem">&#9679;</button>
+            <button class="canvas-size"        data-size="16" title="Bold" aria-label="Bold" style="font-size:1.1rem">&#9679;</button>
           </div>
           <div class="canvas-divider"></div>
           <!-- Ink colors -->
           <div class="canvas-colors" id="canvas-color-row">
-            <button class="canvas-color active" data-color="#111111" style="background:#111111" title="Black"></button>
-            <button class="canvas-color" data-color="#d97706" style="background:#d97706" title="Amber"></button>
-            <button class="canvas-color" data-color="#dc2626" style="background:#dc2626" title="Red"></button>
-            <button class="canvas-color" data-color="#16a34a" style="background:#16a34a" title="Green"></button>
-            <button class="canvas-color" data-color="#2563eb" style="background:#2563eb" title="Blue"></button>
-            <button class="canvas-color" data-color="#7c3aed" style="background:#7c3aed" title="Purple"></button>
+            <button class="canvas-color active" data-color="#111111" style="background:#111111" title="Black" aria-label="Black"></button>
+            <button class="canvas-color" data-color="#d97706" style="background:#d97706" title="Amber" aria-label="Amber"></button>
+            <button class="canvas-color" data-color="#dc2626" style="background:#dc2626" title="Red" aria-label="Red"></button>
+            <button class="canvas-color" data-color="#16a34a" style="background:#16a34a" title="Green" aria-label="Green"></button>
+            <button class="canvas-color" data-color="#2563eb" style="background:#2563eb" title="Blue" aria-label="Blue"></button>
+            <button class="canvas-color" data-color="#7c3aed" style="background:#7c3aed" title="Purple" aria-label="Purple"></button>
           </div>
           <div class="canvas-divider"></div>
-          <button class="canvas-tool" id="canvas-clear-btn" title="Clear canvas" style="font-size:.8rem;width:auto;padding:0 .6rem;color:var(--red)">Clear</button>
+          <button class="canvas-tool" id="canvas-clear-btn" title="Clear canvas" aria-label="Clear canvas" style="font-size:.8rem;width:auto;padding:0 .6rem;color:var(--red)">Clear</button>
         </div>
 
         <!-- Canvas — always white so drawing is visible regardless of note color -->
@@ -1452,122 +1460,135 @@ img{max-width:100%;display:block}
   <div class="settings-panel">
     <h2 class="s-ttl" data-i18n="settings">Settings</h2>
 
-    <!-- Profiles -->
-    <div style="margin-bottom:1.1rem">
-      <div class="s-lbl" data-i18n="userProfilesHdr">👥 User Profiles</div>
-      <div class="profiles-list" id="settings-profiles-list"></div>
-      <button class="btn btn-ghost btn-sm" id="add-profile-btn" data-i18n="addProfileBtn" style="margin-top:.5rem;width:100%">+ Add Profile</button>
-    </div>
-
-    <hr style="border:none;border-top:1px solid var(--border);margin:1rem 0">
-
-    <!-- Language -->
-    <div style="margin-bottom:1.1rem">
-      <div class="s-lbl" data-i18n="language">Language</div>
-      <div class="lang-toggle">
-        <button id="lang-en" class="lang-btn active">🇺🇸 English</button>
-        <button id="lang-id" class="lang-btn">🇮🇩 Indonesia</button>
+    <!-- Display -->
+    <details class="settings-group" open>
+      <summary class="settings-group-summary" data-i18n="settingsGroupDisplay">Display</summary>
+      <div class="settings-group-body">
+        <!-- Language -->
+        <div style="margin-bottom:1.1rem">
+          <div class="s-lbl" data-i18n="language">Language</div>
+          <div class="lang-toggle">
+            <button id="lang-en" class="lang-btn active">🇺🇸 English</button>
+            <button id="lang-id" class="lang-btn">🇮🇩 Indonesia</button>
+          </div>
+        </div>
+        <!-- Theme -->
+        <div style="margin-bottom:.5rem">
+          <div class="s-lbl" id="s-lbl-theme">Theme</div>
+          <div class="theme-toggle">
+            <button id="theme-light" class="theme-btn active">☀️ Light</button>
+            <button id="theme-dark"  class="theme-btn">🌙 Dark</button>
+            <button id="theme-auto"  class="theme-btn">⚙ Auto</button>
+          </div>
+        </div>
       </div>
-    </div>
+    </details>
 
-    <hr style="border:none;border-top:1px solid var(--border);margin:1rem 0">
-
-    <!-- Theme -->
-    <div style="margin-bottom:1.1rem">
-      <div class="s-lbl" id="s-lbl-theme">Theme</div>
-      <div class="theme-toggle">
-        <button id="theme-light" class="theme-btn active">☀️ Light</button>
-        <button id="theme-dark"  class="theme-btn">🌙 Dark</button>
-        <button id="theme-auto"  class="theme-btn">⚙ Auto</button>
+    <!-- Formats -->
+    <details class="settings-group">
+      <summary class="settings-group-summary" data-i18n="settingsGroupFormat">Formats</summary>
+      <div class="settings-group-body">
+        <!-- Currency -->
+        <div style="margin-bottom:1rem">
+          <div class="s-lbl" data-i18n="currency">Currency</div>
+          <select class="fi" id="setting-currency" style="margin-top:4px">
+            <option value="IDR">IDR — Indonesian Rupiah (Rp)</option>
+            <option value="USD">USD — US Dollar ($)</option>
+            <option value="EUR">EUR — Euro (€)</option>
+            <option value="SGD">SGD — Singapore Dollar (S$)</option>
+            <option value="MYR">MYR — Malaysian Ringgit (RM)</option>
+          </select>
+        </div>
+        <!-- Date format -->
+        <div style="margin-bottom:1rem">
+          <div class="s-lbl" data-i18n="dateFormat">Date Format</div>
+          <select class="fi" id="setting-dateformat" style="margin-top:4px">
+            <option value="DD/MM/YYYY">DD/MM/YYYY</option>
+            <option value="MM/DD/YYYY">MM/DD/YYYY</option>
+            <option value="YYYY-MM-DD">YYYY-MM-DD</option>
+            <option value="D MMM YYYY">D MMM YYYY (15 Mar 2026)</option>
+          </select>
+        </div>
+        <!-- Number format -->
+        <div style="margin-bottom:1rem">
+          <div class="s-lbl" data-i18n="numberFormat">Number Format</div>
+          <select class="fi" id="setting-numformat" style="margin-top:4px">
+            <option value="id-ID">1.000.000,00 (Indonesian)</option>
+            <option value="en-US">1,000,000.00 (English)</option>
+          </select>
+        </div>
+        <div style="margin-bottom:1rem">
+          <div class="s-lbl" data-i18n="preview">Preview</div>
+          <div class="s-val" id="format-preview" style="font-size:.88rem;line-height:1.8"></div>
+        </div>
+        <button class="btn btn-primary" style="width:100%" id="setting-apply" data-i18n="applySettings">Apply Settings</button>
       </div>
-    </div>
+    </details>
 
-    <hr style="border:none;border-top:1px solid var(--border);margin:1rem 0">
-
-    <!-- Currency -->
-    <div style="margin-bottom:1rem">
-      <div class="s-lbl" data-i18n="currency">Currency</div>
-      <select class="fi" id="setting-currency" style="margin-top:4px">
-        <option value="IDR">IDR — Indonesian Rupiah (Rp)</option>
-        <option value="USD">USD — US Dollar ($)</option>
-        <option value="EUR">EUR — Euro (€)</option>
-        <option value="SGD">SGD — Singapore Dollar (S$)</option>
-        <option value="MYR">MYR — Malaysian Ringgit (RM)</option>
-      </select>
-    </div>
-
-    <!-- Date format -->
-    <div style="margin-bottom:1rem">
-      <div class="s-lbl" data-i18n="dateFormat">Date Format</div>
-      <select class="fi" id="setting-dateformat" style="margin-top:4px">
-        <option value="DD/MM/YYYY">DD/MM/YYYY</option>
-        <option value="MM/DD/YYYY">MM/DD/YYYY</option>
-        <option value="YYYY-MM-DD">YYYY-MM-DD</option>
-        <option value="D MMM YYYY">D MMM YYYY (15 Mar 2026)</option>
-      </select>
-    </div>
-
-    <!-- Number format -->
-    <div style="margin-bottom:1rem">
-      <div class="s-lbl" data-i18n="numberFormat">Number Format</div>
-      <select class="fi" id="setting-numformat" style="margin-top:4px">
-        <option value="id-ID">1.000.000,00 (Indonesian)</option>
-        <option value="en-US">1,000,000.00 (English)</option>
-      </select>
-    </div>
-
-    <div style="margin-bottom:1rem">
-      <div class="s-lbl" data-i18n="preview">Preview</div>
-      <div class="s-val" id="format-preview" style="font-size:.88rem;line-height:1.8"></div>
-    </div>
-
-    <button class="btn btn-primary" style="width:100%;margin-bottom:.75rem" id="setting-apply" data-i18n="applySettings">Apply Settings</button>
-
-    <hr style="border:none;border-top:1px solid var(--border);margin:1rem 0">
-
-    <!-- OCR Settings -->
-    <div class="fg" style="margin-bottom:.9rem">
-      <div class="s-lbl">📷 Receipt OCR</div>
-      <div style="margin-top:6px;margin-bottom:8px">
-        <label style="font-size:.78rem;color:var(--text2);display:block;margin-bottom:4px">Provider</label>
-        <select class="fi" id="ocr-provider" style="font-size:.84rem">
-          <option value="gemini">Gemini (Google) — Free tier available</option>
-          <option value="anthropic">Claude (Anthropic) — Paid</option>
-          <option value="ocrspace">OCR.space — Free tier available</option>
-        </select>
+    <!-- Profiles & Accounts -->
+    <details class="settings-group">
+      <summary class="settings-group-summary" data-i18n="settingsGroupProfiles">Profiles &amp; Accounts</summary>
+      <div class="settings-group-body">
+        <!-- Profiles -->
+        <div style="margin-bottom:1.1rem">
+          <div class="s-lbl" data-i18n="userProfilesHdr">👥 User Profiles</div>
+          <div class="profiles-list" id="settings-profiles-list"></div>
+          <button class="btn btn-ghost btn-sm" id="add-profile-btn" data-i18n="addProfileBtn" style="margin-top:.5rem;width:100%">+ Add Profile</button>
+        </div>
+        <!-- Categories & Accounts -->
+        <div style="margin-bottom:.5rem">
+          <div class="s-lbl" data-i18n="moneySettingsHdr">Money Settings</div>
+          <button class="btn btn-ghost" style="width:100%;margin-bottom:.5rem;margin-top:6px" id="edit-cats-btn" data-i18n="editCategoriesBtn">🏷 Edit Categories</button>
+          <button class="btn btn-ghost" style="width:100%" id="edit-payment-btn" data-i18n="editAccountsBtn">💰 Accounts (Cash & Bank)</button>
+        </div>
       </div>
-      <label style="font-size:.78rem;color:var(--text2);display:block;margin-bottom:4px" id="ocr-key-label">API Key</label>
-      <input class="fi" id="ocr-key-input" type="password" placeholder="Paste API key…" style="margin-top:2px;font-family:monospace;font-size:.8rem">
-      <div style="font-size:.7rem;color:var(--text3);margin-top:4px" id="ocr-key-hint">
-        Get a free Gemini key at <strong>aistudio.google.com</strong> → Get API Key
+    </details>
+
+    <!-- Integrations -->
+    <details class="settings-group">
+      <summary class="settings-group-summary" data-i18n="settingsGroupIntegrations">Integrations</summary>
+      <div class="settings-group-body">
+        <!-- OCR Settings -->
+        <div class="fg" style="margin-bottom:.9rem">
+          <div class="s-lbl">📷 Receipt OCR</div>
+          <div style="margin-top:6px;margin-bottom:8px">
+            <label style="font-size:.78rem;color:var(--text2);display:block;margin-bottom:4px">Provider</label>
+            <select class="fi" id="ocr-provider" style="font-size:.84rem">
+              <option value="gemini">Gemini (Google) — Free tier available</option>
+              <option value="anthropic">Claude (Anthropic) — Paid</option>
+              <option value="ocrspace">OCR.space — Free tier available</option>
+            </select>
+          </div>
+          <label style="font-size:.78rem;color:var(--text2);display:block;margin-bottom:4px" id="ocr-key-label">API Key</label>
+          <input class="fi" id="ocr-key-input" type="password" placeholder="Paste API key…" style="margin-top:2px;font-family:monospace;font-size:.8rem">
+          <div style="font-size:.7rem;color:var(--text3);margin-top:4px" id="ocr-key-hint">
+            Get a free Gemini key at <strong>aistudio.google.com</strong> → Get API Key
+          </div>
+          <button class="btn btn-primary btn-sm" id="ocr-key-save" style="margin-top:8px;width:100%">Save Key</button>
+          <div id="ocr-key-status" style="font-size:.72rem;margin-top:4px"></div>
+        </div>
+        <hr style="border:none;border-top:1px solid var(--border);margin:1rem 0">
+        <!-- API -->
+        <div class="fg">
+          <div class="s-lbl">API URL</div>
+          <input class="fi" id="api-input" placeholder="Paste Apps Script URL…" style="margin-top:4px">
+          <button class="btn btn-primary btn-sm" id="api-save" style="margin-top:8px;width:100%" data-i18n="saveReload">Save & Reload</button>
+        </div>
+        <div>
+          <div class="s-lbl">Active Endpoint</div>
+          <div class="s-val" id="api-display">—</div>
+        </div>
       </div>
-      <button class="btn btn-primary btn-sm" id="ocr-key-save" style="margin-top:8px;width:100%">Save Key</button>
-      <div id="ocr-key-status" style="font-size:.72rem;margin-top:4px"></div>
-    </div>
-    <hr style="border:none;border-top:1px solid var(--border);margin:1rem 0">
+    </details>
 
-    <!-- API -->
-    <div class="fg">
-      <div class="s-lbl">API URL</div>
-      <input class="fi" id="api-input" placeholder="Paste Apps Script URL…" style="margin-top:4px">
-      <button class="btn btn-primary btn-sm" id="api-save" style="margin-top:8px;width:100%" data-i18n="saveReload">Save & Reload</button>
-    </div>
-    <div style="margin-bottom:.9rem">
-      <div class="s-lbl">Active Endpoint</div>
-      <div class="s-val" id="api-display">—</div>
-    </div>
-    <hr style="border:none;border-top:1px solid var(--border);margin:1rem 0">
-    <hr style="border:none;border-top:1px solid var(--border);margin:1rem 0">
-
-    <!-- Categories & Accounts -->
-    <div style="margin-bottom:.75rem">
-      <div class="s-lbl" data-i18n="moneySettingsHdr">Money Settings</div>
-      <button class="btn btn-ghost" style="width:100%;margin-bottom:.5rem;margin-top:6px" id="edit-cats-btn" data-i18n="editCategoriesBtn">🏷 Edit Categories</button>
-      <button class="btn btn-ghost" style="width:100%;margin-bottom:.5rem" id="edit-payment-btn" data-i18n="editAccountsBtn">💰 Accounts (Cash & Bank)</button>
-    </div>
-
-    <button class="btn btn-ghost" style="width:100%;margin-bottom:.5rem" id="export-btn">⬇ Export Data</button>
-    <button class="btn btn-ghost" style="width:100%;margin-bottom:.5rem" id="refresh-btn" data-i18n="refreshData">↺ Refresh all data</button>
+    <!-- Data -->
+    <details class="settings-group">
+      <summary class="settings-group-summary" data-i18n="settingsGroupData">Data</summary>
+      <div class="settings-group-body">
+        <button class="btn btn-ghost" style="width:100%;margin-bottom:.5rem" id="export-btn">⬇ Export Data</button>
+        <button class="btn btn-ghost" style="width:100%" id="refresh-btn" data-i18n="refreshData">↺ Refresh all data</button>
+      </div>
+    </details>
   </div>
 </div>
 
@@ -1582,13 +1603,16 @@ const LS_PROFILES       = 'lumina_profiles';
 const LS_ACTIVE_PROFILE = 'lumina_active_profile';
 const PROFILE_COLORS    = ['#f59e0b','#3b82f6','#10b981','#ec4899','#8b5cf6','#ef4444','#f97316','#06b6d4'];
 
+let _profilesCache = null; // in-memory cache — avoids re-parsing localStorage on every call
 function _loadProfiles(){
   try{ return JSON.parse(localStorage.getItem(LS_PROFILES)||'null'); }catch(e){ return null; }
 }
 function _saveProfiles(profiles){
   localStorage.setItem(LS_PROFILES, JSON.stringify(profiles));
+  _profilesCache = null;
 }
 function getProfiles(){
+  if(_profilesCache) return _profilesCache;
   let p = _loadProfiles();
   if(!p || !p.length){
     // Default: 2 profiles
@@ -1598,6 +1622,7 @@ function getProfiles(){
     ];
     _saveProfiles(p);
   }
+  _profilesCache = p;
   return p;
 }
 function getActiveProfile(){
@@ -1706,7 +1731,7 @@ function renderSettingsProfiles(){
     <div class="profile-row" data-pid="${p.id}">
       <button class="profile-row-avatar" style="background:${p.color}" data-pid="${p.id}" title="${esc(tr.changeColorTitle||'Change color')}">${profileInitials(p.name)}</button>
       <input class="profile-row-name" value="${esc(p.name)}" data-pid="${p.id}" maxlength="20" placeholder="${esc(tr.namePlaceholder||'Name…')}">
-      ${profiles.length>1?`<button class="profile-row-del" data-pid="${p.id}" title="${esc(tr.deleteProfileTitle||'Delete profile')}">🗑</button>`:''}
+      ${profiles.length>1?`<button class="profile-row-del" data-pid="${p.id}" title="${esc(tr.deleteProfileTitle||'Delete profile')}" aria-label="${esc(tr.deleteProfileTitle||'Delete profile')}">🗑</button>`:''}
     </div>
     <div class="profile-color-picker" id="pcp-${p.id}" style="display:none">
       ${PROFILE_COLORS.map(c=>`<span class="profile-color-swatch${p.color===c?' sel':''}" data-color="${c}" data-pid="${p.id}" style="background:${c}"></span>`).join('')}
@@ -1881,6 +1906,11 @@ const TRANSLATIONS = {
     confirmDeleteProfile:'Delete this profile?',
     addLabel:'Add',
     allUsers:'All',
+    settingsGroupDisplay:'Display',
+    settingsGroupFormat:'Formats',
+    settingsGroupProfiles:'Profiles & Accounts',
+    settingsGroupIntegrations:'Integrations',
+    settingsGroupData:'Data',
   },
   id: {
     settings:'Pengaturan', language:'Bahasa', currency:'Mata Uang',
@@ -1974,6 +2004,11 @@ const TRANSLATIONS = {
     confirmDeleteProfile:'Hapus profil ini?',
     addLabel:'Tambah',
     allUsers:'Semua',
+    settingsGroupDisplay:'Tampilan',
+    settingsGroupFormat:'Format',
+    settingsGroupProfiles:'Profil & Kantong',
+    settingsGroupIntegrations:'Integrasi',
+    settingsGroupData:'Data',
   }
 };
 
@@ -2324,6 +2359,8 @@ const driveThumb=(url,sz='w200')=>{
   return url;
 };
 const addMonth=(m,d)=>{const[y,mo]=m.split('-').map(Number);const dt=new Date(y,mo-1+d,1);return`${dt.getFullYear()}-${String(dt.getMonth()+1).padStart(2,'0')}`};
+// Debounce: delays fn until `ms` has passed since the last call (used to avoid re-rendering on every keystroke)
+function _debounce(fn,ms){let timer;return(...args)=>{clearTimeout(timer);timer=setTimeout(()=>fn(...args),ms);};}
 
 document.querySelectorAll('[data-close]').forEach(b=>b.addEventListener('click',()=>closeModal(b.dataset.close)));
 document.querySelectorAll('.overlay').forEach(o=>o.addEventListener('click',e=>{if(e.target===o)closeModal(o.id)}));
@@ -2755,7 +2792,7 @@ function initCalendar(){
         const timeStr = info.event.start
           ? info.event.start.toLocaleTimeString(_locale.lang==='id'?'id-ID':'en-US',{hour:'2-digit',minute:'2-digit'})
           : '';
-        toast(`📅 ${info.event.title}${timeStr?' · '+timeStr:''}${ext.calendar_name?' ('+ext.calendar_name+')':''}`, 'info', 4000);
+        toast(`📅 ${esc(info.event.title)}${timeStr?' · '+timeStr:''}${ext.description?'<br>'+esc(ext.description):''}${ext.calendar_name?' ('+esc(ext.calendar_name)+')':''}`, 'info', ext.description?5500:4000);
         return;
       }
       // Lumina event — open edit modal
@@ -2951,10 +2988,11 @@ function initDiarySearch(){
   const monthSel = document.getElementById('diary-month-filter');
   if(!input) return;
 
+  const debouncedRenderDiary = _debounce(renderDiary, 280);
   input.addEventListener('input', ()=>{
     _diaryQuery = input.value.trim();
     clear.style.display = _diaryQuery ? '' : 'none';
-    renderDiary();
+    debouncedRenderDiary();
   });
   clear.addEventListener('click', ()=>{
     input.value = ''; _diaryQuery = '';
@@ -3002,10 +3040,11 @@ function initAgendaSearch(){
   const clear = document.getElementById('agenda-search-clear');
   if(!input) return;
 
+  const debouncedApplyAgendaSearch = _debounce(applyAgendaSearch, 280);
   input.addEventListener('input', ()=>{
     _agendaQuery = input.value.trim();
     clear.style.display = _agendaQuery ? '' : 'none';
-    applyAgendaSearch();
+    debouncedApplyAgendaSearch();
   });
   clear.addEventListener('click', ()=>{
     input.value = ''; _agendaQuery = '';
@@ -3522,12 +3561,15 @@ function renderBarChart(){
 
   if(_barChart){_barChart.destroy();}
   const ctx=document.getElementById('chart-bar').getContext('2d');
+  const _cs=getComputedStyle(document.documentElement);
+  const textColor=_cs.getPropertyValue('--text2').trim()||'#6b5e4c';
+  const gridColor=_cs.getPropertyValue('--border').trim()||'#e6ddd0';
   _barChart=new Chart(ctx,{type:'bar',data:{labels,datasets:[{label:t().income||'Income',data:incomes,
-    backgroundColor:getComputedStyle(document.documentElement).getPropertyValue('--green').trim()||'#16a34a',
+    backgroundColor:_cs.getPropertyValue('--green').trim()||'#16a34a',
     borderRadius:4},
     {label:t().expense||'Expense',data:expenses,
-    backgroundColor:getComputedStyle(document.documentElement).getPropertyValue('--red').trim()||'#dc2626',
-    borderRadius:4}]},options:{plugins:{legend:{labels:{font:{size:11},boxWidth:12}}},scales:{x:{grid:{display:false},ticks:{font:{size:10}}},y:{ticks:{callback:v=>v>=1e6?'Rp'+(v/1e6).toFixed(1)+'jt':v>=1e3?'Rp'+(v/1e3).toFixed(0)+'k':'Rp'+v,font:{size:10}},grid:{color:'rgba(0,0,0,.05)'}}}},animation:{duration:400}});
+    backgroundColor:_cs.getPropertyValue('--red').trim()||'#dc2626',
+    borderRadius:4}]},options:{plugins:{legend:{labels:{font:{size:11},boxWidth:12,color:textColor}}},scales:{x:{grid:{display:false},ticks:{font:{size:10},color:textColor}},y:{ticks:{callback:v=>v>=1e6?'Rp'+(v/1e6).toFixed(1)+'jt':v>=1e3?'Rp'+(v/1e3).toFixed(0)+'k':'Rp'+v,font:{size:10},color:textColor},grid:{color:gridColor}}}},animation:{duration:400}});
 }
 
 // ── Budget progress bars ──────────────────────────────────
@@ -3780,7 +3822,7 @@ function renderHome(){
                 isTomorrow?`<span class="home-ev-badge badge-tomorrow">${tr.tomorrow||'Tomorrow'}</span>`:
                 `<span class="home-ev-badge badge-soon">${fmtDate(ev.date)}</span>`;
     const gcalTag=ev.source==='gcal'?`<span class="home-ev-badge badge-gcal" title="${esc(ev.calendar_name||'Google Calendar')}">📅</span>`:'';
-    return`<div class="home-upcoming-item" data-id="${ev.id}" data-source="${ev.source}">
+    return`<div class="home-upcoming-item" data-id="${ev.id}" data-source="${ev.source}" data-description="${esc(ev.description||'')}">
       <div class="home-ev-dot" style="background:${ev.color||'#f59e0b'}"></div>
       <div class="home-ev-body">
         <div class="home-ev-title">${esc(ev.title)}</div>
@@ -3882,7 +3924,9 @@ function renderHome(){
   el.querySelectorAll('.home-upcoming-item').forEach(item=>{
     item.addEventListener('click',()=>{
       if(item.dataset.source==='gcal'){
-        toast(`📅 ${item.querySelector('.home-ev-title')?.textContent||''}`,'info',3000);
+        const title=esc(item.querySelector('.home-ev-title')?.textContent||'');
+        const desc=item.dataset.description||'';
+        toast(`📅 ${title}${desc?'<br>'+esc(desc):''}`,'info',desc?5500:3000);
         return;
       }
       const ev=_agenda.find(e=>e.id===item.dataset.id);
@@ -3931,36 +3975,47 @@ const DEFAULT_PAYMENT_METHODS = [
 const ACCOUNT_COLORS = ['#16a34a','#2563eb','#f59e0b','#0891b2','#dc2626','#8b5cf6','#ec4899','#f97316'];
 
 // Load custom cats (merges defaults with user additions/deletions)
+// In-memory caches below avoid re-parsing localStorage JSON on every call — these
+// getters are invoked many times per render cycle (renderMoney, renderAccountBalances, etc).
+let _catsRawCache = null; // {expense, income} from LS_CUSTOM_CATS
+function _loadCatsRaw(){
+  if(_catsRawCache) return _catsRawCache;
+  try{ _catsRawCache = JSON.parse(localStorage.getItem(LS_CUSTOM_CATS)||'null') || {}; }
+  catch(_){ _catsRawCache = {}; }
+  return _catsRawCache;
+}
 function getExpenseCats(){
-  try{
-    const saved = JSON.parse(localStorage.getItem(LS_CUSTOM_CATS)||'null');
-    if(saved && saved.expense) return saved.expense;
-  }catch(_){}
+  const saved = _loadCatsRaw();
+  if(saved.expense) return saved.expense;
   return EXPENSE_CATS.map(c=>({...c}));
 }
 function getIncomeCats(){
-  try{
-    const saved = JSON.parse(localStorage.getItem(LS_CUSTOM_CATS)||'null');
-    if(saved && saved.income) return saved.income;
-  }catch(_){}
+  const saved = _loadCatsRaw();
+  if(saved.income) return saved.income;
   return INCOME_CATS.map(c=>({...c}));
 }
+let _pmCache = null;
 function getPaymentMethods(){
+  if(_pmCache) return _pmCache;
   try{
     const saved = JSON.parse(localStorage.getItem(LS_PAYMENT_METHODS)||'null');
     if(saved && Array.isArray(saved)){
       // Backfill color/startingBalance for methods saved before this feature existed
-      return saved.map((m,i)=>({color:ACCOUNT_COLORS[i%ACCOUNT_COLORS.length],startingBalance:0,...m}));
+      _pmCache = saved.map((m,i)=>({color:ACCOUNT_COLORS[i%ACCOUNT_COLORS.length],startingBalance:0,...m}));
+      return _pmCache;
     }
   }catch(_){}
-  return DEFAULT_PAYMENT_METHODS.map(m=>({...m}));
+  _pmCache = DEFAULT_PAYMENT_METHODS.map(m=>({...m}));
+  return _pmCache;
 }
 function saveCats(expense, income){
   localStorage.setItem(LS_CUSTOM_CATS, JSON.stringify({expense, income}));
+  _catsRawCache = null;
   _rebuildCatMap();
 }
 function savePaymentMethods(methods){
   localStorage.setItem(LS_PAYMENT_METHODS, JSON.stringify(methods));
+  _pmCache = null;
 }
 
 // Override catInfo — cached map rebuilt when cats change
@@ -3994,7 +4049,7 @@ function renderCatsList(){
         <input class="cats-item-emoji-input" data-id="${esc(cat.id)}" data-type="${type}" data-role="emoji" value="${esc(cat.emoji||cat.label.split(' ')[0])}">
         <input class="cats-item-label-input" data-id="${esc(cat.id)}" data-type="${type}" data-role="label" value="${esc(cat.label.replace(/^[^\s]+\s/,''))}">
         ${defaultIds.has(cat.id) ? '<span class="cats-item-default">default</span>' : ''}
-        <button class="cats-item-del" data-id="${esc(cat.id)}" data-type="${type}" title="${esc(tr.deleteTitle||'Delete')}">✕</button>
+        <button class="cats-item-del" data-id="${esc(cat.id)}" data-type="${type}" title="${esc(tr.deleteTitle||'Delete')}" aria-label="${esc(tr.deleteTitle||'Delete')}">✕</button>
       </div>`).join('');
 
   document.getElementById('cats-expense-list').innerHTML = makeList(expCats, defaultExpIds, 'expense');
@@ -4084,13 +4139,13 @@ function renderPaymentList(){
   const tr = t();
   document.getElementById('payment-list').innerHTML = methods.map(m=>`
     <div class="acc-row" data-acc-id="${esc(m.id)}">
-      <button class="acc-row-color-btn" style="--acc-color:${m.color||'#ccc'}" data-pay-id="${esc(m.id)}" data-role="color" title="${esc(tr.changeColorTitle||'Change color')}"></button>
+      <button class="acc-row-color-btn" style="--acc-color:${m.color||'#ccc'}" data-pay-id="${esc(m.id)}" data-role="color" title="${esc(tr.changeColorTitle||'Change color')}" aria-label="${esc(tr.changeColorTitle||'Change color')}"></button>
       <input class="acc-row-emoji-input" data-pay-id="${esc(m.id)}" data-role="emoji" value="${esc(m.emoji||'💳')}">
       <input class="acc-row-label-input" data-pay-id="${esc(m.id)}" data-role="label" value="${esc(m.label)}">
       <div class="acc-row-balance">
         <input type="number" class="acc-row-balance-input" data-pay-id="${esc(m.id)}" data-role="balance" value="${m.startingBalance||0}" placeholder="${esc(tr.startingBalancePlaceholder||'Starting balance')}" title="${esc(tr.startingBalancePlaceholder||'Starting balance')}">
       </div>
-      <button class="cats-item-del" data-pay-id="${esc(m.id)}" data-role="delete" title="${esc(tr.deleteTitle||'Delete')}">✕</button>
+      <button class="cats-item-del" data-pay-id="${esc(m.id)}" data-role="delete" title="${esc(tr.deleteTitle||'Delete')}" aria-label="${esc(tr.deleteTitle||'Delete')}">✕</button>
     </div>`).join('');
 
   // Delete
@@ -5140,11 +5195,12 @@ document.getElementById('notes-search-btn')&&document.getElementById('notes-sear
   wrap.style.display=hidden?'':'none';
   if(hidden)document.getElementById('notes-search')&&document.getElementById('notes-search').focus();
 });
+const _debouncedRenderNotes=_debounce(renderNotes,280);
 document.getElementById('notes-search')&&document.getElementById('notes-search').addEventListener('input',function(e){
   _notesQuery=e.target.value.trim();
   const clr=document.getElementById('notes-search-clear');
   if(clr)clr.style.display=_notesQuery?'':'none';
-  renderNotes();
+  _debouncedRenderNotes();
 });
 document.getElementById('notes-search-clear')&&document.getElementById('notes-search-clear').addEventListener('click',function(){
   const inp=document.getElementById('notes-search');if(inp){inp.value='';inp.focus();}
@@ -5310,7 +5366,7 @@ function renderUpcoming(){
       ? `<span class="upcoming-badge badge-gcal" title="${esc(ev.calendar_name||'Google Calendar')}">📅</span>`
       : '';
 
-    return `<div class="upcoming-item" data-id="${ev.id}" data-source="${ev.source}">
+    return `<div class="upcoming-item" data-id="${ev.id}" data-source="${ev.source}" data-description="${esc(ev.description||'')}">
       <div class="upcoming-dot" style="background:${ev.color||'#f59e0b'}"></div>
       <div class="upcoming-body">
         <div class="upcoming-ev-title">${esc(ev.title)}</div>
@@ -5331,7 +5387,9 @@ function renderUpcoming(){
   el.querySelectorAll('.upcoming-item').forEach(item => {
     item.addEventListener('click', ()=>{
       if(item.dataset.source==='gcal'){
-        toast(`📅 ${item.querySelector('.upcoming-ev-title')?.textContent||''}`,'info',3000);
+        const title=esc(item.querySelector('.upcoming-ev-title')?.textContent||'');
+        const desc=item.dataset.description||'';
+        toast(`📅 ${title}${desc?'<br>'+esc(desc):''}`,'info',desc?5500:3000);
         return;
       }
       const ev = _agenda.find(e => e.id === item.dataset.id);
