@@ -2716,7 +2716,7 @@ async function importEnabledGCals(){
   if(!toImport.length){
     _gcalEvents=[];
     if(btn)btn.classList.remove('loading');
-    refreshCalendarView();
+    refreshCalendarViewDebounced();
     renderUpcoming();
     renderHome();
     return;
@@ -2738,12 +2738,18 @@ async function importEnabledGCals(){
   }
 
   if(btn)btn.classList.remove('loading');
-  refreshCalendarView();
+  refreshCalendarViewDebounced();
   renderUpcoming();
   renderHome();
 }
 
 // Refresh FullCalendar with Lumina + GCal events, respecting enabled filter
+// Debounced variant — used where refreshCalendarView() can get called twice in quick
+// succession during startup (agenda data arrives, then GCal import completes moments
+// later), which otherwise clears + refills the whole calendar grid twice, visible as
+// a flash/flicker on real devices. Coalesces those into a single render.
+const refreshCalendarViewDebounced = _debounce(()=>refreshCalendarView(), 100);
+
 function refreshCalendarView(){
   if(!_cal)return;
   _cal.removeAllEvents();
@@ -2883,7 +2889,7 @@ async function loadAgenda(){
   try{
     const d=await api('getAgendas',{});
     _agenda=d.events||[];
-    if(_cal){refreshCalendarView();}
+    if(_cal){refreshCalendarViewDebounced();}
     initAgendaSearch();
     renderUpcoming();
     updateNotifBanner();
