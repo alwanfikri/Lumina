@@ -108,20 +108,30 @@ img{max-width:100%;display:block}
 
 /* AGENDA / FULLCALENDAR */
 .cal-view-btns{display:flex;gap:.3rem}
-/* Calendar filter bar */
-.cal-filter-bar{display:flex;align-items:center;gap:.5rem;margin-bottom:.75rem;flex-wrap:wrap}
-.cal-filter-list{display:flex;gap:.4rem;flex-wrap:wrap;flex:1}
+/* Calendar filter — now a popup button */
+.cal-filter-bar{display:flex;align-items:center;gap:.5rem;margin-bottom:.75rem;position:relative}
+.cal-filter-btn{display:inline-flex;align-items:center;gap:.45rem;padding:.32rem .75rem;border-radius:var(--r-sm);font-size:.78rem;font-weight:500;color:var(--text2);border:1.5px solid var(--border);background:var(--surface);cursor:pointer;transition:all var(--ease);white-space:nowrap}
+.cal-filter-btn:hover{border-color:var(--amber);color:var(--text)}
+.cal-filter-dots{display:flex;gap:3px;align-items:center}
+.cal-filter-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+/* Popup dropdown */
+.cal-filter-popup{position:absolute;top:calc(100% + 6px);left:0;z-index:500;background:var(--surface);border:1.5px solid var(--border);border-radius:var(--r);box-shadow:var(--shadow-lg);min-width:240px;max-width:300px;padding:.6rem;display:none}
+.cal-filter-popup.open{display:block}
+.cal-filter-popup-hdr{font-size:.7rem;text-transform:uppercase;letter-spacing:.07em;color:var(--text3);font-weight:500;margin-bottom:.5rem;padding:0 .1rem}
+.cal-filter-list{display:flex;flex-direction:column;gap:.25rem}
 .cal-filter-loading{font-size:.78rem;color:var(--text3);padding:.2rem 0}
-.cal-chip{display:inline-flex;align-items:center;gap:.35rem;padding:.3rem .65rem;border-radius:20px;font-size:.75rem;font-weight:500;cursor:pointer;border:2px solid transparent;transition:all var(--ease);user-select:none}
-.cal-chip input[type=checkbox]{width:13px;height:13px;cursor:pointer;accent-color:var(--chip-color,var(--amber));flex-shrink:0}
-.cal-chip.active{border-color:var(--chip-color,var(--amber));background:color-mix(in srgb,var(--chip-color,var(--amber)) 12%,transparent)}
-.cal-chip:not(.active){opacity:.55;background:var(--surface2)}
+.cal-chip{display:flex;align-items:center;gap:.5rem;padding:.4rem .5rem;border-radius:var(--r-sm);font-size:.82rem;font-weight:400;cursor:pointer;border:none;background:transparent;transition:background var(--ease);user-select:none;width:100%;text-align:left}
+.cal-chip:hover{background:var(--surface2)}
+.cal-chip input[type=checkbox]{width:14px;height:14px;cursor:pointer;accent-color:var(--chip-color,var(--amber));flex-shrink:0}
+.cal-chip.active{background:color-mix(in srgb,var(--chip-color,var(--amber)) 10%,transparent)}
+.cal-chip:not(.active){opacity:.65}
 .cal-chip-dot{width:9px;height:9px;border-radius:50%;flex-shrink:0}
-.cal-chip-name{max-width:100px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.cal-chip-name{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .cal-chip-badge{font-size:.65rem;background:rgba(0,0,0,.1);padding:1px 5px;border-radius:10px}
-.cal-import-btn{padding:.3rem .7rem;border-radius:var(--r-sm);font-size:.75rem;font-weight:500;color:var(--text2);border:1px solid var(--border);background:var(--surface);cursor:pointer;transition:all var(--ease);white-space:nowrap;flex-shrink:0}
-.cal-import-btn:hover{background:var(--surface2)}
+.cal-import-btn{width:100%;margin-top:.5rem;padding:.4rem .7rem;border-radius:var(--r-sm);font-size:.78rem;font-weight:500;color:var(--text2);border:1px solid var(--border);background:var(--surface2);cursor:pointer;transition:all var(--ease);text-align:center}
+.cal-import-btn:hover{background:var(--border);color:var(--text)}
 .cal-import-btn.loading{opacity:.6;pointer-events:none}
+.cal-filter-popup-footer{border-top:1px solid var(--border);margin-top:.5rem;padding-top:.5rem}
 /* Calendar picker in modal */
 .cal-picker-item{display:flex;align-items:center;gap:.75rem;padding:.65rem .1rem;border-bottom:1px solid var(--border);cursor:pointer;transition:background var(--ease)}
 .cal-picker-item:last-child{border-bottom:none}
@@ -773,14 +783,23 @@ img{max-width:100%;display:block}
       <button class="btn btn-primary btn-sm" id="notif-enable-btn">Enable</button>
     </div>
 
-    <!-- Calendar filter panel -->
+    <!-- Calendar filter popup -->
     <div id="cal-filter-wrap">
       <div class="cal-filter-bar">
-        <div class="cal-filter-list" id="cal-filter-list">
-          <!-- Calendar checkboxes rendered by JS -->
-          <div class="cal-filter-loading">Loading calendars…</div>
+        <button class="cal-filter-btn" id="cal-filter-toggle-btn">
+          📅 Kalender
+          <div class="cal-filter-dots" id="cal-filter-dots"></div>
+          <span style="font-size:.7rem;opacity:.6">▾</span>
+        </button>
+        <div class="cal-filter-popup" id="cal-filter-popup">
+          <div class="cal-filter-popup-hdr">Tampilkan Kalender</div>
+          <div class="cal-filter-list" id="cal-filter-list">
+            <div class="cal-filter-loading">Loading calendars…</div>
+          </div>
+          <div class="cal-filter-popup-footer">
+            <button class="cal-import-btn" id="cal-import-btn" title="Sync from Google Calendar">↺ Sync GCal</button>
+          </div>
         </div>
-        <button class="cal-import-btn" id="cal-import-btn" title="Sync from Google Calendar">↺ Sync GCal</button>
       </div>
     </div>
 
@@ -1532,6 +1551,11 @@ function setActiveProfile(id){
   localStorage.setItem(LS_ACTIVE_PROFILE, id);
   _updateHeaderAvatar();
   _refreshUserFilterChips();
+  // Reload per-user calendar settings
+  loadEnabledCals();
+  if(_calendars.length){ renderCalFilterChips(); refreshCalendarView(); }
+  else loadCalendars();
+  renderHome();
 }
 function profileInitials(name){ return (name||'?').trim().slice(0,2).toUpperCase(); }
 function profileBadge(createdBy){
@@ -2112,6 +2136,7 @@ let _gcalEvents=[];
 let _calendars=[];           // user's calendar list from GCal
 let _enabledCals=new Set();  // calendar IDs currently shown
 const LS_ENABLED_CALS='lumina_enabled_cals';
+function _calKey(){ const p=getActiveProfile(); return p?`${LS_ENABLED_CALS}_${p.id}`:LS_ENABLED_CALS; }
 let _editEntry=null, _carIdx=0, _txType='expense';
 let _cal=null; // FullCalendar instance
 let _quill=null; // Quill instance
@@ -2337,12 +2362,13 @@ document.getElementById('ocr-key-save')?.addEventListener('click',()=>{
 // Restore enabled cals from localStorage
 function loadEnabledCals(){
   try{
-    const saved=JSON.parse(localStorage.getItem(LS_ENABLED_CALS)||'null');
+    const saved=JSON.parse(localStorage.getItem(_calKey())||'null');
     if(saved&&Array.isArray(saved))_enabledCals=new Set(saved);
-  }catch(_){}
+    else _enabledCals=new Set();
+  }catch(_){ _enabledCals=new Set(); }
 }
 function saveEnabledCals(){
-  localStorage.setItem(LS_ENABLED_CALS,JSON.stringify([..._enabledCals]));
+  localStorage.setItem(_calKey(),JSON.stringify([..._enabledCals]));
 }
 
 // Fetch calendars + render filter chips + auto-import enabled ones
@@ -2365,7 +2391,7 @@ async function loadCalendars(){
   }
 }
 
-// Render the display-toggle chips above the calendar
+// Render the display-toggle chips inside popup
 function renderCalFilterChips(){
   const el=document.getElementById('cal-filter-list');
   if(!el)return;
@@ -2388,10 +2414,33 @@ function renderCalFilterChips(){
       if(cb.checked)_enabledCals.add(calId); else _enabledCals.delete(calId);
       saveEnabledCals();
       cb.closest('.cal-chip')?.classList.toggle('active',cb.checked);
+      _updateCalFilterDots();
       refreshCalendarView();
     });
   });
+  _updateCalFilterDots();
 }
+
+function _updateCalFilterDots(){
+  const el=document.getElementById('cal-filter-dots');
+  if(!el)return;
+  const enabled=_calendars.filter(c=>_enabledCals.has(c.id));
+  el.innerHTML=enabled.slice(0,5).map(c=>`<span class="cal-filter-dot" style="background:${c.color||'#3b82f6'}" title="${esc(c.name)}"></span>`).join('');
+}
+
+// Popup toggle
+(function _initCalFilterPopup(){
+  document.addEventListener('click', e=>{
+    const btn=document.getElementById('cal-filter-toggle-btn');
+    const popup=document.getElementById('cal-filter-popup');
+    if(!btn||!popup)return;
+    if(btn.contains(e.target)){
+      popup.classList.toggle('open');
+    } else if(!popup.contains(e.target)){
+      popup.classList.remove('open');
+    }
+  });
+})();
 
 // ── Import selection modal ────────────────────────────
 // Track which calendars are selected FOR IMPORT (separate from display toggle)
