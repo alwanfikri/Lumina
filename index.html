@@ -376,6 +376,7 @@ img{max-width:100%;display:block}
 .badge-tomorrow{background:var(--blue-l,#dbeafe);color:#1d4ed8}
 .badge-soon{background:var(--green-l);color:#15803d}
 .badge-has-reminder{background:#fce7f3;color:#be185d}
+.badge-gcal{background:#dbeafe;color:#1d4ed8;padding-left:.4rem;padding-right:.4rem}
 /* ── HOME DASHBOARD ─────────────────────────────── */
 .home-greeting{margin-bottom:1.1rem}
 .home-greeting-date{font-size:.75rem;text-transform:uppercase;letter-spacing:.09em;color:var(--text3);font-weight:500;margin-bottom:.2rem}
@@ -2663,6 +2664,8 @@ async function importEnabledGCals(){
     _gcalEvents=[];
     if(btn)btn.classList.remove('loading');
     refreshCalendarView();
+    renderUpcoming();
+    renderHome();
     return;
   }
 
@@ -2683,6 +2686,8 @@ async function importEnabledGCals(){
 
   if(btn)btn.classList.remove('loading');
   refreshCalendarView();
+  renderUpcoming();
+  renderHome();
 }
 
 // Refresh FullCalendar with Lumina + GCal events, respecting enabled filter
@@ -3692,6 +3697,41 @@ function getGreeting(){
   return tr.goodEvening;
 }
 
+// Merge Lumina's own agenda with synced/imported Google Calendar events for "Upcoming" widgets.
+// Skips GCal events already represented in _agenda (created from Lumina, so they'd double up),
+// and only includes GCal events from calendars the user has enabled for display.
+function _getUpcomingEvents(windowDays){
+  const now=new Date();
+  const todayS=now.toISOString().slice(0,10);
+  const endDt=new Date(now.getTime()+windowDays*86400000);
+  const endS=endDt.toISOString().slice(0,10);
+
+  const luminaGCalIds=new Set(_agenda.map(e=>e.gcal_id).filter(Boolean));
+
+  const fromLumina=_agenda.map(ev=>({
+    id:ev.id, title:ev.title, date:ev.date, all_day:ev.all_day, start_time:ev.start_time,
+    color:ev.color||'#f59e0b', reminder:ev.reminder, description:ev.description, source:'lumina'
+  }));
+
+  const fromGCal=(_gcalEvents||[])
+    .filter(ev=>!luminaGCalIds.has(ev.gcal_id) && _enabledCals.has(ev.calendar_id))
+    .map(ev=>({
+      id:'gcal_'+ev.gcal_id, title:ev.title, date:ev.date, all_day:ev.all_day, start_time:ev.start_time,
+      color:ev.color||'#3b82f6', reminder:null, description:ev.description, source:'gcal', calendar_name:ev.calendar_name
+    }));
+
+  return [...fromLumina,...fromGCal]
+    .filter(ev=>{
+      if(ev.all_day) return ev.date>=todayS && ev.date<=endS;
+      return ev.start_time && new Date(ev.start_time)>=now && new Date(ev.start_time)<=endDt;
+    })
+    .sort((a,b)=>{
+      const ta=a.start_time?new Date(a.start_time):new Date(a.date+'T00:00:00');
+      const tb=b.start_time?new Date(b.start_time):new Date(b.date+'T00:00:00');
+      return ta-tb;
+    });
+}
+
 function renderHome(){
   const el=document.getElementById('home-content');
   if(!el)return;
@@ -3730,20 +3770,8 @@ function renderHome(){
     </div>
   </div>`;
 
-  // ── Upcoming events ────────────────────────────────────
-  const in3d=new Date(now.getTime()+3*86400000);
-  const in3dS=in3d.toISOString().slice(0,10);
-  const upcoming=_agenda
-    .filter(ev=>{
-      if(ev.all_day) return ev.date>=todayS && ev.date<=in3dS;
-      return ev.start_time && new Date(ev.start_time)>=now && new Date(ev.start_time)<=in3d;
-    })
-    .sort((a,b)=>{
-      const ta=a.start_time?new Date(a.start_time):new Date(a.date+'T00:00:00');
-      const tb=b.start_time?new Date(b.start_time):new Date(b.date+'T00:00:00');
-      return ta-tb;
-    })
-    .slice(0,3);
+  // ── Upcoming events (Lumina + synced Google Calendar) ──
+  const upcoming=_getUpcomingEvents(3).slice(0,3);
 
   const upcomingHtml=upcoming.length ? upcoming.map(ev=>{
     const timeStr=ev.all_day?(tr.allDayEvent||'All day'):new Date(ev.start_time).toLocaleTimeString(_locale.lang==='id'?'id-ID':'en-US',{hour:'2-digit',minute:'2-digit'});
@@ -3751,13 +3779,14 @@ function renderHome(){
     const badge=isToday?`<span class="home-ev-badge badge-today">${tr.today||'Today'}</span>`:
                 isTomorrow?`<span class="home-ev-badge badge-tomorrow">${tr.tomorrow||'Tomorrow'}</span>`:
                 `<span class="home-ev-badge badge-soon">${fmtDate(ev.date)}</span>`;
-    return`<div class="home-upcoming-item" data-id="${ev.id}">
+    const gcalTag=ev.source==='gcal'?`<span class="home-ev-badge badge-gcal" title="${esc(ev.calendar_name||'Google Calendar')}">📅</span>`:'';
+    return`<div class="home-upcoming-item" data-id="${ev.id}" data-source="${ev.source}">
       <div class="home-ev-dot" style="background:${ev.color||'#f59e0b'}"></div>
       <div class="home-ev-body">
         <div class="home-ev-title">${esc(ev.title)}</div>
         <div class="home-ev-time">${timeStr}${ev.reminder?` · 🔔${ev.reminder>=60?ev.reminder/60+'h':ev.reminder+'m'}`:''}${ev.description?` · ${esc(ev.description.slice(0,30))}`:''}</div>
       </div>
-      ${badge}
+      ${gcalTag}${badge}
     </div>`;
   }).join('') : `<div class="home-empty">${tr.noUpcoming||'No upcoming events'}</div>`;
 
@@ -3852,6 +3881,10 @@ function renderHome(){
   // Wire up upcoming item clicks
   el.querySelectorAll('.home-upcoming-item').forEach(item=>{
     item.addEventListener('click',()=>{
+      if(item.dataset.source==='gcal'){
+        toast(`📅 ${item.querySelector('.home-ev-title')?.textContent||''}`,'info',3000);
+        return;
+      }
       const ev=_agenda.find(e=>e.id===item.dataset.id);
       if(ev)openEvModal(ev);
     });
@@ -5242,25 +5275,11 @@ function renderUpcoming(){
   if(!el) return;
 
   const now    = new Date();
-  const in7d   = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
   const todayS = now.toISOString().slice(0,10);
   const tomorrowS = new Date(now.getTime() + 86400000).toISOString().slice(0,10);
 
-  const in7dS = in7d.toISOString().slice(0,10);
-  // Filter: events (timed or all-day) in next 7 days, not already past
-  const upcoming = _agenda
-    .filter(ev => {
-      if(ev.all_day) return ev.date >= todayS && ev.date <= in7dS;
-      if(!ev.start_time) return false;
-      const s = new Date(ev.start_time);
-      return s >= now && s <= in7d;
-    })
-    .sort((a,b) => {
-      const ta = a.start_time ? new Date(a.start_time) : new Date(a.date+'T00:00:00');
-      const tb = b.start_time ? new Date(b.start_time) : new Date(b.date+'T00:00:00');
-      return ta - tb;
-    })
-    .slice(0, 5); // Show max 5
+  // Events (timed or all-day) in next 7 days, not already past — merges Lumina + synced Google Calendar
+  const upcoming = _getUpcomingEvents(7).slice(0, 5); // Show max 5
 
   if(!upcoming.length){ el.innerHTML = ''; return; }
 
@@ -5287,14 +5306,17 @@ function renderUpcoming(){
     const reminderBadge = ev.reminder
       ? `<span class="upcoming-badge badge-has-reminder">🔔 ${ev.reminder >= 60 ? (ev.reminder/60)+'h' : ev.reminder+'m'}</span>`
       : '';
+    const gcalBadge = ev.source==='gcal'
+      ? `<span class="upcoming-badge badge-gcal" title="${esc(ev.calendar_name||'Google Calendar')}">📅</span>`
+      : '';
 
-    return `<div class="upcoming-item" data-id="${ev.id}">
+    return `<div class="upcoming-item" data-id="${ev.id}" data-source="${ev.source}">
       <div class="upcoming-dot" style="background:${ev.color||'#f59e0b'}"></div>
       <div class="upcoming-body">
         <div class="upcoming-ev-title">${esc(ev.title)}</div>
         <div class="upcoming-time">${fmtDate(dateS)} · ${timeStr}</div>
       </div>
-      ${reminderBadge}
+      ${reminderBadge}${gcalBadge}
       <span class="upcoming-badge ${badgeCls}">${badge}</span>
     </div>`;
   }).join('');
@@ -5305,9 +5327,13 @@ function renderUpcoming(){
     <div class="upcoming-list">${items}</div>
   </div>`;
 
-  // Click to edit
+  // Click to edit (Lumina events) or show info (read-only synced GCal events)
   el.querySelectorAll('.upcoming-item').forEach(item => {
     item.addEventListener('click', ()=>{
+      if(item.dataset.source==='gcal'){
+        toast(`📅 ${item.querySelector('.upcoming-ev-title')?.textContent||''}`,'info',3000);
+        return;
+      }
       const ev = _agenda.find(e => e.id === item.dataset.id);
       if(ev) openEvModal(ev);
     });
