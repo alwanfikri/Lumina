@@ -3732,14 +3732,21 @@ function renderHome(){
 
   // ── Upcoming events ────────────────────────────────────
   const in3d=new Date(now.getTime()+3*86400000);
+  const in3dS=in3d.toISOString().slice(0,10);
   const upcoming=_agenda
-    .filter(ev=>ev.start_time&&new Date(ev.start_time)>=now&&new Date(ev.start_time)<=in3d)
-    .sort((a,b)=>new Date(a.start_time)-new Date(b.start_time))
+    .filter(ev=>{
+      if(ev.all_day) return ev.date>=todayS && ev.date<=in3dS;
+      return ev.start_time && new Date(ev.start_time)>=now && new Date(ev.start_time)<=in3d;
+    })
+    .sort((a,b)=>{
+      const ta=a.start_time?new Date(a.start_time):new Date(a.date+'T00:00:00');
+      const tb=b.start_time?new Date(b.start_time):new Date(b.date+'T00:00:00');
+      return ta-tb;
+    })
     .slice(0,3);
 
   const upcomingHtml=upcoming.length ? upcoming.map(ev=>{
-    const startDt=new Date(ev.start_time);
-    const timeStr=startDt.toLocaleTimeString(_locale.lang==='id'?'id-ID':'en-US',{hour:'2-digit',minute:'2-digit'});
+    const timeStr=ev.all_day?(tr.allDayEvent||'All day'):new Date(ev.start_time).toLocaleTimeString(_locale.lang==='id'?'id-ID':'en-US',{hour:'2-digit',minute:'2-digit'});
     const isToday=ev.date===todayS, isTomorrow=ev.date===tomorrowS;
     const badge=isToday?`<span class="home-ev-badge badge-today">${tr.today||'Today'}</span>`:
                 isTomorrow?`<span class="home-ev-badge badge-tomorrow">${tr.tomorrow||'Tomorrow'}</span>`:
@@ -5239,23 +5246,29 @@ function renderUpcoming(){
   const todayS = now.toISOString().slice(0,10);
   const tomorrowS = new Date(now.getTime() + 86400000).toISOString().slice(0,10);
 
-  // Filter: timed events in next 7 days, not already past
+  const in7dS = in7d.toISOString().slice(0,10);
+  // Filter: events (timed or all-day) in next 7 days, not already past
   const upcoming = _agenda
     .filter(ev => {
+      if(ev.all_day) return ev.date >= todayS && ev.date <= in7dS;
       if(!ev.start_time) return false;
       const s = new Date(ev.start_time);
       return s >= now && s <= in7d;
     })
-    .sort((a,b) => new Date(a.start_time) - new Date(b.start_time))
+    .sort((a,b) => {
+      const ta = a.start_time ? new Date(a.start_time) : new Date(a.date+'T00:00:00');
+      const tb = b.start_time ? new Date(b.start_time) : new Date(b.date+'T00:00:00');
+      return ta - tb;
+    })
     .slice(0, 5); // Show max 5
 
   if(!upcoming.length){ el.innerHTML = ''; return; }
 
   const tr = t();
   const items = upcoming.map(ev => {
-    const startDt = new Date(ev.start_time);
+    const startDt = ev.start_time ? new Date(ev.start_time) : new Date(ev.date+'T00:00:00');
     const dateS   = ev.date;
-    const timeStr = startDt.toLocaleTimeString(
+    const timeStr = ev.all_day ? (tr.allDayEvent||'All day') : startDt.toLocaleTimeString(
       _locale.lang === 'id' ? 'id-ID' : 'en-US',
       {hour:'2-digit', minute:'2-digit'}
     );

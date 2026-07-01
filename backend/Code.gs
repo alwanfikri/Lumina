@@ -21,11 +21,13 @@ var DIARY_HEADERS  = ['id','date','title','content_html','photo_urls','mood','up
 var AGENDA_HEADERS = ['id','gcal_id','date','end_date','start_time','end_time','all_day','title','description','color','recur','recur_end','reminder','updatedAt','createdBy'];
 var PHOTOS_HEADERS = ['id','name','drive_id','thumb_url','drive_url','entry_id','createdAt'];
 var MONEY_HEADERS  = ['id','date','type','category','amount','notes','updatedAt','createdBy','payment_method','admin_fee'];
+var NOTES_HEADERS  = ['id','title','content_html','canvas_data','color','pinned','tags','updatedAt','createdBy'];
 
 var DC = {id:1,date:2,title:3,content_html:4,photo_urls:5,mood:6,updatedAt:7,createdBy:8};
 var AC = {id:1,gcal_id:2,date:3,end_date:4,start_time:5,end_time:6,all_day:7,title:8,description:9,color:10,recur:11,recur_end:12,reminder:13,updatedAt:14,createdBy:15};
 var PC = {id:1,name:2,drive_id:3,thumb_url:4,drive_url:5,entry_id:6,createdAt:7};
 var MC = {id:1,date:2,type:3,category:4,amount:5,notes:6,updatedAt:7,createdBy:8,payment_method:9,admin_fee:10};
+var NC = {id:1,title:2,content_html:3,canvas_data:4,color:5,pinned:6,tags:7,updatedAt:8,createdBy:9};
 
 function makeResp(obj){return ContentService.createTextOutput(JSON.stringify(obj)).setMimeType(ContentService.MimeType.JSON);}
 
@@ -107,10 +109,10 @@ function migrateSheets(){
   ensureSheetColumns('Agenda', AGENDA_HEADERS);
   ensureSheetColumns('Photos', PHOTOS_HEADERS);
   ensureSheetColumns('Money',  MONEY_HEADERS);
-  ensureSheetColumns('Notes',  ['id','title','content_html','canvas_data','color','pinned','tags','updatedAt','createdBy']);
+  ensureSheetColumns('Notes',  NOTES_HEADERS);
   // Show current headers for verification
   var ss=SpreadsheetApp.openById(CONFIG.SPREADSHEET_ID);
-  ['Diary','Agenda','Photos','Money'].forEach(function(name){
+  ['Diary','Agenda','Photos','Money','Notes'].forEach(function(name){
     var sh=ss.getSheetByName(name);
     if(!sh){Logger.log(name+': NOT FOUND');return;}
     var cols=sh.getLastColumn();
@@ -172,6 +174,9 @@ function doPost(e){
       case 'saveMoney':    return saveMoney(p);
       case 'getMoneys':    return getMoneys(p);
       case 'deleteMoney':  return deleteMoney(p);
+      case 'saveNote':     return saveNote(p);
+      case 'getNotes':     return getNotes();
+      case 'deleteNote':   return deleteNote(p);
       case 'getCalendars':    return getCalendars();
       case 'importFromGCal':  return importFromGCal(p);
       case 'ensureLuminaCal': return ok({id: getLuminaCalendar().getId(), name: LUMINA_CAL_NAME});
@@ -367,6 +372,29 @@ function getMoneys(p){
 function deleteMoney(p){
   var sh=getSheet('Money',MONEY_HEADERS);var row=sheetFindById(sh,MC.id,p.id);
   if(row!==-1)sh.deleteRow(row);cacheInvalidate();return ok({deleted:true});
+}
+
+// ── NOTES ───────────────────────────────────────────────────
+function saveNote(p){
+  var sh=getSheet('Notes',NOTES_HEADERS);var now=isoNow();var id=p.id||genId();
+  var row=sheetFindById(sh,NC.id,id);
+  var existingCreatedBy='';
+  if(row!==-1){try{existingCreatedBy=v(sh.getRange(row,NC.createdBy).getValue());}catch(e){}}
+  var createdBy=row===-1?v(p.createdBy):existingCreatedBy;
+  var data=[id,v(p.title),v(p.content_html),v(p.canvas_data),v(p.color)||'#ffffff',p.pinned?'true':'false',v(p.tags),now,createdBy];
+  if(row===-1)sh.appendRow(data);else sh.getRange(row,1,1,data.length).setValues([data]);
+  return ok({id:id,updatedAt:now});
+}
+function getNotes(){
+  var rows=sheetGetAll('Notes',NOTES_HEADERS);
+  var out=rows.filter(function(r){return r[0];}).map(function(r){
+    return{id:v(r[0]),title:v(r[1]),content_html:v(r[2]),canvas_data:v(r[3]),color:v(r[4])||'#ffffff',pinned:v(r[5])==='true',tags:v(r[6]),updatedAt:v(r[7]),createdBy:v(r[8])};
+  }).sort(function(a,b){return b.updatedAt.localeCompare(a.updatedAt);});
+  return ok({notes:out});
+}
+function deleteNote(p){
+  var sh=getSheet('Notes',NOTES_HEADERS);var row=sheetFindById(sh,NC.id,p.id);
+  if(row!==-1)sh.deleteRow(row);return ok({deleted:true});
 }
 
 function debugSetup(){
