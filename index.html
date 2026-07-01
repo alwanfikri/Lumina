@@ -2023,6 +2023,12 @@ const t = ()=>TRANSLATIONS[_locale.lang]||TRANSLATIONS.en;
 function applyTheme(theme){
   _locale.theme = theme || 'auto';
   const html = document.documentElement;
+  // Enable smooth color transitions only briefly during the actual switch — leaving this
+  // active permanently (as before) meant every unrelated re-render (renderMoney, renderHome,
+  // etc.) also picked up the transition, causing visible flicker/jank especially on mobile.
+  html.classList.add('theme-ready');
+  clearTimeout(_themeReadyTimer);
+  _themeReadyTimer = setTimeout(()=>html.classList.remove('theme-ready'), 300);
   if(theme === 'dark'){
     html.setAttribute('data-theme','dark');
   } else if(theme === 'light'){
@@ -2285,6 +2291,7 @@ let API_URL = localStorage.getItem(LS_KEY) || DEFAULT_API;
 //  STATE
 // ═══════════════════════════════════════════════════════
 let _agenda=[], _diary=[], _photos=[], _money=[];
+let _themeReadyTimer=null;
 let _gcalEvents=[];
 // imported GCal events (not in sheet)
 let _calendars=[];           // user's calendar list from GCal
@@ -2538,7 +2545,8 @@ function saveEnabledCals(){
 async function loadCalendars(){
   try{
     const d=await api('getCalendars');
-    _calendars=d.calendars||[];
+    // Defensive de-dupe by id — Google Calendar can occasionally list the same calendar twice
+    _calendars=[...new Map((d.calendars||[]).map(c=>[c.id,c])).values()];
 
     // First load: enable Lumina + primary by default
     if(_enabledCals.size===0){
@@ -5417,30 +5425,41 @@ async function _pullSettingsFromServer(){
     let changed = false;
 
     if(settings.profiles && Array.isArray(settings.profiles) && settings.profiles.length){
-      localStorage.setItem(LS_PROFILES, JSON.stringify(settings.profiles));
-      _profilesCache = null;
-      changed = true;
+      const same = JSON.stringify(settings.profiles) === localStorage.getItem(LS_PROFILES);
+      if(!same){
+        localStorage.setItem(LS_PROFILES, JSON.stringify(settings.profiles));
+        _profilesCache = null;
+        changed = true;
+      }
     } else {
       api('saveSetting',{key:'profiles',value:getProfiles()}).catch(()=>{});
     }
 
     if(settings.categories && (settings.categories.expense || settings.categories.income)){
-      localStorage.setItem(LS_CUSTOM_CATS, JSON.stringify(settings.categories));
-      _catsRawCache = null;
-      _rebuildCatMap();
-      changed = true;
+      const same = JSON.stringify(settings.categories) === localStorage.getItem(LS_CUSTOM_CATS);
+      if(!same){
+        localStorage.setItem(LS_CUSTOM_CATS, JSON.stringify(settings.categories));
+        _catsRawCache = null;
+        _rebuildCatMap();
+        changed = true;
+      }
     } else {
       api('saveSetting',{key:'categories',value:{expense:getExpenseCats(),income:getIncomeCats()}}).catch(()=>{});
     }
 
     if(settings.paymentMethods && Array.isArray(settings.paymentMethods) && settings.paymentMethods.length){
-      localStorage.setItem(LS_PAYMENT_METHODS, JSON.stringify(settings.paymentMethods));
-      _pmCache = null;
-      changed = true;
+      const same = JSON.stringify(settings.paymentMethods) === localStorage.getItem(LS_PAYMENT_METHODS);
+      if(!same){
+        localStorage.setItem(LS_PAYMENT_METHODS, JSON.stringify(settings.paymentMethods));
+        _pmCache = null;
+        changed = true;
+      }
     } else {
       api('saveSetting',{key:'paymentMethods',value:getPaymentMethods()}).catch(()=>{});
     }
 
+    // Only re-render if something actually changed — avoids a visible "double flash"
+    // on every load when the pulled data is identical to what's already on screen.
     if(changed){
       _updateHeaderAvatar();
       _renderProfileCards();
@@ -5477,8 +5496,6 @@ async function loadAll(){
     if(theme === 'dark' || (theme === 'auto' && prefersDark)){
       document.documentElement.setAttribute('data-theme','dark');
     }
-    // Enable smooth transitions after load (prevents flash on theme apply)
-    setTimeout(()=>document.documentElement.classList.add('theme-ready'), 300);
   }catch(e){}
 })();
 
