@@ -1532,6 +1532,7 @@ img{max-width:100%;display:block}
         <select class="fi" id="ocr-provider" style="font-size:.84rem">
           <option value="gemini">Gemini (Google) — Free tier available</option>
           <option value="anthropic">Claude (Anthropic) — Paid</option>
+          <option value="ocrspace">OCR.space — Free tier available</option>
         </select>
       </div>
       <label style="font-size:.78rem;color:var(--text2);display:block;margin-bottom:4px" id="ocr-key-label">API Key</label>
@@ -2447,6 +2448,7 @@ document.getElementById('refresh-btn').addEventListener('click',()=>{document.ge
 const _ocrProviderHints = {
   gemini:    { placeholder:'AIza…',   hint:'Get a free key at <strong>aistudio.google.com</strong> → Get API Key', label:'Gemini API Key' },
   anthropic: { placeholder:'sk-ant-…', hint:'Get a key at <strong>console.anthropic.com</strong> (paid)', label:'Anthropic API Key' },
+  ocrspace:  { placeholder:'K8441325…', hint:'Get a free key at <strong>ocr.space/ocrapi</strong>', label:'OCR.space API Key' },
 };
 document.getElementById('ocr-provider')?.addEventListener('change', ()=>{
   const prov = document.getElementById('ocr-provider').value;
@@ -3603,7 +3605,7 @@ function openTxModal(tx=null){
   document.getElementById('tx-admin-fee-manual').style.display = 'none';
   document.querySelectorAll('.admin-fee-chip').forEach(c=>c.classList.toggle('active', hasFee && String(tx.admin_fee)===c.dataset.fee));
   if(hasFee && ![1000,2500,6500].includes(tx.admin_fee)){
-    document.getElementById('tx-admin-fee-manual').style.display='';
+    document.getElementById('tx-admin-fee-manual').style.display='inline-block';
     document.getElementById('tx-admin-fee-manual').value=tx.admin_fee;
     document.querySelector('.admin-fee-chip[data-fee="manual"]')?.classList.add('active');
   }
@@ -3637,7 +3639,7 @@ document.querySelectorAll('.admin-fee-chip').forEach(chip=>{
     chip.classList.add('active');
     const manualInput = document.getElementById('tx-admin-fee-manual');
     if(chip.dataset.fee === 'manual'){
-      manualInput.style.display = '';
+      manualInput.style.display = 'inline-block';
       manualInput.focus();
       document.getElementById('tx-admin-fee').value = parseFloat(manualInput.value)||0;
     } else {
@@ -4194,6 +4196,9 @@ async function scanReceiptOCR(imageBase64, mimeType){
   const provider= localStorage.getItem('lumina_ocr_provider')||'gemini';
   if(!apiKey) throw new Error('No OCR API key set — open Settings and add your key');
 
+  // ── OCR.space (plain text extraction, no AI field parsing) ──
+  if(provider === 'ocrspace') return await _scanWithOcrSpace(imageBase64, mimeType, apiKey);
+
   let rawText;
 
   if(provider === 'gemini'){
@@ -4253,6 +4258,59 @@ async function scanReceiptOCR(imageBase64, mimeType){
   if(!clean) throw new Error('Empty response from OCR');
   try{ return JSON.parse(clean); }
   catch(e){ throw new Error('Could not parse OCR response: '+clean.slice(0,80)); }
+}
+
+// ── OCR.space — plain OCR text extraction, no AI understanding ──
+// We get raw text back and have to guess amount/date/notes ourselves.
+async function _scanWithOcrSpace(imageBase64, mimeType, apiKey){
+  const lang = _locale.lang === 'id' ? 'ind' : 'eng';
+  const body = new URLSearchParams();
+  body.set('apikey', apiKey);
+  body.set('base64Image', `data:${mimeType};base64,${imageBase64}`);
+  body.set('language', lang);
+  body.set('OCREngine', '2');
+  body.set('scale', 'true');
+  body.set('detectOrientation', 'true');
+  const resp = await fetch('https://api.ocr.space/parse/image', { method:'POST', body });
+  if(!resp.ok) throw new Error('OCR.space error: '+resp.status);
+  const data = await resp.json();
+  if(data.IsErroredOnProcessing) throw new Error('OCR.space error: '+(data.ErrorMessage?.[0]||data.ErrorMessage||'processing failed'));
+  const text = data?.ParsedResults?.[0]?.ParsedText || '';
+  if(!text.trim()) throw new Error('No text detected in image');
+  return _parseReceiptText(text);
+}
+
+// Heuristic parser for raw receipt text (used by OCR.space, which has no AI field extraction)
+function _parseReceiptText(text){
+  const lines = text.split('\n').map(l=>l.trim()).filter(Boolean);
+  const totalKeywords = /total|jumlah|grand\s*total|amount\s*due|subtotal|bayar/i;
+  const extractNum = (s) => {
+    const matches = s.match(/\d{1,3}(?:[.,]\d{3})+(?:[.,]\d{2})?|\d{4,}/g);
+    if(!matches) return null;
+    const raw = matches[matches.length-1];
+    const val = parseFloat(raw.replace(/[.,]/g,''));
+    return isNaN(val) ? null : val;
+  };
+  let amount = null;
+  lines.filter(l=>totalKeywords.test(l)).forEach(l=>{
+    const v = extractNum(l);
+    if(v && (amount===null || v>amount)) amount = v;
+  });
+  if(amount===null){
+    let max = 0;
+    lines.forEach(l=>{ const v=extractNum(l); if(v && v>max) max=v; });
+    amount = max || null;
+  }
+  let date = null;
+  const dateMatch = text.match(/(\d{1,2})[\/\-.](\d{1,2})[\/\-.](\d{2,4})/);
+  if(dateMatch){
+    let [, d, m, y] = dateMatch;
+    if(y.length===2) y = '20'+y;
+    d = d.padStart(2,'0'); m = m.padStart(2,'0');
+    if(+d<=31 && +m<=12) date = `${y}-${m}-${d}`;
+  }
+  const notes = (lines.find(l=>l.length>2 && !/^[\d.,\s]+$/.test(l)) || '').slice(0,40);
+  return { amount, category: null, notes, date, payment_method: null };
 }
 
 function initOCR(){
@@ -4653,8 +4711,9 @@ function _updateInsightsBtn(){
 document.getElementById('diary-insights-btn')?.addEventListener('click', _runDiaryInsights);
 
 async function _runDiaryInsights(){
-  const key = localStorage.getItem('lumina_ocr_key')||'';
-  if(!key){ toast('Add an Anthropic API key in Settings → AI / OCR', 'warning', 5000); return; }
+  const key  = localStorage.getItem('lumina_ocr_key')||'';
+  const prov = localStorage.getItem('lumina_ocr_provider')||'gemini';
+  if(!key || prov !== 'anthropic'){ toast('This feature needs an Anthropic (Claude) API key — set provider to Claude in Settings → Receipt OCR', 'warning', 6000); return; }
 
   const entries = _diary.slice(0, 30);
   if(!entries.length){ toast('No diary entries to analyze.', 'info'); return; }
