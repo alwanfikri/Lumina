@@ -665,13 +665,57 @@ img{max-width:100%;display:block}
 @keyframes spin{to{transform:rotate(360deg)}}
 #ev-time-row.hidden{display:none}
 @keyframes toastIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+
+/* ── Profile system ─────────────────────────────────── */
+#profile-screen{position:fixed;inset:0;z-index:9000;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:2rem;gap:0}
+.profile-screen-logo{font-family:var(--font-s);font-size:2rem;font-weight:600;color:var(--text);margin-bottom:.3rem}
+.profile-screen-logo span{color:var(--amber)}
+.profile-screen-sub{font-size:.9rem;color:var(--text2);margin-bottom:2rem}
+.profile-cards{display:flex;gap:1rem;flex-wrap:wrap;justify-content:center}
+.profile-card{display:flex;flex-direction:column;align-items:center;gap:.65rem;padding:1.4rem 1.8rem;background:var(--surface);border:2px solid var(--border);border-radius:var(--r);cursor:pointer;transition:all .2s ease;min-width:110px}
+.profile-card:hover{border-color:var(--amber);transform:translateY(-3px);box-shadow:var(--shadow-lg)}
+.profile-avatar-lg{width:60px;height:60px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1.4rem;font-weight:700;color:#fff;letter-spacing:-.5px}
+.profile-card-name{font-size:.9rem;font-weight:500;color:var(--text);max-width:90px;text-align:center;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.profile-add-card{border-style:dashed;color:var(--text3)}
+.profile-add-card:hover{border-color:var(--amber);color:var(--amber)}
+.profile-add-card .profile-avatar-lg{background:var(--surface2);color:var(--text3)}
+/* User badge (tiny colored dot with initials) */
+.user-badge{display:inline-flex;align-items:center;justify-content:center;width:17px;height:17px;border-radius:50%;font-size:.52rem;font-weight:700;color:#fff;flex-shrink:0;vertical-align:middle;line-height:1}
+/* Header avatar */
+.header-avatar{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.65rem;font-weight:700;color:#fff;cursor:pointer;border:none;flex-shrink:0;transition:opacity .15s}
+.header-avatar:hover{opacity:.8}
+/* Profile settings */
+.profiles-list{display:flex;flex-direction:column;gap:.5rem;margin-top:.5rem}
+.profile-row{display:flex;align-items:center;gap:.55rem;padding:.5rem .6rem;background:var(--surface2);border-radius:var(--r-sm)}
+.profile-row-avatar{width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.75rem;font-weight:700;color:#fff;cursor:pointer;flex-shrink:0;border:none}
+.profile-row-name{flex:1;background:transparent;border:none;font-size:.85rem;color:var(--text);font-family:inherit;outline:none;border-bottom:1.5px solid transparent;padding:.1rem 0}
+.profile-row-name:focus{border-bottom-color:var(--amber)}
+.profile-row-del{background:none;border:none;color:var(--text3);cursor:pointer;font-size:.85rem;padding:.2rem .3rem;border-radius:4px}
+.profile-row-del:hover{color:var(--red);background:var(--red-l)}
+.profile-color-picker{display:flex;gap:.35rem;flex-wrap:wrap;margin:.4rem 0 .2rem .5rem}
+.profile-color-swatch{width:20px;height:20px;border-radius:50%;cursor:pointer;border:2px solid transparent;transition:transform .12s}
+.profile-color-swatch:hover,.profile-color-swatch.sel{transform:scale(1.25);border-color:var(--text)}
+/* User filter chips */
+.user-filter-chips{display:flex;gap:.4rem;flex-wrap:wrap;margin-top:.35rem}
+.user-chip{display:inline-flex;align-items:center;gap:.3rem;padding:.22rem .6rem;border-radius:20px;border:1.5px solid var(--border);background:var(--surface);font-size:.75rem;color:var(--text2);cursor:pointer;transition:all .15s;white-space:nowrap}
+.user-chip:hover{border-color:var(--amber);color:var(--text)}
+.user-chip.active{background:var(--amber);border-color:var(--amber);color:#fff;font-weight:500}
+.user-chip .user-badge{margin-right:.1rem}
 </style>
 </head>
 <body>
 
+<!-- Profile screen -->
+<div id="profile-screen" style="display:none">
+  <div class="profile-screen-logo">Lumin<span>a</span></div>
+  <div class="profile-screen-sub" id="profile-screen-sub">Siapa yang menggunakan Lumina?</div>
+  <div class="profile-cards" id="profile-cards-list"></div>
+</div>
+
 <header class="header">
   <div class="logo">Lumin<span>a</span></div>
   <div class="header-r">
+    <button class="header-avatar" id="header-avatar" title="Ganti user" style="display:none"></button>
     <button class="icon-btn" id="search-btn" title="Search (Ctrl+K)" aria-label="Search">🔍</button>
     <button class="icon-btn" id="settings-btn" title="Settings" aria-label="Settings">⚙</button>
   </div>
@@ -776,6 +820,7 @@ img{max-width:100%;display:block}
           <option value="😍">😍 Loved</option>
         </select>
       </div>
+      <div class="user-filter-chips" id="diary-user-chips" style="display:none"></div>
     </div>
     <div id="diary-mood-stats" style="display:none"></div>
     <div id="diary-results-count" style="display:none"></div>
@@ -846,6 +891,8 @@ img{max-width:100%;display:block}
     <!-- Spending Forecast -->
     <div id="forecast-card" style="display:none;margin:.8rem 0;padding:.75rem 1rem;background:var(--surface);border:1px solid var(--border);border-radius:var(--r);font-size:.83rem"></div>
 
+    <!-- User filter -->
+    <div class="user-filter-chips" id="money-user-chips" style="display:none;margin:.4rem 0 .2rem"></div>
     <!-- Transactions -->
     <div id="tx-list"><div class="loading"><div class="spinner"></div><span class="loading-txt">Loading…</span></div></div>
   </div>
@@ -865,6 +912,7 @@ img{max-width:100%;display:block}
         <input class="search-input" id="notes-search" type="search" placeholder="Search notes..." autocomplete="off">
         <button class="search-clear" id="notes-search-clear" style="display:none">&#x2715;</button>
       </div>
+      <div class="user-filter-chips" id="notes-user-chips" style="display:none;margin-top:.4rem"></div>
     </div>
     <div id="notes-list"><div class="loading"><div class="spinner"></div><span class="loading-txt">Loading...</span></div></div>
   </div>
@@ -1328,6 +1376,15 @@ img{max-width:100%;display:block}
   <div class="settings-panel">
     <h2 class="s-ttl" data-i18n="settings">Settings</h2>
 
+    <!-- Profiles -->
+    <div style="margin-bottom:1.1rem">
+      <div class="s-lbl">👥 Profil Pengguna</div>
+      <div class="profiles-list" id="settings-profiles-list"></div>
+      <button class="btn btn-ghost btn-sm" id="add-profile-btn" style="margin-top:.5rem;width:100%">+ Tambah Profil</button>
+    </div>
+
+    <hr style="border:none;border-top:1px solid var(--border);margin:1rem 0">
+
     <!-- Language -->
     <div style="margin-bottom:1.1rem">
       <div class="s-lbl" data-i18n="language">Language</div>
@@ -1441,6 +1498,194 @@ img{max-width:100%;display:block}
 
 <script>
 'use strict';
+// ═══════════════════════════════════════════════════════
+//  PROFILES (multi-user)
+// ═══════════════════════════════════════════════════════
+const LS_PROFILES       = 'lumina_profiles';
+const LS_ACTIVE_PROFILE = 'lumina_active_profile';
+const PROFILE_COLORS    = ['#f59e0b','#3b82f6','#10b981','#ec4899','#8b5cf6','#ef4444','#f97316','#06b6d4'];
+
+function _loadProfiles(){
+  try{ return JSON.parse(localStorage.getItem(LS_PROFILES)||'null'); }catch(e){ return null; }
+}
+function _saveProfiles(profiles){
+  localStorage.setItem(LS_PROFILES, JSON.stringify(profiles));
+}
+function getProfiles(){
+  let p = _loadProfiles();
+  if(!p || !p.length){
+    // Default: 2 profiles
+    p = [
+      {id:'p1', name:'Aku',   color:'#f59e0b'},
+      {id:'p2', name:'Sayang',color:'#ec4899'},
+    ];
+    _saveProfiles(p);
+  }
+  return p;
+}
+function getActiveProfile(){
+  const profiles = getProfiles();
+  const activeId = localStorage.getItem(LS_ACTIVE_PROFILE);
+  return profiles.find(p=>p.id===activeId) || null;
+}
+function setActiveProfile(id){
+  localStorage.setItem(LS_ACTIVE_PROFILE, id);
+  _updateHeaderAvatar();
+  _refreshUserFilterChips();
+}
+function profileInitials(name){ return (name||'?').trim().slice(0,2).toUpperCase(); }
+function profileBadge(createdBy){
+  if(!createdBy) return '';
+  const p = getProfiles().find(x=>x.id===createdBy);
+  if(!p) return '';
+  return `<span class="user-badge" style="background:${p.color}" title="${esc(p.name)}">${profileInitials(p.name)}</span>`;
+}
+
+function _updateHeaderAvatar(){
+  const btn = document.getElementById('header-avatar');
+  if(!btn) return;
+  const p = getActiveProfile();
+  if(!p){ btn.style.display='none'; return; }
+  btn.style.display = 'flex';
+  btn.style.background = p.color;
+  btn.textContent = profileInitials(p.name);
+  btn.title = p.name + ' — ketuk untuk ganti';
+}
+
+function showProfileScreen(){
+  const screen = document.getElementById('profile-screen');
+  if(!screen) return;
+  screen.style.display = 'flex';
+  document.body.style.overflow = 'hidden';
+  _renderProfileCards();
+}
+function hideProfileScreen(){
+  const screen = document.getElementById('profile-screen');
+  if(!screen) return;
+  screen.style.display = 'none';
+  document.body.style.overflow = '';
+}
+function _renderProfileCards(){
+  const el = document.getElementById('profile-cards-list');
+  if(!el) return;
+  const profiles = getProfiles();
+  el.innerHTML = profiles.map(p=>`
+    <div class="profile-card" data-pid="${p.id}">
+      <div class="profile-avatar-lg" style="background:${p.color}">${profileInitials(p.name)}</div>
+      <div class="profile-card-name">${esc(p.name)}</div>
+    </div>`).join('') +
+    `<div class="profile-card profile-add-card" id="profile-add-card">
+      <div class="profile-avatar-lg">＋</div>
+      <div class="profile-card-name">Tambah</div>
+    </div>`;
+  el.querySelectorAll('.profile-card[data-pid]').forEach(card=>{
+    card.addEventListener('click',()=>{
+      setActiveProfile(card.dataset.pid);
+      hideProfileScreen();
+    });
+  });
+  document.getElementById('profile-add-card')?.addEventListener('click',()=>{
+    hideProfileScreen();
+    document.getElementById('settings-btn').click();
+    setTimeout(()=>document.getElementById('add-profile-btn')?.scrollIntoView({behavior:'smooth'}),300);
+  });
+}
+
+// ── User filter state ────────────────────────────────
+let _diaryUserFilter  = '';
+let _moneyUserFilter  = '';
+let _notesUserFilter  = '';
+
+function _refreshUserFilterChips(){
+  _buildUserChips('diary-user-chips', _diaryUserFilter, v=>{ _diaryUserFilter=v; renderDiary(); });
+  _buildUserChips('money-user-chips', _moneyUserFilter, v=>{ _moneyUserFilter=v; renderMoney(); });
+  _buildUserChips('notes-user-chips', _notesUserFilter, v=>{ _notesUserFilter=v; renderNotes(); });
+}
+function _buildUserChips(containerId, active, onChange){
+  const el = document.getElementById(containerId);
+  if(!el) return;
+  const profiles = getProfiles();
+  if(profiles.length < 2){ el.style.display='none'; return; }
+  el.style.display = 'flex';
+  el.innerHTML = `<span class="user-chip${!active?' active':''}" data-uid="">Semua</span>`
+    + profiles.map(p=>`<span class="user-chip${active===p.id?' active':''}" data-uid="${p.id}"><span class="user-badge" style="background:${p.color}">${profileInitials(p.name)}</span>${esc(p.name)}</span>`).join('');
+  el.querySelectorAll('.user-chip').forEach(chip=>{
+    chip.addEventListener('click',()=>{ onChange(chip.dataset.uid); });
+  });
+}
+
+// ── Profile settings UI ──────────────────────────────
+function renderSettingsProfiles(){
+  const el = document.getElementById('settings-profiles-list');
+  if(!el) return;
+  const profiles = getProfiles();
+  el.innerHTML = profiles.map((p,i)=>`
+    <div class="profile-row" data-pid="${p.id}">
+      <button class="profile-row-avatar" style="background:${p.color}" data-pid="${p.id}" title="Ganti warna">${profileInitials(p.name)}</button>
+      <input class="profile-row-name" value="${esc(p.name)}" data-pid="${p.id}" maxlength="20" placeholder="Nama…">
+      ${profiles.length>1?`<button class="profile-row-del" data-pid="${p.id}" title="Hapus profil">🗑</button>`:''}
+    </div>
+    <div class="profile-color-picker" id="pcp-${p.id}" style="display:none">
+      ${PROFILE_COLORS.map(c=>`<span class="profile-color-swatch${p.color===c?' sel':''}" data-color="${c}" data-pid="${p.id}" style="background:${c}"></span>`).join('')}
+    </div>`).join('');
+
+  // Name change
+  el.querySelectorAll('.profile-row-name').forEach(inp=>{
+    inp.addEventListener('change',()=>{
+      const profiles2 = getProfiles();
+      const p = profiles2.find(x=>x.id===inp.dataset.pid);
+      if(p){ p.name=inp.value.trim()||p.name; _saveProfiles(profiles2); _updateHeaderAvatar(); _refreshUserFilterChips(); }
+    });
+  });
+  // Color picker toggle
+  el.querySelectorAll('.profile-row-avatar').forEach(btn=>{
+    btn.addEventListener('click',()=>{
+      const picker = document.getElementById('pcp-'+btn.dataset.pid);
+      if(!picker) return;
+      const isOpen = picker.style.display !== 'none';
+      el.querySelectorAll('.profile-color-picker').forEach(p=>p.style.display='none');
+      if(!isOpen) picker.style.display='flex';
+    });
+  });
+  // Color swatch pick
+  el.querySelectorAll('.profile-color-swatch').forEach(sw=>{
+    sw.addEventListener('click',()=>{
+      const profiles2 = getProfiles();
+      const p = profiles2.find(x=>x.id===sw.dataset.pid);
+      if(p){ p.color=sw.dataset.color; _saveProfiles(profiles2); renderSettingsProfiles(); _updateHeaderAvatar(); _refreshUserFilterChips(); }
+    });
+  });
+  // Delete profile
+  el.querySelectorAll('.profile-row-del').forEach(btn=>{
+    btn.addEventListener('click',()=>{
+      const profiles2 = getProfiles();
+      if(profiles2.length<=1){ toast('Minimal 1 profil','error'); return; }
+      if(!confirm('Hapus profil ini?')) return;
+      const idx = profiles2.findIndex(x=>x.id===btn.dataset.pid);
+      profiles2.splice(idx,1);
+      _saveProfiles(profiles2);
+      const active = getActiveProfile();
+      if(!active) setActiveProfile(profiles2[0].id);
+      renderSettingsProfiles();
+      _refreshUserFilterChips();
+    });
+  });
+}
+
+document.getElementById('add-profile-btn')?.addEventListener('click',()=>{
+  const profiles = getProfiles();
+  const usedColors = profiles.map(p=>p.color);
+  const color = PROFILE_COLORS.find(c=>!usedColors.includes(c)) || PROFILE_COLORS[profiles.length % PROFILE_COLORS.length];
+  profiles.push({id:'p'+Date.now(), name:'Profil '+(profiles.length+1), color});
+  _saveProfiles(profiles);
+  renderSettingsProfiles();
+  _refreshUserFilterChips();
+});
+
+document.getElementById('header-avatar')?.addEventListener('click',()=>{
+  showProfileScreen();
+});
+
 // ═══════════════════════════════════════════════════════
 //  LOCALE / i18n
 // ═══════════════════════════════════════════════════════
@@ -1988,6 +2233,7 @@ document.getElementById('settings-btn').addEventListener('click',()=>{
     ocrStatus.style.color = hasKey ? 'var(--green)' : 'var(--text3)';
   }
   updateFormatPreview();
+  renderSettingsProfiles();
   document.getElementById('settings-ol').classList.add('open');
 });
 
@@ -2481,8 +2727,10 @@ document.getElementById('ev-save').addEventListener('click',async()=>{
   const endTime=document.getElementById('ev-end-time').value;
   const allDay=document.getElementById('ev-allday').checked;
   try{
+    const _evId=document.getElementById('ev-id').value||undefined;
+    const _evcp=getActiveProfile();
     await api('saveAgenda',{
-      id:document.getElementById('ev-id').value||undefined,
+      id:_evId,
       gcal_id:document.getElementById('ev-gcal-id').value||undefined,
       title,date,end_date:endDate,
       start_time:allDay?null:`${date}T${time}:00`,
@@ -2492,7 +2740,8 @@ document.getElementById('ev-save').addEventListener('click',async()=>{
       recur_end:recurEnd||null,
       reminder:document.getElementById('ev-reminder').value||null,
       description:document.getElementById('ev-desc').value.trim(),
-      color:document.querySelector('#ev-colors .swatch.sel')?.dataset.c||'#f59e0b'
+      color:document.querySelector('#ev-colors .swatch.sel')?.dataset.c||'#f59e0b',
+      ...(!_evId&&_evcp?{createdBy:_evcp.id}:{})
     });
     closeModal('ev-modal');toast(t().savedGcal,'success');await loadAgenda();
   }catch(e){toast(friendlyError(e.message),'error');}
@@ -2661,7 +2910,15 @@ function renderDiary(){
     return;
   }
 
-  el.innerHTML=entries.map(e=>{
+  // Apply user filter
+  const _dfEntries = _diaryUserFilter ? entries.filter(e=>e.createdBy===_diaryUserFilter) : entries;
+
+  if(!_dfEntries.length){
+    el.innerHTML=`<div class="empty"><div class="empty-ico">🔍</div><p class="empty-ttl">${t().noResults||'No results'}</p><p class="empty-sub">${t().tryDifferent||'Try a different search'}</p></div>`;
+    return;
+  }
+
+  el.innerHTML=_dfEntries.map(e=>{
     const thumbs=e._thumbs||(e.photo_urls||'').split(',').filter(Boolean).map(u=>driveThumb(u,'w80'));
     const thumbHtml=thumbs.slice(0,4).map(u=>`<img src="${esc(u)}" class="dc-photo-thumb" onerror="this.style.display='none'">`).join('');
     const preview = stripHtml(e.content_html||'');
@@ -2669,7 +2926,7 @@ function renderDiary(){
     return`<div class="diary-card" data-id="${e.id}">
       <div class="dc-header">
         <div class="dc-date">${fmtDate(e.date)}</div>
-        ${e.mood?`<span class="dc-mood">${e.mood}</span>`:''}
+        <div style="display:flex;align-items:center;gap:.3rem">${profileBadge(e.createdBy)}${e.mood?`<span class="dc-mood">${e.mood}</span>`:''}</div>
       </div>
       <div class="dc-title" title="${esc(titleText)}">${highlight(titleText,_diaryQuery)}</div>
       <div class="dc-preview">${highlight(preview,_diaryQuery)}</div>
@@ -2835,7 +3092,8 @@ document.getElementById('diary-save').addEventListener('click',async()=>{
     if(newPhotoCount>0) btn.textContent=`Uploading 0/${newPhotoCount}…`;
     const photoUrls=await uploadAttachedPhotos(id||'',(done,total)=>{btn.textContent=`Uploading ${done}/${total}…`;});
     const mood=document.getElementById('diary-mood').value||'';
-    await api('saveDiary',{id,date:document.getElementById('diary-date').value,title,content_html:content,photo_urls:photoUrls.join(','),mood});
+    const _dcp=getActiveProfile();
+    await api('saveDiary',{id,date:document.getElementById('diary-date').value,title,content_html:content,photo_urls:photoUrls.join(','),mood,...((!id&&_dcp)?{createdBy:_dcp.id}:{})});
     closeModal('diary-modal');toast(t().saved,'success');loadDiary();loadPhotos();
   }catch(e){toast(friendlyError(e.message),'error');}
   finally{btn.disabled=false;btn.textContent=t().save;}
@@ -3010,13 +3268,14 @@ function renderMoney(){
   renderForecast(fil);
 
   const el=document.getElementById('tx-list');
-  if(!fil.length){el.innerHTML=`<div class="empty"><div class="empty-ico">💰</div><p class="empty-ttl">${t().noTx}</p><p class="empty-sub">${t().tapAdd}</p></div>`;return;}
-  const g={};fil.forEach(t=>{(g[t.date]=g[t.date]||[]).push(t);});
+  const filteredByUser = _moneyUserFilter ? fil.filter(t=>t.createdBy===_moneyUserFilter) : fil;
+  if(!filteredByUser.length){el.innerHTML=`<div class="empty"><div class="empty-ico">💰</div><p class="empty-ttl">${t().noTx}</p><p class="empty-sub">${t().tapAdd}</p></div>`;return;}
+  const g={};filteredByUser.forEach(t=>{(g[t.date]=g[t.date]||[]).push(t);});
   el.innerHTML=Object.keys(g).sort().reverse().map(date=>{
     const dt=g[date].reduce((s,t)=>s+(t.type==='income'?t.amount:-t.amount),0);
     return`<div class="tx-group"><div class="tx-dlbl"><span>${fmtDateLbl(date)}</span><span style="color:${dt>=0?'var(--green)':'var(--red)'};">${dt>=0?'+':'-'}${idr(dt)}</span></div>${
       g[date].map(t=>{const ci=catInfo(t.category);const payMethods=getPaymentMethods();const pm=payMethods.find(m=>m.id===t.payment_method);
-    return`<div class="tx-item" data-id="${t.id}"><div class="tx-dot ${ci.cls}"></div><div class="tx-body"><div class="tx-cat">${ci.label}${pm?`<span class="tx-pay-badge">${pm.emoji} ${pm.label}</span>`:''}</div>${t.notes?`<div class="tx-note">${esc(t.notes)}</div>`:''}</div><div class="tx-amt ${t.type}">${t.type==='income'?'+':'-'}${idr(t.amount)}</div></div>`;}).join('')
+    return`<div class="tx-item" data-id="${t.id}"><div class="tx-dot ${ci.cls}"></div><div class="tx-body"><div class="tx-cat">${ci.label}${pm?`<span class="tx-pay-badge">${pm.emoji} ${pm.label}</span>`:''}</div>${t.notes?`<div class="tx-note">${esc(t.notes)}</div>`:''}</div><div style="display:flex;align-items:center;gap:.35rem">${profileBadge(t.createdBy)}<div class="tx-amt ${t.type}">${t.type==='income'?'+':'-'}${idr(t.amount)}</div></div></div>`;}).join('')
     }</div>`;
   }).join('');
   el.querySelectorAll('.tx-item').forEach(c=>c.addEventListener('click',()=>openTxModal(_money.find(t=>t.id===c.dataset.id))));
@@ -3200,7 +3459,9 @@ document.getElementById('tx-save').addEventListener('click',async()=>{
   if(!amount||amount<=0){showFieldError('tx-amount',t().enterAmount||'Enter a valid amount');return;}
   const btn=document.getElementById('tx-save');btn.disabled=true;btn.textContent=t().saving;
   try{
-    await api('saveMoney',{id:document.getElementById('tx-id').value||undefined,date:document.getElementById('tx-date').value,type:_txType,category:document.getElementById('tx-cat').value,amount,notes:document.getElementById('tx-notes').value.trim(),payment_method:document.getElementById('tx-payment')?.value||'cash'});
+    const _txId=document.getElementById('tx-id').value||undefined;
+    const _txcp=getActiveProfile();
+    await api('saveMoney',{id:_txId,date:document.getElementById('tx-date').value,type:_txType,category:document.getElementById('tx-cat').value,amount,notes:document.getElementById('tx-notes').value.trim(),payment_method:document.getElementById('tx-payment')?.value||'cash',...(!_txId&&_txcp?{createdBy:_txcp.id}:{})});
     closeModal('tx-modal');toast('Saved','success');loadMoney();
   }catch(e){toast(friendlyError(e.message),'error');}
   finally{btn.disabled=false;btn.textContent=t().save;}
@@ -3247,9 +3508,11 @@ function renderHome(){
   const dayNames_id=['Minggu','Senin','Selasa','Rabu','Kamis','Jumat','Sabtu'];
   const dayNames=_locale.lang==='id'?dayNames_id:dayNames_en;
   const dayName=dayNames[now.getDay()];
+  const _greetProfile=getActiveProfile();
+  const _greetName=_greetProfile?_greetProfile.name:'Lumina';
   const greeting=`<div class="home-greeting">
     <div class="home-greeting-date">${dayName}, ${fmtDate(todayS)}</div>
-    <div class="home-greeting-text">${getGreeting()}, <span>Lumina ✦</span></div>
+    <div class="home-greeting-text">${getGreeting()}, <span>${esc(_greetName)} ✦</span></div>
   </div>`;
 
 
@@ -4332,6 +4595,7 @@ function renderNotes(){
   const q=_notesQuery.toLowerCase();
   let notes=[..._notes].sort((a,b)=>(b.pinned?1:0)-(a.pinned?1:0));
   if(q) notes=notes.filter(n=>(n.title||'').toLowerCase().includes(q)||(n.content_html||'').replace(/<[^>]*>/g,'').toLowerCase().includes(q)||(n.tags||'').toLowerCase().includes(q));
+  if(_notesUserFilter) notes=notes.filter(n=>n.createdBy===_notesUserFilter);
   if(!notes.length){
     el.innerHTML='<div class="empty"><div class="empty-ico">&#128221;</div><p class="empty-ttl">'+(q?(tr.noResults||'No results'):(tr.noNotes||'No notes yet'))+'</p><p class="empty-sub">'+(q?(tr.tryDifferent||'Try a different search'):(tr.tapNote||'Tap + Note to start writing'))+'</p></div>';
     return;
@@ -4344,7 +4608,7 @@ function renderNotes(){
     return '<div class="note-card'+(note.pinned?' pinned':'')+'" data-id="'+note.id+'" '+bg+'>'
       +'<div class="note-card-title">'+highlight(note.title||tr.untitled||'Untitled',q)+'</div>'
       +preview+'<div class="note-card-footer"><span class="note-card-date">'+fmtDate((note.updatedAt||'').slice(0,10))+'</span>'
-      +'<div class="note-card-tags">'+tags+'</div></div></div>';
+      +'<div style="display:flex;align-items:center;gap:.3rem">'+profileBadge(note.createdBy)+'<div class="note-card-tags">'+tags+'</div></div></div></div>';
   }).join('')+'</div>';
   el.querySelectorAll('.note-card').forEach(function(card){
     card.addEventListener('click',function(){const note=_notes.find(function(n){return n.id===card.dataset.id;});if(note)openNoteModal(note);});
@@ -4441,7 +4705,8 @@ document.getElementById('note-save')&&document.getElementById('note-save').addEv
     }
     if(!title&&!content_html&&!canvas_data){toast(t().noteCantBeEmpty||'Note needs a title or content','error');return;}
     const cleanTags=tags.split(',').map(s=>s.trim()).filter(Boolean).join(',');
-    await api('saveNote',{id:id||undefined,title,content_html,canvas_data,color,pinned,tags:cleanTags});
+    const _ncp=getActiveProfile();
+    await api('saveNote',{id:id||undefined,title,content_html,canvas_data,color,pinned,tags:cleanTags,...(!id&&_ncp?{createdBy:_ncp.id}:{})});
     closeModal('note-modal');toast(t().saved||'Saved','success');loadNotes();
   }catch(e){toast(friendlyError(e.message),'error');}
   finally{btn.disabled=false;btn.textContent=t().save||'Save';}
@@ -4710,6 +4975,16 @@ applyTranslations();
 applyTheme(_locale.theme||'auto');
 renderHome();
 _updateInsightsBtn();
+
+// Profile system init
+(function(){
+  _updateHeaderAvatar();
+  _refreshUserFilterChips();
+  // Show profile screen if no active profile chosen yet
+  if(!getActiveProfile()){
+    showProfileScreen();
+  }
+})();
 
 // Start loading — DOM is ready since script is at end of body
 loadAll();

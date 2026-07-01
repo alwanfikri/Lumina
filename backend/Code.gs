@@ -17,15 +17,15 @@ var CONFIG = {
 };
 
 // Sheet schemas
-var DIARY_HEADERS  = ['id','date','title','content_html','photo_urls','mood','updatedAt'];
-var AGENDA_HEADERS = ['id','gcal_id','date','end_date','start_time','end_time','all_day','title','description','color','recur','recur_end','reminder','updatedAt'];
+var DIARY_HEADERS  = ['id','date','title','content_html','photo_urls','mood','updatedAt','createdBy'];
+var AGENDA_HEADERS = ['id','gcal_id','date','end_date','start_time','end_time','all_day','title','description','color','recur','recur_end','reminder','updatedAt','createdBy'];
 var PHOTOS_HEADERS = ['id','name','drive_id','thumb_url','drive_url','entry_id','createdAt'];
-var MONEY_HEADERS  = ['id','date','type','category','amount','notes','updatedAt'];
+var MONEY_HEADERS  = ['id','date','type','category','amount','notes','updatedAt','createdBy'];
 
-var DC = {id:1,date:2,title:3,content_html:4,photo_urls:5,mood:6,updatedAt:7};
-var AC = {id:1,gcal_id:2,date:3,end_date:4,start_time:5,end_time:6,all_day:7,title:8,description:9,color:10,recur:11,recur_end:12,reminder:13,updatedAt:14};
+var DC = {id:1,date:2,title:3,content_html:4,photo_urls:5,mood:6,updatedAt:7,createdBy:8};
+var AC = {id:1,gcal_id:2,date:3,end_date:4,start_time:5,end_time:6,all_day:7,title:8,description:9,color:10,recur:11,recur_end:12,reminder:13,updatedAt:14,createdBy:15};
 var PC = {id:1,name:2,drive_id:3,thumb_url:4,drive_url:5,entry_id:6,createdAt:7};
-var MC = {id:1,date:2,type:3,category:4,amount:5,notes:6,updatedAt:7};
+var MC = {id:1,date:2,type:3,category:4,amount:5,notes:6,updatedAt:7,createdBy:8};
 
 function makeResp(obj){return ContentService.createTextOutput(JSON.stringify(obj)).setMimeType(ContentService.MimeType.JSON);}
 
@@ -107,6 +107,7 @@ function migrateSheets(){
   ensureSheetColumns('Agenda', AGENDA_HEADERS);
   ensureSheetColumns('Photos', PHOTOS_HEADERS);
   ensureSheetColumns('Money',  MONEY_HEADERS);
+  ensureSheetColumns('Notes',  ['id','title','content_html','canvas_data','color','pinned','tags','updatedAt','createdBy']);
   // Show current headers for verification
   var ss=SpreadsheetApp.openById(CONFIG.SPREADSHEET_ID);
   ['Diary','Agenda','Photos','Money'].forEach(function(name){
@@ -184,7 +185,11 @@ function doPost(e){
 function saveDiary(p){
   var sh=getSheet('Diary',DIARY_HEADERS);var now=isoNow();var id=p.id||genId();
   var row=sheetFindById(sh,DC.id,id);
-  var data=[id,v(p.date)||now.slice(0,10),v(p.title),v(p.content_html),v(p.photo_urls),v(p.mood),now];
+  // Preserve existing createdBy on update; only set on new records
+  var existingCreatedBy='';
+  if(row!==-1){try{existingCreatedBy=v(sh.getRange(row,DC.createdBy).getValue());}catch(e){}}
+  var createdBy=row===-1?v(p.createdBy):existingCreatedBy;
+  var data=[id,v(p.date)||now.slice(0,10),v(p.title),v(p.content_html),v(p.photo_urls),v(p.mood),now,createdBy];
   if(row===-1)sh.appendRow(data);else sh.getRange(row,1,1,data.length).setValues([data]);
   cacheInvalidate();
   return ok({id:id,updatedAt:now});
@@ -193,7 +198,7 @@ function getDiaries(){
   var cached=cacheGet('lumina_diaries');if(cached)return ok(cached);
   var rows=sheetGetAll('Diary',DIARY_HEADERS);
   var out=rows.filter(function(r){return r[0];}).map(function(r){
-    return{id:v(r[0]),date:fmtDate(r[1]),title:v(r[2]),content_html:v(r[3]),photo_urls:v(r[4]),mood:v(r[5]),updatedAt:v(r[6])};
+    return{id:v(r[0]),date:fmtDate(r[1]),title:v(r[2]),content_html:v(r[3]),photo_urls:v(r[4]),mood:v(r[5]),updatedAt:v(r[6]),createdBy:v(r[7])};
   }).sort(function(a,b){return b.date.localeCompare(a.date);});
   cachePut('lumina_diaries',{entries:out});
   return ok({entries:out});
@@ -257,7 +262,10 @@ function saveAgenda(p){
     }
   }catch(calErr){Logger.log('Calendar sync error (non-fatal): '+calErr.message);}
 
-  var data=[id,gcalId,v(p.date),v(p.end_date)||v(p.date),v(p.start_time),v(p.end_time),v(p.all_day)||'false',v(p.title),v(p.description),v(p.color)||'#f59e0b',v(p.recur),v(p.recur_end),v(p.reminder),now];
+  var existingCreatedByA='';
+  if(row!==-1){try{existingCreatedByA=v(sh.getRange(row,AC.createdBy).getValue());}catch(e){}}
+  var createdByA=row===-1?v(p.createdBy):existingCreatedByA;
+  var data=[id,gcalId,v(p.date),v(p.end_date)||v(p.date),v(p.start_time),v(p.end_time),v(p.all_day)||'false',v(p.title),v(p.description),v(p.color)||'#f59e0b',v(p.recur),v(p.recur_end),v(p.reminder),now,createdByA];
   if(row===-1)sh.appendRow(data);else sh.getRange(row,1,1,data.length).setValues([data]);
   cacheInvalidate();
   return ok({id:id,gcal_id:gcalId,updatedAt:now});
@@ -270,7 +278,7 @@ function getAgendas(p){
     var rows=sheetGetAll('Agenda',AGENDA_HEADERS);
     out=rows.filter(function(r){return r[0];}).map(function(r){
       return{id:v(r[0]),gcal_id:v(r[1]),date:fmtDate(r[2]),end_date:fmtDate(r[3]),start_time:fmtDateTime(r[4]),end_time:fmtDateTime(r[5]),
-             all_day:v(r[6])==='true',title:v(r[7]),description:v(r[8]),color:v(r[9])||'#f59e0b',recur:v(r[10]),recur_end:fmtDate(r[11]),reminder:v(r[12]),updatedAt:v(r[13])};
+             all_day:v(r[6])==='true',title:v(r[7]),description:v(r[8]),color:v(r[9])||'#f59e0b',recur:v(r[10]),recur_end:fmtDate(r[11]),reminder:v(r[12]),updatedAt:v(r[13]),createdBy:v(r[14])};
     }).sort(function(a,b){return a.date.localeCompare(b.date);});
     cachePut('lumina_agendas',{events:out});
   }
@@ -335,7 +343,10 @@ function saveMoney(p){
   if(!p.amount)return fail('Missing amount');
   var sh=getSheet('Money',MONEY_HEADERS);var now=isoNow();var id=p.id||genId();
   var row=sheetFindById(sh,MC.id,id);
-  var data=[id,v(p.date)||now.slice(0,10),v(p.type)||'expense',v(p.category),parseFloat(p.amount)||0,v(p.notes),now];
+  var existingCreatedByM='';
+  if(row!==-1){try{existingCreatedByM=v(sh.getRange(row,MC.createdBy).getValue());}catch(e){}}
+  var createdByM=row===-1?v(p.createdBy):existingCreatedByM;
+  var data=[id,v(p.date)||now.slice(0,10),v(p.type)||'expense',v(p.category),parseFloat(p.amount)||0,v(p.notes),now,createdByM];
   if(row===-1)sh.appendRow(data);else sh.getRange(row,1,1,data.length).setValues([data]);
   cacheInvalidate();
   return ok({id:id,updatedAt:now});
@@ -346,7 +357,7 @@ function getMoneys(p){
   if(!out){
     var rows=sheetGetAll('Money',MONEY_HEADERS);
     out=rows.filter(function(r){return r[0];}).map(function(r){
-      return{id:v(r[0]),date:fmtDate(r[1]),type:v(r[2]),category:v(r[3]),amount:parseFloat(r[4])||0,notes:v(r[5]),updatedAt:v(r[6])};
+      return{id:v(r[0]),date:fmtDate(r[1]),type:v(r[2]),category:v(r[3]),amount:parseFloat(r[4])||0,notes:v(r[5]),updatedAt:v(r[6]),createdBy:v(r[7])};
     }).sort(function(a,b){return b.date.localeCompare(a.date);});
     cachePut('lumina_moneys',{transactions:out});
   }
