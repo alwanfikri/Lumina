@@ -386,6 +386,9 @@ img{max-width:100%;display:block}
 .home-money-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:.7rem .75rem;box-shadow:var(--shadow);text-align:center}
 .home-money-lbl{font-size:.65rem;text-transform:uppercase;letter-spacing:.07em;color:var(--text3);font-weight:500;margin-bottom:.2rem}
 .home-money-val{font-family:var(--font-s);font-size:.95rem;font-weight:600}
+.home-total-bal{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:.7rem .9rem;box-shadow:var(--shadow);display:flex;align-items:center;justify-content:space-between;margin-top:.5rem}
+.home-total-bal-lbl{font-size:.72rem;color:var(--text3);font-weight:500}
+.home-total-bal-val{font-family:var(--font-s);font-size:1.1rem;font-weight:700}
 
 /* Recent diary */
 .home-diary-item{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:.8rem 1rem;box-shadow:var(--shadow);cursor:pointer;transition:all var(--ease)}
@@ -3649,6 +3652,8 @@ function renderHome(){
   const fil=_money.filter(tx=>tx.date.slice(0,7)===_m);
   let inc=0,exp=0;fil.forEach(tx=>{if(tx.type==='income')inc+=tx.amount;else exp+=tx.amount;});
   const bal=inc-exp;
+  let totalInc=0,totalExp=0;_money.forEach(tx=>{if(tx.type==='income')totalInc+=tx.amount;else totalExp+=tx.amount;});
+  const totalBal=totalInc-totalExp;
   const moneySection=`<div class="home-section">
     <div class="home-section-hdr">
       <div class="home-section-title">${tr.thisMonth||'This month'} — ${fmtMonth(_m)}</div>
@@ -3667,6 +3672,10 @@ function renderHome(){
         <div class="home-money-lbl">${tr.balance||'Balance'}</div>
         <div class="home-money-val" style="color:${bal>=0?'var(--green)':'var(--red)'}">${idr(bal)}</div>
       </div>
+    </div>
+    <div class="home-total-bal">
+      <span class="home-total-bal-lbl">${tr.totalBalance||'Total Balance (All Time)'}</span>
+      <span class="home-total-bal-val" style="color:${totalBal>=0?'var(--green)':'var(--red)'}">${idr(totalBal)}</span>
     </div>
   </div>`;
 
