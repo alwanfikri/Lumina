@@ -411,6 +411,10 @@ img{max-width:100%;display:block}
 .acc-row-color-btn{width:24px;height:24px;border-radius:50%;border:2px solid var(--border);cursor:pointer;flex-shrink:0;background:var(--acc-color,#ccc)}
 .acc-row-emoji{width:24px;text-align:center;font-size:1rem;flex-shrink:0}
 .acc-row-label{flex:1;font-size:.85rem;color:var(--text);min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.acc-row-emoji-input{width:24px;text-align:center;font-size:1rem;flex-shrink:0;background:transparent;border:none;outline:none;color:var(--text);font-family:inherit;padding:.15rem 0;border-radius:4px}
+.acc-row-emoji-input:focus{background:var(--surface2)}
+.acc-row-label-input{flex:1;min-width:0;font-size:.85rem;color:var(--text);background:transparent;border:none;outline:none;font-family:inherit;border-bottom:1.5px solid transparent;padding:.15rem 0}
+.acc-row-label-input:focus{border-bottom-color:var(--amber)}
 .acc-row-balance{width:100px;flex-shrink:0}
 .acc-row-balance-input{width:100%;font-size:.78rem;padding:.3rem .4rem;border:1px solid var(--border);border-radius:6px;background:var(--bg);color:var(--text);text-align:right}
 .acc-color-popup{position:fixed;z-index:1100;background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:.6rem;box-shadow:var(--shadow-lg);display:grid;grid-template-columns:repeat(5,26px);gap:6px}
@@ -512,6 +516,10 @@ img{max-width:100%;display:block}
 .cats-item:last-child{border-bottom:none}
 .cats-item-emoji{width:28px;text-align:center;font-size:1rem;flex-shrink:0}
 .cats-item-label{flex:1;font-size:.86rem;color:var(--text)}
+.cats-item-emoji-input{width:28px;text-align:center;font-size:1rem;flex-shrink:0;background:transparent;border:none;outline:none;color:var(--text);font-family:inherit;padding:.15rem 0;border-radius:4px}
+.cats-item-emoji-input:focus{background:var(--surface2)}
+.cats-item-label-input{flex:1;min-width:0;font-size:.86rem;color:var(--text);background:transparent;border:none;outline:none;font-family:inherit;border-bottom:1.5px solid transparent;padding:.15rem 0}
+.cats-item-label-input:focus{border-bottom-color:var(--amber)}
 .cats-item-del{background:none;border:none;cursor:pointer;color:var(--text3);font-size:.85rem;padding:2px 4px;border-radius:4px;transition:all var(--ease);flex-shrink:0}
 .cats-item-del:hover{background:var(--red-l);color:var(--red)}
 .cats-item-default{font-size:.65rem;color:var(--text3);padding:.1rem .35rem;border-radius:10px;background:var(--surface2);flex-shrink:0}
@@ -754,14 +762,14 @@ img{max-width:100%;display:block}
 <!-- Profile screen -->
 <div id="profile-screen" style="display:none">
   <div class="profile-screen-logo">Lumin<span>a</span></div>
-  <div class="profile-screen-sub" id="profile-screen-sub">Siapa yang menggunakan Lumina?</div>
+  <div class="profile-screen-sub" id="profile-screen-sub" data-i18n="whoUsingLumina">Who's using Lumina?</div>
   <div class="profile-cards" id="profile-cards-list"></div>
 </div>
 
 <header class="header">
   <div class="logo">Lumin<span>a</span></div>
   <div class="header-r">
-    <button class="header-avatar" id="header-avatar" title="Ganti user" style="display:none"></button>
+    <button class="header-avatar" id="header-avatar" data-i18n-title="switchUserTitle" title="Switch user" style="display:none"></button>
     <button class="icon-btn" id="search-btn" title="Search (Ctrl+K)" aria-label="Search">🔍</button>
     <button class="icon-btn" id="settings-btn" title="Settings" aria-label="Settings">⚙</button>
   </div>
@@ -1041,7 +1049,7 @@ img{max-width:100%;display:block}
     <div class="modal-actions">
       <button class="btn btn-danger btn-sm" id="ev-del" style="display:none;margin-right:auto" data-i18n="deleteBtn">🗑 Delete</button>
       <button class="btn btn-ghost" data-close="ev-modal" data-i18n="cancel">Cancel</button>
-      <button class="btn btn-primary" id="ev-save">Save</button>
+      <button class="btn btn-primary" id="ev-save" data-i18n="save">Save</button>
     </div>
   </div>
 </div>
@@ -1088,7 +1096,7 @@ img{max-width:100%;display:block}
     <div class="modal-actions">
       <button class="btn btn-danger btn-sm" id="diary-del" style="display:none;margin-right:auto" data-i18n="deleteBtn">🗑 Delete</button>
       <button class="btn btn-ghost" data-close="diary-modal" data-i18n="cancel">Cancel</button>
-      <button class="btn btn-primary" id="diary-save">Save</button>
+      <button class="btn btn-primary" id="diary-save" data-i18n="save">Save</button>
     </div>
   </div>
 </div>
@@ -1122,14 +1130,14 @@ img{max-width:100%;display:block}
       <div id="cat-suggestion" style="display:none;margin-top:.3rem;font-size:.76rem;color:var(--text3)"></div>
     </div>
     <div class="frow">
-      <div class="fg"><label class="flabel" id="tx-lbl-pay">Kantong / Akun</label>
+      <div class="fg"><label class="flabel" id="tx-lbl-pay" data-i18n="txAccountLabel">Account</label>
         <select class="fi" id="tx-payment">
           <option value="cash">💵 Cash</option>
         </select>
       </div>
       <div class="fg"><label class="flabel" id="tx-lbl-notes">Notes</label>
         <div style="position:relative">
-          <input class="fi" id="tx-notes" placeholder="Optional…" style="padding-right:2.4rem">
+          <input class="fi" id="tx-notes" placeholder="Optional…" data-i18n-placeholder="optionalPlaceholder" style="padding-right:2.4rem">
           <button id="ocr-btn" title="Scan receipt with camera or upload" style="position:absolute;right:.4rem;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;font-size:1.1rem;color:var(--amber);padding:0;transition:color var(--ease)" >📷</button>
         </div>
       </div>
@@ -1139,24 +1147,24 @@ img{max-width:100%;display:block}
     <div class="fg">
       <label class="admin-fee-toggle" for="tx-admin-fee-toggle">
         <input type="checkbox" id="tx-admin-fee-toggle">
-        🏦 Ada biaya admin transfer?
+        <span data-i18n="adminFeeQuestion">🏦 Any transfer admin fee?</span>
       </label>
       <div id="tx-admin-fee-body" style="display:none">
         <div class="admin-fee-chips">
           <span class="admin-fee-chip" data-fee="1000">Rp 1.000</span>
           <span class="admin-fee-chip" data-fee="2500">Rp 2.500</span>
           <span class="admin-fee-chip" data-fee="6500">Rp 6.500</span>
-          <span class="admin-fee-chip" data-fee="manual">Manual</span>
+          <span class="admin-fee-chip" data-fee="manual" data-i18n="adminFeeManual">Manual</span>
           <input type="number" min="0" step="500" class="admin-fee-manual" id="tx-admin-fee-manual" placeholder="Rp…">
         </div>
-        <div class="tx-admin-note">Biaya admin akan ditambahkan ke jumlah yang dikurangi dari saldo kantong.</div>
+        <div class="tx-admin-note" data-i18n="adminFeeNote">The admin fee will be added and deducted from the account balance along with the transaction.</div>
       </div>
       <input type="hidden" id="tx-admin-fee" value="0">
     </div>
     <div class="modal-actions">
       <button class="btn btn-danger btn-sm" id="tx-del" style="display:none;margin-right:auto" data-i18n="deleteBtn">🗑 Delete</button>
       <button class="btn btn-ghost" data-close="tx-modal" data-i18n="cancel">Cancel</button>
-      <button class="btn btn-primary" id="tx-save">Save</button>
+      <button class="btn btn-primary" id="tx-save" data-i18n="save">Save</button>
     </div>
   </div>
 </div>
@@ -1253,8 +1261,8 @@ img{max-width:100%;display:block}
       <!-- Actions -->
       <div class="modal-actions" style="margin-top:.9rem">
         <button class="btn btn-danger btn-sm" id="note-del" style="display:none;margin-right:auto">&#128465; Delete</button>
-        <button class="btn btn-ghost" data-close="note-modal">Cancel</button>
-        <button class="btn btn-primary" id="note-save">Save</button>
+        <button class="btn btn-ghost" data-close="note-modal" data-i18n="cancel">Cancel</button>
+        <button class="btn btn-primary" id="note-save" data-i18n="save">Save</button>
       </div>
     </div>
   </div>
@@ -1306,7 +1314,7 @@ img{max-width:100%;display:block}
       <div class="loading"><div class="spinner"></div>Loading calendars…</div>
     </div>
     <div class="modal-actions">
-      <button class="btn btn-ghost" data-close="cal-import-modal">Cancel</button>
+      <button class="btn btn-ghost" data-close="cal-import-modal" data-i18n="cancel">Cancel</button>
       <button class="btn btn-primary" id="cal-import-confirm-btn">↺ Import Selected</button>
     </div>
   </div>
@@ -1316,22 +1324,22 @@ img{max-width:100%;display:block}
 <div class="overlay" id="cats-modal">
   <div class="modal">
     <div class="modal-hdr">
-      <h2 class="modal-ttl">Edit Categories</h2>
+      <h2 class="modal-ttl" data-i18n="editCategoriesTitle">Edit Categories</h2>
       <button class="modal-x" data-close="cats-modal">✕</button>
     </div>
     <div class="cats-tabs">
-      <button class="cats-tab active" data-cats-tab="expense">💸 Expense</button>
-      <button class="cats-tab" data-cats-tab="income">💰 Income</button>
+      <button class="cats-tab active" data-cats-tab="expense">💸 <span data-i18n="expense">Expense</span></button>
+      <button class="cats-tab" data-cats-tab="income">💰 <span data-i18n="income">Income</span></button>
     </div>
     <div id="cats-expense-list" class="cats-list"></div>
     <div id="cats-income-list" class="cats-list" style="display:none"></div>
     <div class="cats-add-row">
       <input class="fi" id="cats-new-emoji" placeholder="🏷" style="width:3rem;text-align:center;flex-shrink:0">
-      <input class="fi" id="cats-new-label" placeholder="Category name" style="flex:1">
-      <button class="btn btn-primary btn-sm" id="cats-add-btn">+ Add</button>
+      <input class="fi" id="cats-new-label" placeholder="Category name" data-i18n-placeholder="categoryNamePlaceholder" style="flex:1">
+      <button class="btn btn-primary btn-sm" id="cats-add-btn" data-i18n="addBtn">+ Add</button>
     </div>
     <div class="modal-actions">
-      <button class="btn btn-ghost" data-close="cats-modal">Done</button>
+      <button class="btn btn-ghost" data-close="cats-modal" data-i18n="done">Done</button>
     </div>
   </div>
 </div>
@@ -1340,18 +1348,18 @@ img{max-width:100%;display:block}
 <div class="overlay" id="payment-modal">
   <div class="modal">
     <div class="modal-hdr">
-      <h2 class="modal-ttl">💰 Akun / Kantong</h2>
+      <h2 class="modal-ttl" data-i18n="accountsTitle">💰 Accounts</h2>
       <button class="modal-x" data-close="payment-modal">✕</button>
     </div>
-    <p style="font-size:.8rem;color:var(--text2);margin-bottom:.8rem">Cash & rekening bank kamu — saldo dihitung otomatis dari transaksi + saldo awal.</p>
+    <p style="font-size:.8rem;color:var(--text2);margin-bottom:.8rem" data-i18n="accountsDesc">Cash & bank accounts — balance is calculated automatically from transactions + starting balance.</p>
     <div id="payment-list" class="cats-list"></div>
     <div class="cats-add-row">
       <input class="fi" id="pay-new-emoji" placeholder="💳" style="width:3rem;text-align:center;flex-shrink:0">
-      <input class="fi" id="pay-new-label" placeholder="Nama kantong (mis. BCA)" style="flex:1">
-      <button class="btn btn-primary btn-sm" id="pay-add-btn">+ Add</button>
+      <input class="fi" id="pay-new-label" placeholder="Account name (e.g. BCA)" data-i18n-placeholder="accountsNamePlaceholder" style="flex:1">
+      <button class="btn btn-primary btn-sm" id="pay-add-btn" data-i18n="addBtn">+ Add</button>
     </div>
     <div class="modal-actions">
-      <button class="btn btn-ghost" data-close="payment-modal">Done</button>
+      <button class="btn btn-ghost" data-close="payment-modal" data-i18n="done">Done</button>
     </div>
   </div>
 </div>
@@ -1445,9 +1453,9 @@ img{max-width:100%;display:block}
 
     <!-- Profiles -->
     <div style="margin-bottom:1.1rem">
-      <div class="s-lbl">👥 Profil Pengguna</div>
+      <div class="s-lbl" data-i18n="userProfilesHdr">👥 User Profiles</div>
       <div class="profiles-list" id="settings-profiles-list"></div>
-      <button class="btn btn-ghost btn-sm" id="add-profile-btn" style="margin-top:.5rem;width:100%">+ Tambah Profil</button>
+      <button class="btn btn-ghost btn-sm" id="add-profile-btn" data-i18n="addProfileBtn" style="margin-top:.5rem;width:100%">+ Add Profile</button>
     </div>
 
     <hr style="border:none;border-top:1px solid var(--border);margin:1rem 0">
@@ -1549,11 +1557,11 @@ img{max-width:100%;display:block}
     <hr style="border:none;border-top:1px solid var(--border);margin:1rem 0">
     <hr style="border:none;border-top:1px solid var(--border);margin:1rem 0">
 
-    <!-- Categories & Payment Methods -->
+    <!-- Categories & Accounts -->
     <div style="margin-bottom:.75rem">
-      <div class="s-lbl">Money Settings</div>
-      <button class="btn btn-ghost" style="width:100%;margin-bottom:.5rem;margin-top:6px" id="edit-cats-btn">🏷 Edit Categories</button>
-      <button class="btn btn-ghost" style="width:100%;margin-bottom:.5rem" id="edit-payment-btn">💰 Akun / Kantong (Cash & Bank)</button>
+      <div class="s-lbl" data-i18n="moneySettingsHdr">Money Settings</div>
+      <button class="btn btn-ghost" style="width:100%;margin-bottom:.5rem;margin-top:6px" id="edit-cats-btn" data-i18n="editCategoriesBtn">🏷 Edit Categories</button>
+      <button class="btn btn-ghost" style="width:100%;margin-bottom:.5rem" id="edit-payment-btn" data-i18n="editAccountsBtn">💰 Accounts (Cash & Bank)</button>
     </div>
 
     <button class="btn btn-ghost" style="width:100%;margin-bottom:.5rem" id="export-btn">⬇ Export Data</button>
@@ -1621,7 +1629,7 @@ function _updateHeaderAvatar(){
   btn.style.display = 'flex';
   btn.style.background = p.color;
   btn.textContent = profileInitials(p.name);
-  btn.title = p.name + ' — ketuk untuk ganti';
+  btn.title = p.name + ' — ' + (t().switchUserTitle||'Switch user').toLowerCase();
 }
 
 function showProfileScreen(){
@@ -1648,7 +1656,7 @@ function _renderProfileCards(){
     </div>`).join('') +
     `<div class="profile-card profile-add-card" id="profile-add-card">
       <div class="profile-avatar-lg">＋</div>
-      <div class="profile-card-name">Tambah</div>
+      <div class="profile-card-name">${esc(t().addLabel||'Add')}</div>
     </div>`;
   el.querySelectorAll('.profile-card[data-pid]').forEach(card=>{
     card.addEventListener('click',()=>{
@@ -1679,7 +1687,7 @@ function _buildUserChips(containerId, active, onChange){
   const profiles = getProfiles();
   if(profiles.length < 2){ el.style.display='none'; return; }
   el.style.display = 'flex';
-  el.innerHTML = `<span class="user-chip${!active?' active':''}" data-uid="">Semua</span>`
+  el.innerHTML = `<span class="user-chip${!active?' active':''}" data-uid="">${esc(t().allUsers||'All')}</span>`
     + profiles.map(p=>`<span class="user-chip${active===p.id?' active':''}" data-uid="${p.id}"><span class="user-badge" style="background:${p.color}">${profileInitials(p.name)}</span>${esc(p.name)}</span>`).join('');
   el.querySelectorAll('.user-chip').forEach(chip=>{
     chip.addEventListener('click',()=>{ onChange(chip.dataset.uid); });
@@ -1691,11 +1699,12 @@ function renderSettingsProfiles(){
   const el = document.getElementById('settings-profiles-list');
   if(!el) return;
   const profiles = getProfiles();
+  const tr = t();
   el.innerHTML = profiles.map((p,i)=>`
     <div class="profile-row" data-pid="${p.id}">
-      <button class="profile-row-avatar" style="background:${p.color}" data-pid="${p.id}" title="Ganti warna">${profileInitials(p.name)}</button>
-      <input class="profile-row-name" value="${esc(p.name)}" data-pid="${p.id}" maxlength="20" placeholder="Nama…">
-      ${profiles.length>1?`<button class="profile-row-del" data-pid="${p.id}" title="Hapus profil">🗑</button>`:''}
+      <button class="profile-row-avatar" style="background:${p.color}" data-pid="${p.id}" title="${esc(tr.changeColorTitle||'Change color')}">${profileInitials(p.name)}</button>
+      <input class="profile-row-name" value="${esc(p.name)}" data-pid="${p.id}" maxlength="20" placeholder="${esc(tr.namePlaceholder||'Name…')}">
+      ${profiles.length>1?`<button class="profile-row-del" data-pid="${p.id}" title="${esc(tr.deleteProfileTitle||'Delete profile')}">🗑</button>`:''}
     </div>
     <div class="profile-color-picker" id="pcp-${p.id}" style="display:none">
       ${PROFILE_COLORS.map(c=>`<span class="profile-color-swatch${p.color===c?' sel':''}" data-color="${c}" data-pid="${p.id}" style="background:${c}"></span>`).join('')}
@@ -1731,8 +1740,8 @@ function renderSettingsProfiles(){
   el.querySelectorAll('.profile-row-del').forEach(btn=>{
     btn.addEventListener('click',()=>{
       const profiles2 = getProfiles();
-      if(profiles2.length<=1){ toast('Minimal 1 profil','error'); return; }
-      if(!confirm('Hapus profil ini?')) return;
+      if(profiles2.length<=1){ toast(t().minOneProfile||'At least 1 profile is required','error'); return; }
+      if(!confirm(t().confirmDeleteProfile||'Delete this profile?')) return;
       const idx = profiles2.findIndex(x=>x.id===btn.dataset.pid);
       profiles2.splice(idx,1);
       _saveProfiles(profiles2);
@@ -1840,6 +1849,36 @@ const TRANSLATIONS = {
     today:'Today', tomorrow:'Tomorrow',
     detailsPlaceholder:'Details…',
     optionalPlaceholder:'Optional…',
+    // Categories & Accounts (Kantong)
+    moneySettingsHdr:'Money Settings',
+    editCategoriesBtn:'🏷 Edit Categories',
+    editCategoriesTitle:'Edit Categories',
+    categoryNamePlaceholder:'Category name',
+    enterCategoryName:'Enter a category name',
+    editAccountsBtn:'💰 Accounts (Cash & Bank)',
+    accountsTitle:'💰 Accounts',
+    accountsDesc:'Cash & bank accounts — balance is calculated automatically from transactions + starting balance.',
+    accountsNamePlaceholder:'Account name (e.g. BCA)',
+    enterAccountName:'Enter an account name',
+    startingBalancePlaceholder:'Starting balance',
+    changeColorTitle:'Change color',
+    deleteTitle:'Delete',
+    addBtn:'+ Add',
+    txAccountLabel:'Account',
+    adminFeeQuestion:'🏦 Any transfer admin fee?',
+    adminFeeNote:'The admin fee will be added and deducted from the account balance along with the transaction.',
+    adminFeeManual:'Manual',
+    // Profiles
+    whoUsingLumina:"Who's using Lumina?",
+    switchUserTitle:'Switch user',
+    userProfilesHdr:'👥 User Profiles',
+    addProfileBtn:'+ Add Profile',
+    namePlaceholder:'Name…',
+    deleteProfileTitle:'Delete profile',
+    minOneProfile:'At least 1 profile is required',
+    confirmDeleteProfile:'Delete this profile?',
+    addLabel:'Add',
+    allUsers:'All',
   },
   id: {
     settings:'Pengaturan', language:'Bahasa', currency:'Mata Uang',
@@ -1903,6 +1942,36 @@ const TRANSLATIONS = {
     today:'Hari ini', tomorrow:'Besok',
     detailsPlaceholder:'Detail…',
     optionalPlaceholder:'Opsional…',
+    // Categories & Accounts (Kantong)
+    moneySettingsHdr:'Pengaturan Uang',
+    editCategoriesBtn:'🏷 Ubah Kategori',
+    editCategoriesTitle:'Ubah Kategori',
+    categoryNamePlaceholder:'Nama kategori',
+    enterCategoryName:'Masukkan nama kategori',
+    editAccountsBtn:'💰 Akun / Kantong (Cash & Bank)',
+    accountsTitle:'💰 Akun / Kantong',
+    accountsDesc:'Cash & rekening bank kamu — saldo dihitung otomatis dari transaksi + saldo awal.',
+    accountsNamePlaceholder:'Nama kantong (mis. BCA)',
+    enterAccountName:'Masukkan nama kantong',
+    startingBalancePlaceholder:'Saldo awal',
+    changeColorTitle:'Ganti warna',
+    deleteTitle:'Hapus',
+    addBtn:'+ Tambah',
+    txAccountLabel:'Kantong / Akun',
+    adminFeeQuestion:'🏦 Ada biaya admin transfer?',
+    adminFeeNote:'Biaya admin akan ditambahkan dan dikurangi dari saldo kantong bersama transaksi ini.',
+    adminFeeManual:'Manual',
+    // Profiles
+    whoUsingLumina:'Siapa yang menggunakan Lumina?',
+    switchUserTitle:'Ganti user',
+    userProfilesHdr:'👥 Profil Pengguna',
+    addProfileBtn:'+ Tambah Profil',
+    namePlaceholder:'Nama…',
+    deleteProfileTitle:'Hapus profil',
+    minOneProfile:'Minimal 1 profil',
+    confirmDeleteProfile:'Hapus profil ini?',
+    addLabel:'Tambah',
+    allUsers:'Semua',
   }
 };
 
@@ -2086,9 +2155,10 @@ function applyTranslations(){
   safeText('ev-lbl-desc',         tr.description);
   safeText('ev-lbl-repeat-until', tr.repeatUntil);
   safeText('ev-lbl-reminder',     tr.reminder);
-  // data-i18n Cancel/Delete buttons
-  document.querySelectorAll('[data-i18n="cancel"]').forEach(el=>el.textContent=tr.cancel);
-  document.querySelectorAll('[data-i18n="deleteBtn"]').forEach(el=>el.textContent=tr.deleteBtn);
+  // Generic data-i18n sweep — covers any element tagged with a translation key
+  document.querySelectorAll('[data-i18n]').forEach(el=>{ const k=el.dataset.i18n; if(tr[k])el.textContent=tr[k]; });
+  document.querySelectorAll('[data-i18n-placeholder]').forEach(el=>{ const k=el.dataset.i18nPlaceholder; if(tr[k])el.placeholder=tr[k]; });
+  document.querySelectorAll('[data-i18n-title]').forEach(el=>{ const k=el.dataset.i18nTitle; if(tr[k])el.title=tr[k]; });
 
   // Settings title
   const sttl=document.querySelector('.s-ttl');if(sttl)sttl.textContent=tr.settings;
@@ -2355,6 +2425,8 @@ document.getElementById('setting-apply').addEventListener('click',()=>{
   // Re-render all tabs with new locale
   applyTranslations();
   applyTheme(_locale.theme||'auto');
+  renderSettingsProfiles();
+  _refreshUserFilterChips();
   if(_diary.length)  renderDiary();
   if(_money.length)  renderMoney();
   renderHome();
@@ -3873,17 +3945,40 @@ function renderCatsList(){
   const defaultExpIds = new Set(EXPENSE_CATS.map(c=>c.id));
   const defaultIncIds = new Set(INCOME_CATS.map(c=>c.id));
 
+  const tr = t();
   const makeList = (cats, defaultIds, type) =>
     cats.map(cat=>`
       <div class="cats-item" data-id="${esc(cat.id)}" data-type="${type}">
-        <span class="cats-item-emoji">${cat.emoji||cat.label.split(' ')[0]}</span>
-        <span class="cats-item-label">${esc(cat.label.replace(/^[^\s]+\s/,''))}</span>
+        <input class="cats-item-emoji-input" data-id="${esc(cat.id)}" data-type="${type}" data-role="emoji" value="${esc(cat.emoji||cat.label.split(' ')[0])}">
+        <input class="cats-item-label-input" data-id="${esc(cat.id)}" data-type="${type}" data-role="label" value="${esc(cat.label.replace(/^[^\s]+\s/,''))}">
         ${defaultIds.has(cat.id) ? '<span class="cats-item-default">default</span>' : ''}
-        <button class="cats-item-del" data-id="${esc(cat.id)}" data-type="${type}" title="Delete">✕</button>
+        <button class="cats-item-del" data-id="${esc(cat.id)}" data-type="${type}" title="${esc(tr.deleteTitle||'Delete')}">✕</button>
       </div>`).join('');
 
   document.getElementById('cats-expense-list').innerHTML = makeList(expCats, defaultExpIds, 'expense');
   document.getElementById('cats-income-list').innerHTML  = makeList(incCats, defaultIncIds, 'income');
+
+  // Rename label / change emoji — rebuild the combined `emoji + label` field used elsewhere
+  const applyCatEdit = (id, type, patch) => {
+    const list = type==='expense' ? getExpenseCats() : getIncomeCats();
+    const cat = list.find(c=>c.id===id);
+    if(!cat) return;
+    const currentName = (cat.label||'').replace(/^[^\s]+\s/,'') || cat.label;
+    const emoji = patch.emoji !== undefined ? patch.emoji : (cat.emoji || cat.label.split(' ')[0]);
+    const name  = patch.name  !== undefined ? patch.name  : currentName;
+    cat.emoji = emoji;
+    cat.label = `${emoji} ${name}`.trim();
+    if(type==='expense') saveCats(list, getIncomeCats());
+    else saveCats(getExpenseCats(), list);
+    _refreshCategorySelects();
+    if(document.getElementById('panel-money')?.classList.contains('active')) renderMoney();
+  };
+  document.querySelectorAll('.cats-item-emoji-input').forEach(inp=>{
+    inp.addEventListener('change', ()=>{ applyCatEdit(inp.dataset.id, inp.dataset.type, {emoji: inp.value.trim()||'🏷'}); });
+  });
+  document.querySelectorAll('.cats-item-label-input').forEach(inp=>{
+    inp.addEventListener('change', ()=>{ applyCatEdit(inp.dataset.id, inp.dataset.type, {name: inp.value.trim()}); });
+  });
 
   // Wire delete buttons
   document.querySelectorAll('.cats-item-del').forEach(btn=>{
@@ -3917,7 +4012,7 @@ document.querySelectorAll('.cats-tab').forEach(btn=>{
 document.getElementById('cats-add-btn')?.addEventListener('click', ()=>{
   const emoji = document.getElementById('cats-new-emoji').value.trim() || '🏷';
   const label = document.getElementById('cats-new-label').value.trim();
-  if(!label){ toast('Enter a category name','error'); return; }
+  if(!label){ toast(t().enterCategoryName||'Enter a category name','error'); return; }
   const id = 'custom_' + label.toLowerCase().replace(/\s+/g,'_') + '_' + Date.now().toString(36);
   const newCat = {id, emoji, label: emoji+' '+label, cls:'co', color:'#d97706'};
   if(_catsTab==='expense'){
@@ -3944,15 +4039,16 @@ function openPaymentModal(){
 
 function renderPaymentList(){
   const methods = getPaymentMethods();
+  const tr = t();
   document.getElementById('payment-list').innerHTML = methods.map(m=>`
     <div class="acc-row" data-acc-id="${esc(m.id)}">
-      <button class="acc-row-color-btn" style="--acc-color:${m.color||'#ccc'}" data-pay-id="${esc(m.id)}" data-role="color" title="Ganti warna"></button>
-      <span class="acc-row-emoji">${m.emoji||'💳'}</span>
-      <span class="acc-row-label" title="${esc(m.label)}">${esc(m.label)}</span>
+      <button class="acc-row-color-btn" style="--acc-color:${m.color||'#ccc'}" data-pay-id="${esc(m.id)}" data-role="color" title="${esc(tr.changeColorTitle||'Change color')}"></button>
+      <input class="acc-row-emoji-input" data-pay-id="${esc(m.id)}" data-role="emoji" value="${esc(m.emoji||'💳')}">
+      <input class="acc-row-label-input" data-pay-id="${esc(m.id)}" data-role="label" value="${esc(m.label)}">
       <div class="acc-row-balance">
-        <input type="number" class="acc-row-balance-input" data-pay-id="${esc(m.id)}" data-role="balance" value="${m.startingBalance||0}" placeholder="Saldo awal" title="Saldo awal (Rp)">
+        <input type="number" class="acc-row-balance-input" data-pay-id="${esc(m.id)}" data-role="balance" value="${m.startingBalance||0}" placeholder="${esc(tr.startingBalancePlaceholder||'Starting balance')}" title="${esc(tr.startingBalancePlaceholder||'Starting balance')}">
       </div>
-      <button class="cats-item-del" data-pay-id="${esc(m.id)}" data-role="delete" title="Hapus">✕</button>
+      <button class="cats-item-del" data-pay-id="${esc(m.id)}" data-role="delete" title="${esc(tr.deleteTitle||'Delete')}">✕</button>
     </div>`).join('');
 
   // Delete
@@ -3963,6 +4059,24 @@ function renderPaymentList(){
       renderPaymentList();
       _refreshPaymentSelect();
       renderAccountBalances();
+    });
+  });
+
+  // Rename label
+  document.querySelectorAll('[data-role="label"]').forEach(inp=>{
+    inp.addEventListener('change', ()=>{
+      const methods = getPaymentMethods();
+      const m = methods.find(x=>x.id===inp.dataset.payId);
+      if(m){ m.label = inp.value.trim()||m.label; savePaymentMethods(methods); _refreshPaymentSelect(); renderAccountBalances(); if(document.getElementById('panel-money')?.classList.contains('active')) renderMoney(); }
+    });
+  });
+
+  // Change emoji
+  document.querySelectorAll('[data-role="emoji"]').forEach(inp=>{
+    inp.addEventListener('change', ()=>{
+      const methods = getPaymentMethods();
+      const m = methods.find(x=>x.id===inp.dataset.payId);
+      if(m){ m.emoji = inp.value.trim()||m.emoji; savePaymentMethods(methods); _refreshPaymentSelect(); renderAccountBalances(); if(document.getElementById('panel-money')?.classList.contains('active')) renderMoney(); }
     });
   });
 
@@ -4007,7 +4121,7 @@ function renderPaymentList(){
 document.getElementById('pay-add-btn')?.addEventListener('click', ()=>{
   const emoji = document.getElementById('pay-new-emoji').value.trim() || '💳';
   const label = document.getElementById('pay-new-label').value.trim();
-  if(!label){ toast('Enter a method name','error'); return; }
+  if(!label){ toast(t().enterAccountName||'Enter an account name','error'); return; }
   const id = 'pay_' + label.toLowerCase().replace(/\s+/g,'_') + '_' + Date.now().toString(36);
   const existing = getPaymentMethods();
   const color = ACCOUNT_COLORS[existing.length % ACCOUNT_COLORS.length];
