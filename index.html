@@ -323,13 +323,16 @@ img{max-width:100%;display:block}
 .theme-toggle{display:flex;gap:.5rem;margin-top:6px}
 .theme-btn{flex:1;padding:.5rem;border-radius:var(--r-sm);font-size:.84rem;font-weight:500;border:1px solid var(--border);background:var(--surface);color:var(--text2);cursor:pointer;transition:all var(--ease)}
 .theme-btn.active{background:var(--amber);color:#fff;border-color:var(--amber)}
-/* Settings groups — collapsible sections */
-.settings-group{border:1px solid var(--border);border-radius:var(--r);margin-bottom:.75rem;overflow:hidden}
-.settings-group-summary{list-style:none;display:flex;align-items:center;justify-content:space-between;padding:.75rem .9rem;cursor:pointer;font-size:.85rem;font-weight:600;color:var(--text);background:var(--surface2);user-select:none}
-.settings-group-summary::-webkit-details-marker{display:none}
+/* Settings groups — collapsible sections (JS-controlled, not native <details>:
+   native <details> inside a transform-animated slide-in panel has a known mobile
+   Chrome reflow bug where content below the first toggle fails to repaint) */
+.settings-group{border:1px solid var(--border);border-radius:var(--r);margin-bottom:.75rem}
+.settings-group-summary{width:100%;list-style:none;display:flex;align-items:center;justify-content:space-between;padding:.75rem .9rem;cursor:pointer;font-size:.85rem;font-weight:600;color:var(--text);background:var(--surface2);user-select:none;border:none;border-radius:var(--r);text-align:left;font-family:inherit}
 .settings-group-summary::after{content:'▾';color:var(--text3);font-size:.75rem;transition:transform .2s ease}
-.settings-group[open] .settings-group-summary::after{transform:rotate(180deg)}
-.settings-group-body{padding:1rem .9rem .2rem}
+.settings-group.open .settings-group-summary::after{transform:rotate(180deg)}
+.settings-group.open .settings-group-summary{border-bottom-left-radius:0;border-bottom-right-radius:0}
+.settings-group-body{display:none;padding:1rem .9rem .2rem}
+.settings-group.open .settings-group-body{display:block}
 .settings-group-body>*:last-child{margin-bottom:0!important}
 /* Dark mode specific tweaks */
 [data-theme="dark"] .ql-toolbar.ql-snow{background:var(--surface2)}
@@ -1461,8 +1464,8 @@ img{max-width:100%;display:block}
     <h2 class="s-ttl" data-i18n="settings">Settings</h2>
 
     <!-- Display -->
-    <details class="settings-group" open>
-      <summary class="settings-group-summary" data-i18n="settingsGroupDisplay">Display</summary>
+    <div class="settings-group open">
+      <button type="button" class="settings-group-summary" data-i18n="settingsGroupDisplay">Display</button>
       <div class="settings-group-body">
         <!-- Language -->
         <div style="margin-bottom:1.1rem">
@@ -1482,11 +1485,11 @@ img{max-width:100%;display:block}
           </div>
         </div>
       </div>
-    </details>
+    </div>
 
     <!-- Formats -->
-    <details class="settings-group">
-      <summary class="settings-group-summary" data-i18n="settingsGroupFormat">Formats</summary>
+    <div class="settings-group">
+      <button type="button" class="settings-group-summary" data-i18n="settingsGroupFormat">Formats</button>
       <div class="settings-group-body">
         <!-- Currency -->
         <div style="margin-bottom:1rem">
@@ -1523,11 +1526,11 @@ img{max-width:100%;display:block}
         </div>
         <button class="btn btn-primary" style="width:100%" id="setting-apply" data-i18n="applySettings">Apply Settings</button>
       </div>
-    </details>
+    </div>
 
     <!-- Profiles & Accounts -->
-    <details class="settings-group">
-      <summary class="settings-group-summary" data-i18n="settingsGroupProfiles">Profiles &amp; Accounts</summary>
+    <div class="settings-group">
+      <button type="button" class="settings-group-summary" data-i18n="settingsGroupProfiles">Profiles &amp; Accounts</button>
       <div class="settings-group-body">
         <!-- Profiles -->
         <div style="margin-bottom:1.1rem">
@@ -1542,11 +1545,11 @@ img{max-width:100%;display:block}
           <button class="btn btn-ghost" style="width:100%" id="edit-payment-btn" data-i18n="editAccountsBtn">💰 Accounts (Cash & Bank)</button>
         </div>
       </div>
-    </details>
+    </div>
 
     <!-- Integrations -->
-    <details class="settings-group">
-      <summary class="settings-group-summary" data-i18n="settingsGroupIntegrations">Integrations</summary>
+    <div class="settings-group">
+      <button type="button" class="settings-group-summary" data-i18n="settingsGroupIntegrations">Integrations</button>
       <div class="settings-group-body">
         <!-- OCR Settings -->
         <div class="fg" style="margin-bottom:.9rem">
@@ -1579,16 +1582,16 @@ img{max-width:100%;display:block}
           <div class="s-val" id="api-display">—</div>
         </div>
       </div>
-    </details>
+    </div>
 
     <!-- Data -->
-    <details class="settings-group">
-      <summary class="settings-group-summary" data-i18n="settingsGroupData">Data</summary>
+    <div class="settings-group">
+      <button type="button" class="settings-group-summary" data-i18n="settingsGroupData">Data</button>
       <div class="settings-group-body">
         <button class="btn btn-ghost" style="width:100%;margin-bottom:.5rem" id="export-btn">⬇ Export Data</button>
         <button class="btn btn-ghost" style="width:100%" id="refresh-btn" data-i18n="refreshData">↺ Refresh all data</button>
       </div>
-    </details>
+    </div>
   </div>
 </div>
 
@@ -2375,7 +2378,11 @@ document.querySelectorAll('.tab-btn').forEach(btn=>btn.addEventListener('click',
 
 // Online status
 
-// Settings
+// Settings — collapsible group toggles
+document.querySelectorAll('.settings-group-summary').forEach(btn=>{
+  btn.addEventListener('click',()=>{ btn.closest('.settings-group')?.classList.toggle('open'); });
+});
+
 document.getElementById('settings-btn').addEventListener('click',()=>{
   document.getElementById('api-input').value=API_URL;
   document.getElementById('api-display').textContent=API_URL||'Not set';
