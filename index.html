@@ -419,8 +419,11 @@ img{max-width:100%;display:block}
 .acc-balance-val{font-family:var(--font-s);font-size:.88rem;font-weight:700;white-space:nowrap}
 
 /* Account row in settings modal: color swatch + starting balance */
-.acc-row{display:flex;align-items:center;gap:.5rem;padding:.5rem .4rem;border-bottom:1px solid var(--border)}
+.acc-row{display:flex;align-items:center;gap:.5rem;padding:.5rem .4rem;border-bottom:1px solid var(--border);background:var(--surface);touch-action:pan-y}
 .acc-row:last-child{border-bottom:none}
+/* Drag-to-reorder handle — shared by category and account rows */
+.drag-handle{color:var(--text3);font-size:1rem;flex-shrink:0;cursor:grab;padding:.2rem .3rem;touch-action:none;user-select:none}
+.dragging-row{opacity:.55;box-shadow:var(--shadow-lg);z-index:5;position:relative;border-radius:var(--r-sm)}
 .acc-row-color-btn{width:28px;height:28px;border-radius:50%;border:2px solid var(--border);cursor:pointer;flex-shrink:0;background:var(--acc-color,#ccc)}
 .acc-row-emoji{width:24px;text-align:center;font-size:1rem;flex-shrink:0}
 .acc-row-label{flex:1;font-size:.85rem;color:var(--text);min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -525,7 +528,7 @@ img{max-width:100%;display:block}
 .cats-tab{flex:1;padding:.45rem;border-radius:var(--r-sm);font-size:.82rem;font-weight:500;border:1px solid var(--border);background:var(--surface);color:var(--text2);cursor:pointer;transition:all var(--ease)}
 .cats-tab.active{background:var(--amber);color:#fff;border-color:var(--amber)}
 .cats-list{max-height:240px;overflow-y:auto;margin-bottom:.75rem}
-.cats-item{display:flex;align-items:center;gap:.5rem;padding:.5rem .4rem;border-bottom:1px solid var(--border);border-radius:var(--r-sm)}
+.cats-item{display:flex;align-items:center;gap:.5rem;padding:.5rem .4rem;border-bottom:1px solid var(--border);border-radius:var(--r-sm);background:var(--surface);touch-action:pan-y}
 .cats-item:last-child{border-bottom:none}
 .cats-item-emoji{width:28px;text-align:center;font-size:1rem;flex-shrink:0}
 .cats-item-label{flex:1;font-size:.86rem;color:var(--text)}
@@ -1934,6 +1937,7 @@ const TRANSLATIONS = {
     txFromAccountLabel:'From Account',
     enterToAccount:'Choose a destination account',
     sameAccountError:'Choose two different accounts',
+    dragToReorder:'Drag to reorder',
   },
   id: {
     settings:'Pengaturan', language:'Bahasa', currency:'Mata Uang',
@@ -2037,6 +2041,7 @@ const TRANSLATIONS = {
     txFromAccountLabel:'Dari Kantong',
     enterToAccount:'Pilih kantong tujuan',
     sameAccountError:'Pilih dua kantong yang berbeda',
+    dragToReorder:'Seret untuk mengurutkan',
   }
 };
 
@@ -2396,6 +2401,46 @@ const driveThumb=(url,sz='w200')=>{
 const addMonth=(m,d)=>{const[y,mo]=m.split('-').map(Number);const dt=new Date(y,mo-1+d,1);return`${dt.getFullYear()}-${String(dt.getMonth()+1).padStart(2,'0')}`};
 // Debounce: delays fn until `ms` has passed since the last call (used to avoid re-rendering on every keystroke)
 function _debounce(fn,ms){let timer;return(...args)=>{clearTimeout(timer);timer=setTimeout(()=>fn(...args),ms);};}
+
+// Touch-friendly drag-to-reorder using Pointer Events (unlike native HTML5 drag-and-drop,
+// this works on mobile touch screens, which is how this app is used most of the time).
+// `container` holds sibling rows each with [data-drag-item] + [data-drag-id]; each row must
+// contain one `.drag-handle` element to grab. Calls onReorder(newIdOrderArray) on drop.
+function _enableDragReorder(container, onReorder){
+  if(!container) return;
+  container.querySelectorAll('.drag-handle').forEach(handle=>{
+    handle.addEventListener('pointerdown', e=>{
+      const dragEl = handle.closest('[data-drag-item]');
+      if(!dragEl) return;
+      e.preventDefault();
+      try{ dragEl.setPointerCapture(e.pointerId); }catch(_){}
+      dragEl.classList.add('dragging-row');
+      const items = ()=>[...container.querySelectorAll('[data-drag-item]')];
+
+      const onMove = ev=>{
+        const y = ev.clientY;
+        const after = items().find(item=>{
+          if(item===dragEl) return false;
+          const rect = item.getBoundingClientRect();
+          return y < rect.top + rect.height/2;
+        });
+        if(after) container.insertBefore(dragEl, after);
+        else container.appendChild(dragEl);
+      };
+      const onUp = ev=>{
+        try{ dragEl.releasePointerCapture(e.pointerId); }catch(_){}
+        dragEl.classList.remove('dragging-row');
+        dragEl.removeEventListener('pointermove', onMove);
+        dragEl.removeEventListener('pointerup', onUp);
+        dragEl.removeEventListener('pointercancel', onUp);
+        onReorder(items().map(el=>el.dataset.dragId));
+      };
+      dragEl.addEventListener('pointermove', onMove);
+      dragEl.addEventListener('pointerup', onUp);
+      dragEl.addEventListener('pointercancel', onUp);
+    });
+  });
+}
 
 document.querySelectorAll('[data-close]').forEach(b=>b.addEventListener('click',()=>closeModal(b.dataset.close)));
 document.querySelectorAll('.overlay').forEach(o=>o.addEventListener('click',e=>{if(e.target===o)closeModal(o.id)}));
@@ -4124,7 +4169,8 @@ function renderCatsList(){
   const tr = t();
   const makeList = (cats, defaultIds, type) =>
     cats.map(cat=>`
-      <div class="cats-item" data-id="${esc(cat.id)}" data-type="${type}">
+      <div class="cats-item" data-id="${esc(cat.id)}" data-type="${type}" data-drag-item data-drag-id="${esc(cat.id)}">
+        <span class="drag-handle" aria-label="${esc(tr.dragToReorder||'Drag to reorder')}">⠿</span>
         <input class="cats-item-emoji-input" data-id="${esc(cat.id)}" data-type="${type}" data-role="emoji" value="${esc(cat.emoji||cat.label.split(' ')[0])}">
         <input class="cats-item-label-input" data-id="${esc(cat.id)}" data-type="${type}" data-role="label" value="${esc(cat.label.replace(/^[^\s]+\s/,''))}">
         ${defaultIds.has(cat.id) ? '<span class="cats-item-default">default</span>' : ''}
@@ -4133,6 +4179,20 @@ function renderCatsList(){
 
   document.getElementById('cats-expense-list').innerHTML = makeList(expCats, defaultExpIds, 'expense');
   document.getElementById('cats-income-list').innerHTML  = makeList(incCats, defaultIncIds, 'income');
+
+  // Drag-to-reorder within each tab (expense/income are independent lists)
+  _enableDragReorder(document.getElementById('cats-expense-list'), newOrderIds=>{
+    const cats = getExpenseCats();
+    const reordered = newOrderIds.map(id=>cats.find(c=>c.id===id)).filter(Boolean);
+    saveCats(reordered, getIncomeCats());
+    _refreshCategorySelects();
+  });
+  _enableDragReorder(document.getElementById('cats-income-list'), newOrderIds=>{
+    const cats = getIncomeCats();
+    const reordered = newOrderIds.map(id=>cats.find(c=>c.id===id)).filter(Boolean);
+    saveCats(getExpenseCats(), reordered);
+    _refreshCategorySelects();
+  });
 
   // Rename label / change emoji — rebuild the combined `emoji + label` field used elsewhere
   const applyCatEdit = (id, type, patch) => {
@@ -4217,7 +4277,8 @@ function renderPaymentList(){
   const methods = getPaymentMethods();
   const tr = t();
   document.getElementById('payment-list').innerHTML = methods.map(m=>`
-    <div class="acc-row" data-acc-id="${esc(m.id)}">
+    <div class="acc-row" data-acc-id="${esc(m.id)}" data-drag-item data-drag-id="${esc(m.id)}">
+      <span class="drag-handle" aria-label="${esc(tr.dragToReorder||'Drag to reorder')}">⠿</span>
       <button class="acc-row-color-btn" style="--acc-color:${m.color||'#ccc'}" data-pay-id="${esc(m.id)}" data-role="color" title="${esc(tr.changeColorTitle||'Change color')}" aria-label="${esc(tr.changeColorTitle||'Change color')}"></button>
       <input class="acc-row-emoji-input" data-pay-id="${esc(m.id)}" data-role="emoji" value="${esc(m.emoji||'💳')}">
       <input class="acc-row-label-input" data-pay-id="${esc(m.id)}" data-role="label" value="${esc(m.label)}">
@@ -4226,6 +4287,15 @@ function renderPaymentList(){
       </div>
       <button class="cats-item-del" data-pay-id="${esc(m.id)}" data-role="delete" title="${esc(tr.deleteTitle||'Delete')}" aria-label="${esc(tr.deleteTitle||'Delete')}">✕</button>
     </div>`).join('');
+
+  // Drag-to-reorder
+  _enableDragReorder(document.getElementById('payment-list'), newOrderIds=>{
+    const current = getPaymentMethods();
+    const reordered = newOrderIds.map(id=>current.find(m=>m.id===id)).filter(Boolean);
+    savePaymentMethods(reordered);
+    _refreshPaymentSelect();
+    renderAccountBalances();
+  });
 
   // Delete
   document.querySelectorAll('[data-role="delete"]').forEach(btn=>{
