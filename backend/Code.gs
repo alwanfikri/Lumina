@@ -20,14 +20,14 @@ var CONFIG = {
 var DIARY_HEADERS  = ['id','date','title','content_html','photo_urls','mood','updatedAt','createdBy'];
 var AGENDA_HEADERS = ['id','gcal_id','date','end_date','start_time','end_time','all_day','title','description','color','recur','recur_end','reminder','updatedAt','createdBy'];
 var PHOTOS_HEADERS = ['id','name','drive_id','thumb_url','drive_url','entry_id','createdAt'];
-var MONEY_HEADERS  = ['id','date','type','category','amount','notes','updatedAt','createdBy','payment_method','admin_fee'];
+var MONEY_HEADERS  = ['id','date','type','category','amount','notes','updatedAt','createdBy','payment_method','admin_fee','to_payment_method'];
 var NOTES_HEADERS  = ['id','title','content_html','canvas_data','color','pinned','tags','updatedAt','createdBy'];
 var SETTINGS_HEADERS = ['key','value','updatedAt']; // shared settings synced across devices: profiles, categories, paymentMethods
 
 var DC = {id:1,date:2,title:3,content_html:4,photo_urls:5,mood:6,updatedAt:7,createdBy:8};
 var AC = {id:1,gcal_id:2,date:3,end_date:4,start_time:5,end_time:6,all_day:7,title:8,description:9,color:10,recur:11,recur_end:12,reminder:13,updatedAt:14,createdBy:15};
 var PC = {id:1,name:2,drive_id:3,thumb_url:4,drive_url:5,entry_id:6,createdAt:7};
-var MC = {id:1,date:2,type:3,category:4,amount:5,notes:6,updatedAt:7,createdBy:8,payment_method:9,admin_fee:10};
+var MC = {id:1,date:2,type:3,category:4,amount:5,notes:6,updatedAt:7,createdBy:8,payment_method:9,admin_fee:10,to_payment_method:11};
 var NC = {id:1,title:2,content_html:3,canvas_data:4,color:5,pinned:6,tags:7,updatedAt:8,createdBy:9};
 
 function makeResp(obj){return ContentService.createTextOutput(JSON.stringify(obj)).setMimeType(ContentService.MimeType.JSON);}
@@ -360,7 +360,7 @@ function saveMoney(p){
   var sh=getSheet('Money',MONEY_HEADERS);var now=isoNow();var id=p.id||genId();
   var row=sheetFindById(sh,MC.id,id);
   var createdByM=row===-1?v(p.createdBy):getExistingValue(sh,row,MC.createdBy);
-  var data=[id,v(p.date)||now.slice(0,10),v(p.type)||'expense',v(p.category),parseFloat(p.amount)||0,v(p.notes),now,createdByM,v(p.payment_method)||'cash',parseFloat(p.admin_fee)||0];
+  var data=[id,v(p.date)||now.slice(0,10),v(p.type)||'expense',v(p.category),parseFloat(p.amount)||0,v(p.notes),now,createdByM,v(p.payment_method)||'cash',parseFloat(p.admin_fee)||0,v(p.to_payment_method)];
   if(row===-1)sh.appendRow(data);else sh.getRange(row,1,1,data.length).setValues([data]);
   cacheInvalidate();
   return ok({id:id,updatedAt:now});
@@ -371,7 +371,7 @@ function getMoneys(p){
   if(!out){
     var rows=sheetGetAll('Money',MONEY_HEADERS);
     out=rows.filter(function(r){return r[0];}).map(function(r){
-      return{id:v(r[0]),date:fmtDate(r[1]),type:v(r[2]),category:v(r[3]),amount:parseFloat(r[4])||0,notes:v(r[5]),updatedAt:v(r[6]),createdBy:v(r[7]),payment_method:v(r[8])||'cash',admin_fee:parseFloat(r[9])||0};
+      return{id:v(r[0]),date:fmtDate(r[1]),type:v(r[2]),category:v(r[3]),amount:parseFloat(r[4])||0,notes:v(r[5]),updatedAt:v(r[6]),createdBy:v(r[7]),payment_method:v(r[8])||'cash',admin_fee:parseFloat(r[9])||0,to_payment_method:v(r[10])};
     }).sort(function(a,b){return b.date.localeCompare(a.date);});
     cachePut('lumina_moneys',{transactions:out});
   }

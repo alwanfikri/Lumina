@@ -266,6 +266,7 @@ img{max-width:100%;display:block}
 .type-toggle button{flex:1;padding:.52rem;font-size:.84rem;font-weight:500;transition:all var(--ease);color:var(--text2);cursor:pointer;border:none;background:none}
 .tt-exp{background:var(--red-l)!important;color:var(--red)!important}
 .tt-inc{background:var(--green-l)!important;color:var(--green)!important}
+.tt-transfer{background:var(--amber-l)!important;color:var(--amber-d)!important}
 
 /* CAROUSEL */
 .carousel{position:fixed;inset:0;z-index:200;background:rgba(0,0,0,.93);display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .2s}
@@ -1132,13 +1133,13 @@ img{max-width:100%;display:block}
     <div class="modal-hdr"><h2 class="modal-ttl" id="tx-ttl">New Transaction</h2><button class="modal-x" data-close="tx-modal">✕</button></div>
     <input type="hidden" id="tx-id">
     <div class="fg"><label class="flabel">Type</label>
-      <div class="type-toggle"><button id="tt-exp">− Expense</button><button id="tt-inc">+ Income</button></div>
+      <div class="type-toggle"><button id="tt-exp">− Expense</button><button id="tt-inc">+ Income</button><button id="tt-transfer" data-i18n="transferBtn">⇄ Transfer</button></div>
     </div>
     <div class="frow">
       <div class="fg"><label class="flabel">Date</label><input class="fi" id="tx-date" type="date"></div>
       <div class="fg"><label class="flabel">Amount (Rp)</label><input class="fi" id="tx-amount" type="number" min="0" step="1000" placeholder="0"></div>
     </div>
-    <div class="fg"><label class="flabel">Category</label><select class="fi" id="tx-cat"></select>
+    <div class="fg" id="tx-cat-row"><label class="flabel">Category</label><select class="fi" id="tx-cat"></select>
       <div id="cat-suggestion" style="display:none;margin-top:.3rem;font-size:.76rem;color:var(--text3)"></div>
     </div>
     <div class="frow">
@@ -1147,7 +1148,13 @@ img{max-width:100%;display:block}
           <option value="cash">💵 Cash</option>
         </select>
       </div>
-      <div class="fg"><label class="flabel" id="tx-lbl-notes">Notes</label>
+      <div class="fg" id="tx-payment-to-row" style="display:none">
+        <label class="flabel" data-i18n="txToAccountLabel">To Account</label>
+        <select class="fi" id="tx-payment-to">
+          <option value="cash">💵 Cash</option>
+        </select>
+      </div>
+      <div class="fg" id="tx-notes-row"><label class="flabel" id="tx-lbl-notes">Notes</label>
         <div style="position:relative">
           <input class="fi" id="tx-notes" placeholder="Optional…" data-i18n-placeholder="optionalPlaceholder" style="padding-right:2.4rem">
           <button id="ocr-btn" title="Scan receipt with camera or upload" style="position:absolute;right:.4rem;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;font-size:1.1rem;color:var(--amber);padding:0;transition:color var(--ease)" >📷</button>
@@ -1915,6 +1922,11 @@ const TRANSLATIONS = {
     settingsGroupProfiles:'Profiles & Accounts',
     settingsGroupIntegrations:'Integrations',
     settingsGroupData:'Data',
+    transferBtn:'⇄ Transfer',
+    txToAccountLabel:'To Account',
+    txFromAccountLabel:'From Account',
+    enterToAccount:'Choose a destination account',
+    sameAccountError:'Choose two different accounts',
   },
   id: {
     settings:'Pengaturan', language:'Bahasa', currency:'Mata Uang',
@@ -2013,6 +2025,11 @@ const TRANSLATIONS = {
     settingsGroupProfiles:'Profil & Kantong',
     settingsGroupIntegrations:'Integrasi',
     settingsGroupData:'Data',
+    transferBtn:'⇄ Transfer',
+    txToAccountLabel:'Ke Kantong',
+    txFromAccountLabel:'Dari Kantong',
+    enterToAccount:'Pilih kantong tujuan',
+    sameAccountError:'Pilih dua kantong yang berbeda',
   }
 };
 
@@ -3465,7 +3482,8 @@ async function loadMoney(){
 }
 function renderMoney(){
   const fil=_money.filter(t=>t.date.slice(0,7)===_month);
-  let inc=0,exp=0;fil.forEach(t=>{if(t.type==='income')inc+=t.amount;else exp+=t.amount;});
+  // Transfers move money between the user's own accounts — they're not real income/expense
+  let inc=0,exp=0;fil.forEach(t=>{if(t.type==='income')inc+=t.amount;else if(t.type==='expense')exp+=t.amount;});
   const bal=inc-exp;
   document.getElementById('sum-inc').textContent=idr(inc);
   document.getElementById('sum-exp').textContent=idr(exp);
@@ -3491,9 +3509,16 @@ function renderMoney(){
   if(!filteredByUser.length){el.innerHTML=`<div class="empty"><div class="empty-ico">💰</div><p class="empty-ttl">${t().noTx}</p><p class="empty-sub">${t().tapAdd}</p></div>`;return;}
   const g={};filteredByUser.forEach(t=>{(g[t.date]=g[t.date]||[]).push(t);});
   el.innerHTML=Object.keys(g).sort().reverse().map(date=>{
-    const dt=g[date].reduce((s,t)=>s+(t.type==='income'?t.amount:-t.amount),0);
+    const dt=g[date].reduce((s,t)=>s+(t.type==='income'?t.amount:t.type==='expense'?-t.amount:0),0);
     return`<div class="tx-group"><div class="tx-dlbl"><span>${fmtDateLbl(date)}</span><span style="color:${dt>=0?'var(--green)':'var(--red)'};">${dt>=0?'+':'-'}${idr(dt)}</span></div>${
-      g[date].map(t=>{const ci=catInfo(t.category);const payMethods=getPaymentMethods();const pm=payMethods.find(m=>m.id===t.payment_method);
+      g[date].map(t=>{
+        const payMethods=getPaymentMethods();
+        if(t.type==='transfer'){
+          const from=payMethods.find(m=>m.id===t.payment_method);
+          const to=payMethods.find(m=>m.id===t.to_payment_method);
+          return`<div class="tx-item" data-id="${t.id}"><div class="tx-dot" style="background:var(--amber)"></div><div class="tx-body"><div class="tx-cat">⇄ ${from?from.emoji+' '+from.label:'?'} → ${to?to.emoji+' '+to.label:'?'}</div>${t.notes?`<div class="tx-note">${esc(t.notes)}</div>`:''}${t.admin_fee>0?`<div class="tx-note" style="color:var(--text3)">+ admin ${idr(t.admin_fee)}</div>`:''}</div><div style="display:flex;align-items:center;gap:.35rem">${profileBadge(t.createdBy)}<div class="tx-amt" style="color:var(--text2)">${idr(t.amount)}</div></div></div>`;
+        }
+        const ci=catInfo(t.category);const pm=payMethods.find(m=>m.id===t.payment_method);
     return`<div class="tx-item" data-id="${t.id}"><div class="tx-dot ${ci.cls}"></div><div class="tx-body"><div class="tx-cat">${ci.label}${pm?`<span class="tx-pay-badge">${pm.emoji} ${pm.label}</span>`:''}</div>${t.notes?`<div class="tx-note">${esc(t.notes)}</div>`:''}${t.admin_fee>0?`<div class="tx-note" style="color:var(--text3)">+ admin ${idr(t.admin_fee)}</div>`:''}</div><div style="display:flex;align-items:center;gap:.35rem">${profileBadge(t.createdBy)}<div class="tx-amt ${t.type}">${t.type==='income'?'+':'-'}${idr(t.amount)}</div></div></div>`;}).join('')
     }</div>`;
   }).join('');
@@ -3647,6 +3672,14 @@ function setTxType(type){
   _txType=type;
   document.getElementById('tt-exp').className=type==='expense'?'tt-exp':'';
   document.getElementById('tt-inc').className=type==='income'?'tt-inc':'';
+  document.getElementById('tt-transfer').className=type==='transfer'?'tt-transfer':'';
+  const isTransfer=type==='transfer';
+  document.getElementById('tx-cat-row').style.display=isTransfer?'none':'';
+  document.getElementById('tx-payment-to-row').style.display=isTransfer?'':'none';
+  document.getElementById('tx-notes-row').style.display=isTransfer?'none':'';
+  const payLbl=document.getElementById('tx-lbl-pay');
+  if(payLbl) payLbl.textContent=isTransfer?(t().txFromAccountLabel||'From Account'):(t().txAccountLabel||'Account');
+  if(isTransfer){ _refreshPaymentSelect(); _refreshPaymentToSelect(); return; }
   const sel=document.getElementById('tx-cat');
   if(!sel)return;
   const cats=_txType==='income'?getIncomeCats():getExpenseCats();
@@ -3677,9 +3710,13 @@ function openTxModal(tx=null){
     document.querySelector('.admin-fee-chip[data-fee="manual"]')?.classList.add('active');
   }
   _refreshPaymentSelect();
+  _refreshPaymentToSelect();
   initOCR();
   document.getElementById('tx-del').style.display=n?'none':'';
   setTxType(tx?.type||'expense');
+  if(tx?.type==='transfer' && tx?.to_payment_method){
+    document.getElementById('tx-payment-to').value = tx.to_payment_method;
+  }
   if(tx?.category){
     const opt=document.querySelector(`#tx-cat option[value="${tx.category}"]`);
     if(opt)opt.selected=true;
@@ -3688,6 +3725,8 @@ function openTxModal(tx=null){
 }
 document.getElementById('tt-exp').addEventListener('click',()=>setTxType('expense'));
 document.getElementById('tt-inc').addEventListener('click',()=>setTxType('income'));
+document.getElementById('tt-transfer').addEventListener('click',()=>setTxType('transfer'));
+document.getElementById('tx-payment').addEventListener('change',()=>{ if(_txType==='transfer')_refreshPaymentToSelect(); });
 document.getElementById('new-tx-btn').addEventListener('click',()=>openTxModal());
 
 // Admin fee toggle + presets
@@ -3721,12 +3760,18 @@ document.getElementById('tx-admin-fee-manual')?.addEventListener('input', (e)=>{
 document.getElementById('tx-save').addEventListener('click',async()=>{
   const amount=parseFloat(document.getElementById('tx-amount').value);
   if(!amount||amount<=0){showFieldError('tx-amount',t().enterAmount||'Enter a valid amount');return;}
+  const fromAccount=document.getElementById('tx-payment')?.value||'cash';
+  const toAccount=document.getElementById('tx-payment-to')?.value||'';
+  if(_txType==='transfer' && fromAccount===toAccount){
+    showFieldError('tx-payment-to',t().sameAccountError||'Choose two different accounts');
+    return;
+  }
   const btn=document.getElementById('tx-save');btn.disabled=true;btn.textContent=t().saving;
   try{
     const _txId=document.getElementById('tx-id').value||undefined;
     const _txcp=getActiveProfile();
     const adminFee = document.getElementById('tx-admin-fee-toggle').checked ? (parseFloat(document.getElementById('tx-admin-fee').value)||0) : 0;
-    await api('saveMoney',{id:_txId,date:document.getElementById('tx-date').value,type:_txType,category:document.getElementById('tx-cat').value,amount,notes:document.getElementById('tx-notes').value.trim(),payment_method:document.getElementById('tx-payment')?.value||'cash',admin_fee:adminFee,...(!_txId&&_txcp?{createdBy:_txcp.id}:{})});
+    await api('saveMoney',{id:_txId,date:document.getElementById('tx-date').value,type:_txType,category:_txType==='transfer'?'':document.getElementById('tx-cat').value,amount,notes:document.getElementById('tx-notes').value.trim(),payment_method:fromAccount,to_payment_method:_txType==='transfer'?toAccount:'',admin_fee:adminFee,...(!_txId&&_txcp?{createdBy:_txcp.id}:{})});
     closeModal('tx-modal');toast('Saved','success');loadMoney();
   }catch(e){toast(friendlyError(e.message),'error');}
   finally{btn.disabled=false;btn.textContent=t().save;}
@@ -3894,7 +3939,7 @@ function renderHome(){
   // ── Money snapshot ─────────────────────────────────────
   const _m=`${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
   const fil=_money.filter(tx=>tx.date.slice(0,7)===_m);
-  let inc=0,exp=0;fil.forEach(tx=>{if(tx.type==='income')inc+=tx.amount;else exp+=tx.amount;});
+  let inc=0,exp=0;fil.forEach(tx=>{if(tx.type==='income')inc+=tx.amount;else if(tx.type==='expense')exp+=tx.amount;});
   const bal=inc-exp;
   const totalBal=getPaymentMethods().reduce((s,acc)=>s+getAccountBalance(acc.id),0);
   const moneySection=`<div class="home-section">
@@ -4268,6 +4313,17 @@ function _refreshPaymentSelect(){
   sel.innerHTML = getPaymentMethods().map(m=>`<option value="${m.id}">${m.emoji} ${m.label}</option>`).join('');
   if(current) sel.value = current;
 }
+function _refreshPaymentToSelect(){
+  const sel = document.getElementById('tx-payment-to');
+  if(!sel) return;
+  const current = sel.value;
+  const methods = getPaymentMethods();
+  sel.innerHTML = methods.map(m=>`<option value="${m.id}">${m.emoji} ${m.label}</option>`).join('');
+  // Default "to" account to something other than the "from" account, if possible
+  const fromVal = document.getElementById('tx-payment')?.value;
+  if(current) sel.value = current;
+  else if(fromVal){ const alt = methods.find(m=>m.id!==fromVal); if(alt) sel.value = alt.id; }
+}
 function populateCatSelect(sel, cats){
   const current = sel.value;
   sel.innerHTML = cats.map(c=>`<option value="${c.id}">${c.label}</option>`).join('');
@@ -4279,6 +4335,13 @@ function getAccountBalance(accountId){
   const acc = getPaymentMethods().find(a=>a.id===accountId);
   let bal = acc?.startingBalance || 0;
   _money.forEach(t=>{
+    if(t.type==='transfer'){
+      // Transfers move money between two of the user's own accounts — the source
+      // loses amount+fee, the destination gains just the amount (fee is lost in transit).
+      if((t.payment_method||'cash')===accountId) bal -= t.amount + (t.admin_fee||0);
+      if(t.to_payment_method===accountId) bal += t.amount;
+      return;
+    }
     if((t.payment_method||'cash') !== accountId) return;
     bal += (t.type==='income' ? t.amount : -t.amount);
     bal -= (t.admin_fee||0);
@@ -4542,12 +4605,20 @@ function exportMoneyCsv(monthFilter){
   const headers = ['Date','Type','Category','Amount','Notes'];
   const rows = [csvRow(headers)];
   txs.forEach(tx=>{
-    const ci = catInfo(tx.category);
-    rows.push(csvRow([tx.date, tx.type, ci.label.replace(/^[^\s]+ /,''), tx.amount, tx.notes||'']));
+    let label;
+    if(tx.type==='transfer'){
+      const accs=getPaymentMethods();
+      const fromLbl=accs.find(a=>a.id===tx.payment_method)?.label||tx.payment_method||'?';
+      const toLbl=accs.find(a=>a.id===tx.to_payment_method)?.label||tx.to_payment_method||'?';
+      label=`${fromLbl} -> ${toLbl}`;
+    } else {
+      label=catInfo(tx.category).label.replace(/^[^\s]+ /,'');
+    }
+    rows.push(csvRow([tx.date, tx.type, label, tx.amount, tx.notes||'']));
   });
   // Summary footer
   let totalInc=0, totalExp=0;
-  txs.forEach(t=>{ if(t.type==='income')totalInc+=t.amount; else totalExp+=t.amount; });
+  txs.forEach(t=>{ if(t.type==='income')totalInc+=t.amount; else if(t.type==='expense')totalExp+=t.amount; });
   rows.push('');
   rows.push(csvRow(['','','Total Income',''+totalInc,'']));
   rows.push(csvRow(['','','Total Expense',''+totalExp,'']));
@@ -4590,7 +4661,7 @@ function printMonthlyReport(month){
   const tr   = t();
   const txs  = _money.filter(t=>t.date.slice(0,7)===month).sort((a,b)=>a.date.localeCompare(b.date));
   let totalInc=0, totalExp=0;
-  txs.forEach(t=>{ if(t.type==='income')totalInc+=t.amount; else totalExp+=t.amount; });
+  txs.forEach(t=>{ if(t.type==='income')totalInc+=t.amount; else if(t.type==='expense')totalExp+=t.amount; });
 
   // Build category breakdown
   const catTotals = {};
@@ -4603,13 +4674,25 @@ function printMonthlyReport(month){
     .join('');
 
   // Build transaction table
-  const txRows = txs.map(tx=>`
-    <tr>
+  const txRows = txs.map(tx=>{
+    if(tx.type==='transfer'){
+      const accs=getPaymentMethods();
+      const fromLbl=accs.find(a=>a.id===tx.payment_method)?.label||tx.payment_method||'?';
+      const toLbl=accs.find(a=>a.id===tx.to_payment_method)?.label||tx.to_payment_method||'?';
+      return `<tr>
+      <td>${fmtDate(tx.date)}</td>
+      <td>⇄ ${esc(fromLbl)} → ${esc(toLbl)}</td>
+      <td>${esc(tx.notes||'')}</td>
+      <td style="text-align:right;color:#6b5e4c">${idr(tx.amount)}</td>
+    </tr>`;
+    }
+    return `<tr>
       <td>${fmtDate(tx.date)}</td>
       <td>${catInfo(tx.category).label}</td>
       <td>${esc(tx.notes||'')}</td>
       <td style="text-align:right;color:${tx.type==='income'?'#16a34a':'#dc2626'}">${tx.type==='income'?'+':'-'}${idr(tx.amount)}</td>
-    </tr>`).join('');
+    </tr>`;
+  }).join('');
 
   const reportHtml = `<!DOCTYPE html>
 <html>
