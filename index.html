@@ -421,9 +421,13 @@ img{max-width:100%;display:block}
 /* Account row in settings modal: color swatch + starting balance */
 .acc-row{display:flex;align-items:center;gap:.5rem;padding:.5rem .4rem;border-bottom:1px solid var(--border);background:var(--surface);touch-action:pan-y}
 .acc-row:last-child{border-bottom:none}
-/* Drag-to-reorder handle — shared by category and account rows */
-.drag-handle{color:var(--text3);font-size:1rem;flex-shrink:0;cursor:grab;padding:.2rem .3rem;touch-action:none;user-select:none}
-.dragging-row{opacity:.55;box-shadow:var(--shadow-lg);z-index:5;position:relative;border-radius:var(--r-sm)}
+/* Up/down reorder buttons — shared by category and account rows. Simpler and more
+   reliable than drag-to-reorder on touch devices, where drags can conflict with
+   the page's own scroll gesture and fail to register. */
+.reorder-btns{display:flex;flex-direction:column;gap:1px;flex-shrink:0}
+.reorder-btn{width:20px;height:16px;display:flex;align-items:center;justify-content:center;font-size:.6rem;line-height:1;color:var(--text3);background:var(--surface2);border:none;border-radius:3px;cursor:pointer;padding:0}
+.reorder-btn:hover:not(:disabled){color:var(--amber);background:var(--amber-l)}
+.reorder-btn:disabled{opacity:.3;cursor:default}
 .acc-row-color-btn{width:28px;height:28px;border-radius:50%;border:2px solid var(--border);cursor:pointer;flex-shrink:0;background:var(--acc-color,#ccc)}
 .acc-row-emoji{width:24px;text-align:center;font-size:1rem;flex-shrink:0}
 .acc-row-label{flex:1;font-size:.85rem;color:var(--text);min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -1938,6 +1942,8 @@ const TRANSLATIONS = {
     enterToAccount:'Choose a destination account',
     sameAccountError:'Choose two different accounts',
     dragToReorder:'Drag to reorder',
+    moveUp:'Move up',
+    moveDown:'Move down',
   },
   id: {
     settings:'Pengaturan', language:'Bahasa', currency:'Mata Uang',
@@ -2042,6 +2048,8 @@ const TRANSLATIONS = {
     enterToAccount:'Pilih kantong tujuan',
     sameAccountError:'Pilih dua kantong yang berbeda',
     dragToReorder:'Seret untuk mengurutkan',
+    moveUp:'Naikkan',
+    moveDown:'Turunkan',
   }
 };
 
@@ -2431,43 +2439,27 @@ const addMonth=(m,d)=>{const[y,mo]=m.split('-').map(Number);const dt=new Date(y,
 // Debounce: delays fn until `ms` has passed since the last call (used to avoid re-rendering on every keystroke)
 function _debounce(fn,ms){let timer;return(...args)=>{clearTimeout(timer);timer=setTimeout(()=>fn(...args),ms);};}
 
-// Touch-friendly drag-to-reorder using Pointer Events (unlike native HTML5 drag-and-drop,
-// this works on mobile touch screens, which is how this app is used most of the time).
-// `container` holds sibling rows each with [data-drag-item] + [data-drag-id]; each row must
-// contain one `.drag-handle` element to grab. Calls onReorder(newIdOrderArray) on drop.
-function _enableDragReorder(container, onReorder){
+// Reorder via up/down buttons — `container` holds sibling rows each tagged
+// [data-drag-item] + [data-drag-id], with one `.reorder-up`/`.reorder-down` button
+// pair per row. Calls onReorder(newIdOrderArray) after each move.
+function _enableArrowReorder(container, onReorder){
   if(!container) return;
-  container.querySelectorAll('.drag-handle').forEach(handle=>{
-    handle.addEventListener('pointerdown', e=>{
-      const dragEl = handle.closest('[data-drag-item]');
-      if(!dragEl) return;
-      e.preventDefault();
-      try{ dragEl.setPointerCapture(e.pointerId); }catch(_){}
-      dragEl.classList.add('dragging-row');
-      const items = ()=>[...container.querySelectorAll('[data-drag-item]')];
-
-      const onMove = ev=>{
-        const y = ev.clientY;
-        const after = items().find(item=>{
-          if(item===dragEl) return false;
-          const rect = item.getBoundingClientRect();
-          return y < rect.top + rect.height/2;
-        });
-        if(after) container.insertBefore(dragEl, after);
-        else container.appendChild(dragEl);
-      };
-      const onUp = ev=>{
-        try{ dragEl.releasePointerCapture(e.pointerId); }catch(_){}
-        dragEl.classList.remove('dragging-row');
-        dragEl.removeEventListener('pointermove', onMove);
-        dragEl.removeEventListener('pointerup', onUp);
-        dragEl.removeEventListener('pointercancel', onUp);
-        onReorder(items().map(el=>el.dataset.dragId));
-      };
-      dragEl.addEventListener('pointermove', onMove);
-      dragEl.addEventListener('pointerup', onUp);
-      dragEl.addEventListener('pointercancel', onUp);
-    });
+  const items = ()=>[...container.querySelectorAll('[data-drag-item]')];
+  const move = (item, dir)=>{
+    const list = items();
+    const idx = list.indexOf(item);
+    const swapIdx = idx+dir;
+    if(swapIdx<0 || swapIdx>=list.length) return;
+    if(dir<0) container.insertBefore(item, list[swapIdx]);
+    else container.insertBefore(list[swapIdx], item);
+    onReorder(items().map(el=>el.dataset.dragId));
+  };
+  const list = items();
+  list.forEach((item,i)=>{
+    const up = item.querySelector('.reorder-up');
+    const down = item.querySelector('.reorder-down');
+    if(up){ up.disabled = i===0; up.addEventListener('click', ()=>move(item,-1)); }
+    if(down){ down.disabled = i===list.length-1; down.addEventListener('click', ()=>move(item,1)); }
   });
 }
 
@@ -4215,7 +4207,10 @@ function renderCatsList(){
   const makeList = (cats, defaultIds, type) =>
     cats.map(cat=>`
       <div class="cats-item" data-id="${esc(cat.id)}" data-type="${type}" data-drag-item data-drag-id="${esc(cat.id)}">
-        <span class="drag-handle" aria-label="${esc(tr.dragToReorder||'Drag to reorder')}">⠿</span>
+        <div class="reorder-btns">
+          <button class="reorder-btn reorder-up" aria-label="${esc(tr.moveUp||'Move up')}">▲</button>
+          <button class="reorder-btn reorder-down" aria-label="${esc(tr.moveDown||'Move down')}">▼</button>
+        </div>
         <input class="cats-item-emoji-input" data-id="${esc(cat.id)}" data-type="${type}" data-role="emoji" value="${esc(cat.emoji||cat.label.split(' ')[0])}">
         <input class="cats-item-label-input" data-id="${esc(cat.id)}" data-type="${type}" data-role="label" value="${esc(cat.label.replace(/^[^\s]+\s/,''))}">
         ${defaultIds.has(cat.id) ? '<span class="cats-item-default">default</span>' : ''}
@@ -4225,18 +4220,20 @@ function renderCatsList(){
   document.getElementById('cats-expense-list').innerHTML = makeList(expCats, defaultExpIds, 'expense');
   document.getElementById('cats-income-list').innerHTML  = makeList(incCats, defaultIncIds, 'income');
 
-  // Drag-to-reorder within each tab (expense/income are independent lists)
-  _enableDragReorder(document.getElementById('cats-expense-list'), newOrderIds=>{
+  // Reorder within each tab (expense/income are independent lists)
+  _enableArrowReorder(document.getElementById('cats-expense-list'), newOrderIds=>{
     const cats = getExpenseCats();
     const reordered = newOrderIds.map(id=>cats.find(c=>c.id===id)).filter(Boolean);
     saveCats(reordered, getIncomeCats());
     _refreshCategorySelects();
+    renderCatsList();
   });
-  _enableDragReorder(document.getElementById('cats-income-list'), newOrderIds=>{
+  _enableArrowReorder(document.getElementById('cats-income-list'), newOrderIds=>{
     const cats = getIncomeCats();
     const reordered = newOrderIds.map(id=>cats.find(c=>c.id===id)).filter(Boolean);
     saveCats(getExpenseCats(), reordered);
     _refreshCategorySelects();
+    renderCatsList();
   });
 
   // Rename label / change emoji — rebuild the combined `emoji + label` field used elsewhere
@@ -4323,7 +4320,10 @@ function renderPaymentList(){
   const tr = t();
   document.getElementById('payment-list').innerHTML = methods.map(m=>`
     <div class="acc-row" data-acc-id="${esc(m.id)}" data-drag-item data-drag-id="${esc(m.id)}">
-      <span class="drag-handle" aria-label="${esc(tr.dragToReorder||'Drag to reorder')}">⠿</span>
+      <div class="reorder-btns">
+        <button class="reorder-btn reorder-up" aria-label="${esc(tr.moveUp||'Move up')}">▲</button>
+        <button class="reorder-btn reorder-down" aria-label="${esc(tr.moveDown||'Move down')}">▼</button>
+      </div>
       <button class="acc-row-color-btn" style="--acc-color:${m.color||'#ccc'}" data-pay-id="${esc(m.id)}" data-role="color" title="${esc(tr.changeColorTitle||'Change color')}" aria-label="${esc(tr.changeColorTitle||'Change color')}"></button>
       <input class="acc-row-emoji-input" data-pay-id="${esc(m.id)}" data-role="emoji" value="${esc(m.emoji||'💳')}">
       <input class="acc-row-label-input" data-pay-id="${esc(m.id)}" data-role="label" value="${esc(m.label)}">
@@ -4338,13 +4338,14 @@ function renderPaymentList(){
     _setFormattedInputValue(inp, m?.startingBalance);
   });
 
-  // Drag-to-reorder
-  _enableDragReorder(document.getElementById('payment-list'), newOrderIds=>{
+  // Reorder
+  _enableArrowReorder(document.getElementById('payment-list'), newOrderIds=>{
     const current = getPaymentMethods();
     const reordered = newOrderIds.map(id=>current.find(m=>m.id===id)).filter(Boolean);
     savePaymentMethods(reordered);
     _refreshPaymentSelect();
     renderAccountBalances();
+    renderPaymentList();
   });
 
   // Delete
