@@ -1140,7 +1140,7 @@ img{max-width:100%;display:block}
     </div>
     <div class="frow">
       <div class="fg"><label class="flabel">Date</label><input class="fi" id="tx-date" type="date"></div>
-      <div class="fg"><label class="flabel">Amount (Rp)</label><input class="fi" id="tx-amount" type="number" min="0" step="1000" placeholder="0"></div>
+      <div class="fg"><label class="flabel">Amount (Rp)</label><input class="fi" id="tx-amount" type="text" placeholder="0"></div>
     </div>
     <div class="fg" id="tx-cat-row"><label class="flabel">Category</label><select class="fi" id="tx-cat"></select>
       <div id="cat-suggestion" style="display:none;margin-top:.3rem;font-size:.76rem;color:var(--text3)"></div>
@@ -1177,7 +1177,7 @@ img{max-width:100%;display:block}
           <span class="admin-fee-chip" data-fee="2500">Rp 2.500</span>
           <span class="admin-fee-chip" data-fee="6500">Rp 6.500</span>
           <span class="admin-fee-chip" data-fee="manual" data-i18n="adminFeeManual">Manual</span>
-          <input type="number" min="0" step="500" class="admin-fee-manual" id="tx-admin-fee-manual" placeholder="Rp…">
+          <input type="text" class="admin-fee-manual" id="tx-admin-fee-manual" placeholder="Rp…">
         </div>
         <div class="tx-admin-note" data-i18n="adminFeeNote">The admin fee will be added and deducted from the account balance along with the transaction.</div>
       </div>
@@ -2143,6 +2143,35 @@ function formatNumber(n, decimals=0){
 const idr = n => formatCurrency(n);
 const fmtDate = s => formatDate(s);
 const fmtDateLbl = s => formatDateLabel(s);
+
+// ── Formatted number inputs ─────────────────────────────
+// Native <input type="number"> ignores the app's locale setting entirely (plain
+// digits, no thousand separators), which looked inconsistent next to amounts
+// displayed elsewhere as "Rp 27.230.000". These helpers turn a plain text input
+// into one that live-formats with the same separator style as idr()/formatNumber(),
+// while still only ever holding a whole-number value underneath.
+function _numGroupSep(){ return _locale.numFormat==='id-ID' ? '.' : ','; }
+function _formatDigits(digits){
+  if(!digits) return '';
+  return digits.replace(/\B(?=(\d{3})+(?!\d))/g, _numGroupSep());
+}
+function _attachFormattedNumberInput(el){
+  if(!el || el.dataset.fmtBound) return;
+  el.dataset.fmtBound = '1';
+  el.setAttribute('inputmode','numeric');
+  el.setAttribute('autocomplete','off');
+  el.addEventListener('input', ()=>{
+    const digits = el.value.replace(/\D/g,'');
+    el.value = _formatDigits(digits);
+  });
+}
+function _getFormattedInputValue(el){
+  return parseFloat((el?.value||'').replace(/\D/g,'')) || 0;
+}
+function _setFormattedInputValue(el, num){
+  if(!el) return;
+  el.value = num ? _formatDigits(String(Math.round(num))) : '';
+}
 
 // ── Apply translations to DOM ──────────────────────────
 // Safe text helper — updates element text without touching innerHTML or event listeners
@@ -3661,12 +3690,21 @@ function renderBarChart(){
   const _cs=getComputedStyle(document.documentElement);
   const textColor=_cs.getPropertyValue('--text2').trim()||'#6b5e4c';
   const gridColor=_cs.getPropertyValue('--border').trim()||'#e6ddd0';
+  // Abbreviated axis labels — follow the same currency symbol + decimal separator as idr()
+  const _sym=CURRENCY_SYMBOLS[_locale.currency]||_locale.currency;
+  const _isID=_locale.numFormat==='id-ID';
+  const _bigUnit=_isID?'jt':'M', _smallUnit=_isID?'rb':'K';
+  const yAxisLabel=v=>{
+    if(v>=1e6) return _sym+' '+(v/1e6).toFixed(1).replace('.',_isID?',':'.')+_bigUnit;
+    if(v>=1e3) return _sym+' '+(v/1e3).toFixed(0)+_smallUnit;
+    return _sym+' '+v;
+  };
   _barChart=new Chart(ctx,{type:'bar',data:{labels,datasets:[{label:t().income||'Income',data:incomes,
     backgroundColor:_cs.getPropertyValue('--green').trim()||'#16a34a',
     borderRadius:4},
     {label:t().expense||'Expense',data:expenses,
     backgroundColor:_cs.getPropertyValue('--red').trim()||'#dc2626',
-    borderRadius:4}]},options:{plugins:{legend:{labels:{font:{size:11},boxWidth:12,color:textColor}}},scales:{x:{grid:{display:false},ticks:{font:{size:10},color:textColor}},y:{ticks:{callback:v=>v>=1e6?'Rp'+(v/1e6).toFixed(1)+'jt':v>=1e3?'Rp'+(v/1e3).toFixed(0)+'k':'Rp'+v,font:{size:10},color:textColor},grid:{color:gridColor}}}},animation:{duration:400}});
+    borderRadius:4}]},options:{plugins:{legend:{labels:{font:{size:11},boxWidth:12,color:textColor}}},scales:{x:{grid:{display:false},ticks:{font:{size:10},color:textColor}},y:{ticks:{callback:yAxisLabel,font:{size:10},color:textColor},grid:{color:gridColor}}}},animation:{duration:400}});
 }
 
 // ── Budget progress bars ──────────────────────────────────
@@ -3703,15 +3741,20 @@ document.getElementById('budget-btn').addEventListener('click',()=>{
   el.innerHTML=EXPENSE_CATS.map(cat=>`
     <div class="fg">
       <label class="flabel">${cat.label}</label>
-      <input class="fi" type="number" min="0" step="10000" placeholder="${t().noLimit}"
-             id="budget-${cat.id}" value="${_budgets[cat.id]||''}">
+      <input class="fi" type="text" placeholder="${t().noLimit}"
+             id="budget-${cat.id}">
     </div>`).join('');
+  EXPENSE_CATS.forEach(cat=>{
+    const inp=document.getElementById(`budget-${cat.id}`);
+    _attachFormattedNumberInput(inp);
+    _setFormattedInputValue(inp, _budgets[cat.id]);
+  });
   openModal('budget-modal');
 });
 
 document.getElementById('budget-save-btn').addEventListener('click',()=>{
   EXPENSE_CATS.forEach(cat=>{
-    const val=parseFloat(document.getElementById(`budget-${cat.id}`).value);
+    const val=_getFormattedInputValue(document.getElementById(`budget-${cat.id}`));
     if(val>0) _budgets[cat.id]=val;
     else delete _budgets[cat.id];
   });
@@ -3743,7 +3786,8 @@ function openTxModal(tx=null){
   document.getElementById('tx-ttl').textContent=n?t().newTx:t().editTx;
   document.getElementById('tx-id').value=tx?.id||'';
   document.getElementById('tx-date').value=tx?.date||today();
-  document.getElementById('tx-amount').value=tx?.amount||'';
+  _attachFormattedNumberInput(document.getElementById('tx-amount'));
+  _setFormattedInputValue(document.getElementById('tx-amount'), tx?.amount);
   document.getElementById('tx-notes').value=tx?.notes||'';
   document.getElementById('tx-payment').value=tx?.payment_method||'cash';
   document.getElementById('ocr-preview').style.display='none';
@@ -3753,12 +3797,13 @@ function openTxModal(tx=null){
   document.getElementById('tx-admin-fee-toggle').checked = hasFee;
   document.getElementById('tx-admin-fee-body').style.display = hasFee ? '' : 'none';
   document.getElementById('tx-admin-fee').value = tx?.admin_fee || 0;
+  _attachFormattedNumberInput(document.getElementById('tx-admin-fee-manual'));
   document.getElementById('tx-admin-fee-manual').value = '';
   document.getElementById('tx-admin-fee-manual').style.display = 'none';
   document.querySelectorAll('.admin-fee-chip').forEach(c=>c.classList.toggle('active', hasFee && String(tx.admin_fee)===c.dataset.fee));
   if(hasFee && ![1000,2500,6500].includes(tx.admin_fee)){
     document.getElementById('tx-admin-fee-manual').style.display='inline-block';
-    document.getElementById('tx-admin-fee-manual').value=tx.admin_fee;
+    _setFormattedInputValue(document.getElementById('tx-admin-fee-manual'), tx.admin_fee);
     document.querySelector('.admin-fee-chip[data-fee="manual"]')?.classList.add('active');
   }
   _refreshPaymentSelect();
@@ -3799,7 +3844,7 @@ document.querySelectorAll('.admin-fee-chip').forEach(chip=>{
     if(chip.dataset.fee === 'manual'){
       manualInput.style.display = 'inline-block';
       manualInput.focus();
-      document.getElementById('tx-admin-fee').value = parseFloat(manualInput.value)||0;
+      document.getElementById('tx-admin-fee').value = _getFormattedInputValue(manualInput);
     } else {
       manualInput.style.display = 'none';
       document.getElementById('tx-admin-fee').value = chip.dataset.fee;
@@ -3807,10 +3852,10 @@ document.querySelectorAll('.admin-fee-chip').forEach(chip=>{
   });
 });
 document.getElementById('tx-admin-fee-manual')?.addEventListener('input', (e)=>{
-  document.getElementById('tx-admin-fee').value = parseFloat(e.target.value)||0;
+  document.getElementById('tx-admin-fee').value = _getFormattedInputValue(e.target);
 });
 document.getElementById('tx-save').addEventListener('click',async()=>{
-  const amount=parseFloat(document.getElementById('tx-amount').value);
+  const amount=_getFormattedInputValue(document.getElementById('tx-amount'));
   if(!amount||amount<=0){showFieldError('tx-amount',t().enterAmount||'Enter a valid amount');return;}
   const fromAccount=document.getElementById('tx-payment')?.value||'cash';
   const toAccount=document.getElementById('tx-payment-to')?.value||'';
@@ -4283,10 +4328,15 @@ function renderPaymentList(){
       <input class="acc-row-emoji-input" data-pay-id="${esc(m.id)}" data-role="emoji" value="${esc(m.emoji||'💳')}">
       <input class="acc-row-label-input" data-pay-id="${esc(m.id)}" data-role="label" value="${esc(m.label)}">
       <div class="acc-row-balance">
-        <input type="number" class="acc-row-balance-input" data-pay-id="${esc(m.id)}" data-role="balance" value="${m.startingBalance||0}" placeholder="${esc(tr.startingBalancePlaceholder||'Starting balance')}" title="${esc(tr.startingBalancePlaceholder||'Starting balance')}">
+        <input type="text" class="acc-row-balance-input" data-pay-id="${esc(m.id)}" data-role="balance" placeholder="${esc(tr.startingBalancePlaceholder||'Starting balance')}" title="${esc(tr.startingBalancePlaceholder||'Starting balance')}">
       </div>
       <button class="cats-item-del" data-pay-id="${esc(m.id)}" data-role="delete" title="${esc(tr.deleteTitle||'Delete')}" aria-label="${esc(tr.deleteTitle||'Delete')}">✕</button>
     </div>`).join('');
+  document.querySelectorAll('.acc-row-balance-input').forEach(inp=>{
+    _attachFormattedNumberInput(inp);
+    const m = methods.find(x=>x.id===inp.dataset.payId);
+    _setFormattedInputValue(inp, m?.startingBalance);
+  });
 
   // Drag-to-reorder
   _enableDragReorder(document.getElementById('payment-list'), newOrderIds=>{
@@ -4331,7 +4381,7 @@ function renderPaymentList(){
     inp.addEventListener('change', ()=>{
       const methods = getPaymentMethods();
       const m = methods.find(x=>x.id===inp.dataset.payId);
-      if(m){ m.startingBalance = parseFloat(inp.value)||0; savePaymentMethods(methods); renderAccountBalances(); }
+      if(m){ m.startingBalance = _getFormattedInputValue(inp); savePaymentMethods(methods); renderAccountBalances(); }
     });
   });
 
@@ -4623,7 +4673,7 @@ function initOCR(){
 
       // Auto-fill fields
       if(result.amount && result.amount > 0){
-        document.getElementById('tx-amount').value = result.amount;
+        _setFormattedInputValue(document.getElementById('tx-amount'), result.amount);
       }
       if(result.notes){
         document.getElementById('tx-notes').value = result.notes;
