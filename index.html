@@ -1626,12 +1626,18 @@ function getProfiles(){
   if(_profilesCache) return _profilesCache;
   let p = _loadProfiles();
   if(!p || !p.length){
-    // Default: 2 profiles
+    // Default: 2 profiles. Local-only bootstrap — must NOT push to the server here.
+    // _pullSettingsFromServer() runs moments after page load and is the sole place
+    // that decides whether to seed the server; if this default write also pushed to
+    // the backend, any device that (even momentarily) has empty localStorage would
+    // clobber the shared server profiles back to "Aku/Sayang", and every other
+    // device syncing afterwards would then pull that regression — a race that bit
+    // us in production. See _pullSettingsFromServer for the real seeding logic.
     p = [
       {id:'p1', name:'Aku',   color:'#f59e0b'},
       {id:'p2', name:'Sayang',color:'#ec4899'},
     ];
-    _saveProfiles(p);
+    localStorage.setItem(LS_PROFILES, JSON.stringify(p));
   }
   _profilesCache = p;
   return p;
@@ -1649,6 +1655,7 @@ function setActiveProfile(id){
   loadEnabledCals();
   if(_calendars.length){ renderCalFilterChips(); refreshCalendarView(); }
   else loadCalendars();
+  renderUpcoming();
   renderHome();
 }
 function profileInitials(name){ return (name||'?').trim().slice(0,2).toUpperCase(); }
@@ -3812,13 +3819,19 @@ function _getUpcomingEvents(windowDays){
   const todayS=now.toISOString().slice(0,10);
   const endDt=new Date(now.getTime()+windowDays*86400000);
   const endS=endDt.toISOString().slice(0,10);
+  const activeProfile=getActiveProfile();
 
   const luminaGCalIds=new Set(_agenda.map(e=>e.gcal_id).filter(Boolean));
 
-  const fromLumina=_agenda.map(ev=>({
-    id:ev.id, title:ev.title, date:ev.date, all_day:ev.all_day, start_time:ev.start_time,
-    color:ev.color||'#f59e0b', reminder:ev.reminder, description:ev.description, source:'lumina'
-  }));
+  // Only show each profile their own events in Upcoming — legacy events with no
+  // createdBy (from before multi-user) still show to everyone. GCal-sourced events
+  // have no concept of a Lumina profile owner, so those aren't filtered here.
+  const fromLumina=_agenda
+    .filter(ev=>!activeProfile || !ev.createdBy || ev.createdBy===activeProfile.id)
+    .map(ev=>({
+      id:ev.id, title:ev.title, date:ev.date, all_day:ev.all_day, start_time:ev.start_time,
+      color:ev.color||'#f59e0b', reminder:ev.reminder, description:ev.description, source:'lumina'
+    }));
 
   const fromGCal=(_gcalEvents||[])
     .filter(ev=>!luminaGCalIds.has(ev.gcal_id) && _enabledCals.has(ev.calendar_id))
