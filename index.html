@@ -2192,7 +2192,7 @@ function applyTranslations(){
   // ── Safe text-only updates (no innerHTML, no event listener destruction) ──
 
   // Tab labels - update only the text node, preserve .ti span
-  const tabIds=['home','agenda','diary','photos','money'];
+  const tabIds=['home','agenda','diary','photos','money','notes'];
   document.querySelectorAll('.tab-btn').forEach((btn,i)=>{
     const key=tabIds[i];
     // Find or create a text node after the .ti span
