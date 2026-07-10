@@ -3532,7 +3532,7 @@ document.getElementById('c-del').addEventListener('click',async()=>{
 // ═══════════════════════════════════════════════════════
 const EXPENSE_CATS=[{id:'food',label:'🍜 Food & Drink',cls:'cf',color:'#f97316'},{id:'transport',label:'🚗 Transport',cls:'ct',color:'#3b82f6'},{id:'shopping',label:'🛍 Shopping',cls:'cs',color:'#a855f7'},{id:'health',label:'💊 Health',cls:'ch',color:'#ef4444'},{id:'entertain',label:'🎬 Entertainment',cls:'ce',color:'#ec4899'},{id:'bills',label:'📋 Bills & Utilities',cls:'cb',color:'#6b7280'},{id:'other',label:'📦 Other',cls:'co',color:'#d97706'}];
 const INCOME_CATS=[{id:'salary',label:'💼 Salary',cls:'csl',color:'#16a34a'},{id:'freelance',label:'💻 Freelance',cls:'cfl',color:'#10b981'},{id:'other',label:'📦 Other Income',cls:'co',color:'#d97706'}];
-const catInfo=id=>_catInfo(id);  // delegates to custom cats (overridden after settings JS loads)
+const catInfo=(id,type)=>_catInfo(id,type);  // delegates to custom cats (overridden after settings JS loads)
 
 // Budget storage (localStorage)
 const LS_BUDGETS = 'lumina_budgets';
@@ -3599,7 +3599,7 @@ function renderMoney(){
           const to=payMethods.find(m=>m.id===t.to_payment_method);
           return`<div class="tx-item" data-id="${t.id}"><div class="tx-dot" style="background:var(--amber)"></div><div class="tx-body"><div class="tx-cat">⇄ ${from?from.emoji+' '+from.label:'?'} → ${to?to.emoji+' '+to.label:'?'}</div>${t.notes?`<div class="tx-note">${esc(t.notes)}</div>`:''}${t.admin_fee>0?`<div class="tx-note" style="color:var(--text3)">+ admin ${idr(t.admin_fee)}</div>`:''}</div><div style="display:flex;align-items:center;gap:.35rem">${profileBadge(t.createdBy)}<div class="tx-amt" style="color:var(--text2)">${idr(t.amount)}</div></div></div>`;
         }
-        const ci=catInfo(t.category);const pm=payMethods.find(m=>m.id===t.payment_method);
+        const ci=catInfo(t.category,t.type);const pm=payMethods.find(m=>m.id===t.payment_method);
     return`<div class="tx-item" data-id="${t.id}"><div class="tx-dot ${ci.cls}"></div><div class="tx-body"><div class="tx-cat">${ci.label}${pm?`<span class="tx-pay-badge">${pm.emoji} ${pm.label}</span>`:''}</div>${t.notes?`<div class="tx-note">${esc(t.notes)}</div>`:''}${t.admin_fee>0?`<div class="tx-note" style="color:var(--text3)">+ admin ${idr(t.admin_fee)}</div>`:''}</div><div style="display:flex;align-items:center;gap:.35rem">${profileBadge(t.createdBy)}<div class="tx-amt ${t.type}">${t.type==='income'?'+':'-'}${idr(t.amount)}</div></div></div>`;}).join('')
     }</div>`;
   }).join('');
@@ -3667,7 +3667,7 @@ function renderDonutChart(fil){
 
   centerEl.innerHTML=`<div class="donut-center-val">${idr(total)}</div><div class="donut-center-lbl">total spent</div>`;
 
-  const data={labels:cats.map(id=>catInfo(id).label),datasets:[{data:cats.map(id=>totals[id]),backgroundColor:cats.map(id=>catInfo(id).color||'#d97706'),borderWidth:0,hoverOffset:4}]};
+  const data={labels:cats.map(id=>catInfo(id,'expense').label),datasets:[{data:cats.map(id=>totals[id]),backgroundColor:cats.map(id=>catInfo(id,'expense').color||'#d97706'),borderWidth:0,hoverOffset:4}]};
 
   if(_donutChart){_donutChart.destroy();}
   const ctx=document.getElementById('chart-donut').getContext('2d');
@@ -4187,11 +4187,17 @@ function savePaymentMethods(methods){
   api('saveSetting',{key:'paymentMethods',value:methods}).catch(e=>console.warn('[Sync] accounts save failed:',e.message));
 }
 
-// Override catInfo — cached map rebuilt when cats change
-let _catMap = {};
-function _rebuildCatMap(){ _catMap={}; [...getExpenseCats(),...getIncomeCats()].forEach(c=>{_catMap[c.id]=c;}); }
+// Override catInfo — cached maps rebuilt when cats change
+// Kept separate per type: expense and income categories can share the same id
+// (both have an 'other') but mean different things, so a single merged map
+// would let one silently overwrite the other's label/color.
+let _catMapExpense = {}, _catMapIncome = {};
+function _rebuildCatMap(){
+  _catMapExpense={}; getExpenseCats().forEach(c=>{_catMapExpense[c.id]=c;});
+  _catMapIncome={}; getIncomeCats().forEach(c=>{_catMapIncome[c.id]=c;});
+}
 _rebuildCatMap();
-const _catInfo = id => _catMap[id] || {label:id, cls:'co', color:'#d97706'};
+const _catInfo = (id,type) => (type==='income' ? _catMapIncome[id]||_catMapExpense[id] : _catMapExpense[id]||_catMapIncome[id]) || {label:id, cls:'co', color:'#d97706'};
 
 // ── Categories modal ───────────────────────────────────
 let _catsTab = 'expense';
@@ -4754,7 +4760,7 @@ function exportMoneyCsv(monthFilter){
       const toLbl=accs.find(a=>a.id===tx.to_payment_method)?.label||tx.to_payment_method||'?';
       label=`${fromLbl} -> ${toLbl}`;
     } else {
-      label=catInfo(tx.category).label.replace(/^[^\s]+ /,'');
+      label=catInfo(tx.category,tx.type).label.replace(/^[^\s]+ /,'');
     }
     rows.push(csvRow([tx.date, tx.type, label, tx.amount, tx.notes||'']));
   });
@@ -4812,7 +4818,7 @@ function printMonthlyReport(month){
   });
   const catRows = Object.entries(catTotals)
     .sort((a,b)=>b[1]-a[1])
-    .map(([id,amt])=>`<tr><td>${catInfo(id).label}</td><td style="text-align:right">${idr(amt)}</td></tr>`)
+    .map(([id,amt])=>`<tr><td>${catInfo(id,'expense').label}</td><td style="text-align:right">${idr(amt)}</td></tr>`)
     .join('');
 
   // Build transaction table
@@ -4830,7 +4836,7 @@ function printMonthlyReport(month){
     }
     return `<tr>
       <td>${fmtDate(tx.date)}</td>
-      <td>${catInfo(tx.category).label}</td>
+      <td>${catInfo(tx.category,tx.type).label}</td>
       <td>${esc(tx.notes||'')}</td>
       <td style="text-align:right;color:${tx.type==='income'?'#16a34a':'#dc2626'}">${tx.type==='income'?'+':'-'}${idr(tx.amount)}</td>
     </tr>`;
