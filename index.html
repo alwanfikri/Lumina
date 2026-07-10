@@ -586,9 +586,10 @@ img{max-width:100%;display:block}
   box-shadow:0 1px 4px rgba(0,0,0,.08);
   position:relative;overflow:hidden;min-height:80px;
   border:1.5px solid rgba(0,0,0,.07);
-  /* Text always dark on colored cards */
+  /* Text always dark on colored cards, except the dark swatches below */
   color:#1c1710;
 }
+.note-card.note-dark-bg{color:rgba(255,255,255,.9)}
 /* Dark mode: uncolored cards and white/near-white cards use CSS vars */
 [data-theme="dark"] .note-card:not([style*="background"]),
 [data-theme="dark"] .note-card[style*="background:#f8f8f8"],
@@ -1044,7 +1045,7 @@ img{max-width:100%;display:block}
       <input class="fi" id="ev-recur-end" type="date" placeholder="No end date">
     </div>
     <div class="fg">
-      <label class="flabel">Reminder</label>
+      <label class="flabel" id="ev-lbl-reminder">Reminder</label>
       <select class="fi" id="ev-reminder">
         <option value="">No reminder</option>
         <option value="5">5 minutes before</option>
@@ -1848,7 +1849,7 @@ const TRANSLATIONS = {
     budgets:'🎯 Budgets',
     // Agenda modal
     newEventTitle:'New Event', editEventTitle:'Edit Event',
-    titleLabel:'Title', startDate:'Start Date', endDate:'End Date',
+    titleLabel:'Title', startDate:'Start Date', endDate:'End Date', month:'Month',
     startTime:'Start Time', endTime:'End Time', allDayEvent:'All day event',
     repeat:'Repeat', repeatUntil:'Repeat Until', description:'Description',
     color:'Color', deleteBtn:'🗑 Delete', cancel:'Cancel', save:'Save',
@@ -1963,7 +1964,7 @@ const TRANSLATIONS = {
     newEvent:'+ Acara', newEntry:'+ Catatan', upload:'+ Unggah', addTx:'+ Tambah',
     budgets:'🎯 Anggaran',
     newEventTitle:'Acara Baru', editEventTitle:'Edit Acara',
-    titleLabel:'Judul', startDate:'Tanggal Mulai', endDate:'Tanggal Selesai',
+    titleLabel:'Judul', startDate:'Tanggal Mulai', endDate:'Tanggal Selesai', month:'Bulan',
     startTime:'Waktu Mulai', endTime:'Waktu Selesai', allDayEvent:'Sepanjang hari',
     repeat:'Ulangi', repeatUntil:'Ulangi Sampai', description:'Keterangan',
     color:'Warna', deleteBtn:'🗑 Hapus', cancel:'Batal', save:'Simpan',
@@ -2202,7 +2203,7 @@ function applyTranslations(){
   });
 
   // Section titles
-  const panels={agenda:tr.agenda,diary:tr.diary,photos:tr.photos,money:tr.money};
+  const panels={agenda:tr.agenda,diary:tr.diary,photos:tr.photos,money:tr.money,notes:tr.notes};
   document.querySelectorAll('.sec-title').forEach(el=>{
     const tab=el.closest('.panel')?.id?.replace('panel-','');
     if(tab&&panels[tab])el.textContent=panels[tab];
@@ -2238,7 +2239,7 @@ function applyTranslations(){
   safeText('exp-money-month-lbl',(tr.money||'Money') + ' (' + (tr.thisMonth||'This month') + ')');
   safeText('exp-diary-lbl',      tr.diary||'Diary');
   safeText('exp-agenda-lbl',     tr.agenda||'Agenda');
-  safeText('exp-report-month-lbl', tr.dateFormat ? (tr.monthlyReport||'Month') : 'Month');
+  safeText('exp-report-month-lbl', tr.month||'Month');
   safeText('export-btn',         tr.exportData||'⬇ Export Data');
   safeText('s-lbl-theme',        tr.theme||'Theme');
   const tBtns={'light':tr.themeLight||'☀️ Light','dark':tr.themeDark||'🌙 Dark','auto':tr.themeAuto||'⚙ Auto'};
@@ -2332,6 +2333,12 @@ function updateModalLabels(){
     recurSel.options[2].text=tr.everyWeek;
     recurSel.options[3].text=tr.everyMonth;
     recurSel.options[4].text=tr.everyWeekday;
+  }
+  // Reminder options
+  const remSel=document.getElementById('ev-reminder');
+  if(remSel&&remSel.options.length>=7&&tr.reminderOptions){
+    remSel.options[0].text=tr.noReminder;
+    tr.reminderOptions.forEach((txt,i)=>{ remSel.options[i+1].text=txt; });
   }
 }
 
@@ -2511,7 +2518,7 @@ document.getElementById('settings-btn').addEventListener('click',()=>{
   if(ocrStatus){
     const hasKey  = !!localStorage.getItem('lumina_ocr_key');
     const prov    = localStorage.getItem('lumina_ocr_provider')||'gemini';
-    const provName= prov==='gemini'?'Gemini':'Claude';
+    const provName= prov==='gemini'?'Gemini':prov==='ocrspace'?'OCR.space':'Claude';
     ocrStatus.textContent = hasKey ? `✅ ${provName} key is set` : '⚠ No key set — receipt scanning disabled';
     ocrStatus.style.color = hasKey ? 'var(--green)' : 'var(--text3)';
   }
@@ -3506,7 +3513,7 @@ document.addEventListener('keydown',e=>{
     const settings=document.getElementById('settings-ol');
     if(settings?.classList.contains('open')){settings.classList.remove('open');document.body.style.overflow='';return;}
     const search=document.getElementById('search-overlay');
-    if(search?.style.display!=='none'){closeSearch();return;}
+    if(search?.style.display!=='none'){_closeSearch();return;}
     const openOverlays=[...document.querySelectorAll('.overlay.open')];
     if(openOverlays.length)closeModal(openOverlays[openOverlays.length-1].id);
     return;
@@ -4962,7 +4969,7 @@ function _globalSearch(query){
     if(text.includes(q)) hits.money.push(e);
   });
   (_notes||[]).forEach(n=>{
-    const text = ((n.title||'') + ' ' + (n.content||'')).toLowerCase();
+    const text = ((n.title||'') + ' ' + (n.content_html||'')).toLowerCase();
     if(text.includes(q)) hits.notes.push(n);
   });
 
@@ -5013,7 +5020,7 @@ function _globalSearch(query){
       <div class="sr-item-icon">${icon}</div>
       <div class="sr-item-body">
         <div class="sr-item-title">${highlight(e.title||t().untitled||'Untitled',q)}</div>
-        <div class="sr-item-meta">${highlight((e.content||'').slice(0,60),q)}</div>
+        <div class="sr-item-meta">${highlight((e.content_html||'').replace(/<[^>]*>/g,'').slice(0,60),q)}</div>
       </div>
       <div class="sr-item-date">${fmtDate(e.updatedAt||e.createdAt||'')}</div>
     </div>`);
@@ -5313,10 +5320,11 @@ function renderNotes(){
   }
   el.innerHTML='<div class="notes-grid">'+notes.map(function(note){
     const isCanvas=!!note.canvas_data&&!note.content_html;
+    const isDarkBg=['#1e293b','#1e3a5f','#111111'].includes(note.color);
     const bg=note.color&&note.color!=='#ffffff'?'style="background:'+note.color+'"':'';
     const preview=isCanvas?'<img class="note-card-canvas-thumb" src="'+note.canvas_data+'" alt="Drawing" loading="lazy">':'<div class="note-card-preview">'+(note.content_html||'').replace(/<[^>]*>/g,'').slice(0,120)+'</div>';
     const tags=(note.tags||'').split(',').filter(Boolean).slice(0,3).map(function(tag){return'<span class="note-tag">'+esc(tag.trim())+'</span>';}).join('');
-    return '<div class="note-card'+(note.pinned?' pinned':'')+'" data-id="'+note.id+'" '+bg+'>'
+    return '<div class="note-card'+(note.pinned?' pinned':'')+(isDarkBg?' note-dark-bg':'')+'" data-id="'+note.id+'" '+bg+'>'
       +'<div class="note-card-title">'+highlight(note.title||tr.untitled||'Untitled',q)+'</div>'
       +preview+'<div class="note-card-footer"><span class="note-card-date">'+fmtDate((note.updatedAt||'').slice(0,10))+'</span>'
       +'<div style="display:flex;align-items:center;gap:.3rem">'+profileBadge(note.createdBy)+'<div class="note-card-tags">'+tags+'</div></div></div></div>';
